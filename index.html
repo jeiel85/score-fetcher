@@ -50,11 +50,14 @@
             left: 50%; transform: translateX(-50%); 
             width: 100%; max-width: 600px; box-sizing: border-box;
             background: white; padding: 15px; border-top: 1px solid #eee; 
-            display: none; justify-content: center; gap: 10px; z-index: 20; 
+            display: none; justify-content: center; gap: 8px; z-index: 20; 
         }
         
-        .btn-download-normal { flex: 1; padding: 15px; background-color: #17a2b8; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .btn-download-reverse { flex: 1; padding: 15px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-download-normal { flex: 2; padding: 15px 5px; background-color: #17a2b8; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .btn-download-reverse { flex: 2; padding: 15px 5px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        
+        /* 위로 가기 버튼 스타일 추가 */
+        .btn-top { flex: 1; padding: 15px 5px; background-color: #34495e; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; white-space: nowrap; }
 
         .modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -111,6 +114,7 @@
     <div class="bottom-bar" id="download-bar">
         <button class="btn-download-normal" onclick="downloadAll(false)">순서대로<br>저장 ⬇️</button>
         <button class="btn-download-reverse" onclick="downloadAll(true)">역순으로<br>저장 ⬆️</button>
+        <button class="btn-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">맨 위로<br>🚀</button>
     </div>
 
     <div class="modal-overlay" id="songModal">
@@ -149,13 +153,6 @@
 
         // ---------------- 구글 시트 기반 이력 관리 로직 ---------------- //
 
-        /**
-         * 목적: 미래의 내가 디버깅하기 위함.
-         * Input: 없음
-         * Output: 구글 시트로 POST 요청 전송 (제목 포함)
-         * 핵심 로직: 다운로드 실행 시, 제목과 텍스트를 하나로 묶어 서버로 전송. 제목이 비어있으면 '제목 없음'으로 처리함.
-         * 왜: 팀원 모두가 조회할 수 있도록 중앙 DB(구글 시트)에 데이터를 영구 보관하기 위함.
-         */
         async function saveToHistory() {
             if(!SCRIPT_URL || SCRIPT_URL === "여기에_URL을_붙여넣으세요") return; 
 
@@ -210,7 +207,6 @@
                             document.getElementById('setlist-title').value = displayTitle !== "제목 없는 콘티" ? displayTitle : "";
                             document.getElementById('song-input').value = item.text;
                             
-                            // [추가된 로직] 이전 조회 결과물 및 다운로드 버튼 초기화 
                             document.getElementById('result-container').innerHTML = "";
                             document.getElementById('download-bar').style.display = 'none';
                             foundImages = [];
@@ -371,17 +367,8 @@
             document.getElementById('song-input').focus();
         }
 
-        /**
-         * 목적: 미래의 내가 디버깅하기 위함.
-         * Input: 버튼 클릭 이벤트
-         * Output: 악보 이미지 UI 생성 및 다운로드용 파일명 생성
-         * 핵심 로직: 텍스트의 불필요한 빈 줄을 제거하고 다시 화면에 반영한 후, 날짜를 계산하고 이미지를 검색함.
-         * 왜: 사용자가 복사/붙여넣기 과정에서 실수로 넣은 빈 줄 때문에 빈 카드가 생기거나 오류가 나는 것을 방지하고 깔끔한 UX를 제공하기 위함.
-         */
         function startSearch() {
             let rawText = document.getElementById('song-input').value;
-            
-            // [추가된 로직] 불필요한 빈 줄 완벽 제거 후 텍스트 상자 업데이트
             let cleanLines = rawText.split('\n').filter(line => line.trim() !== "");
             document.getElementById('song-input').value = cleanLines.join('\n');
             
@@ -466,7 +453,6 @@
                 if (!confirm(`${validImages.length}개의 악보를 ${orderText} 저장합니다.`)) return;
             }
 
-            // 구글 시트로 저장 실행
             saveToHistory();
 
             const targetImages = isReverse ? [...foundImages].reverse() : [...foundImages];
