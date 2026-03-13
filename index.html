@@ -389,9 +389,33 @@
             document.getElementById('song-input').focus();
         }
 
+        /**
+         * 목적: 미래의 내가 디버깅하기 위함.
+         * Input: 버튼 클릭 이벤트 (textarea에 입력된 원본 텍스트)
+         * Output: 포맷팅된 텍스트 업데이트 및 악보 이미지 UI 생성
+         * 핵심 로직: 정규식을 이용해 각 줄의 맨 앞 숫자와 제목을 분리한 뒤, 숫자는 무조건 3자리(padStart)로 만들고 불필요한 점(.)을 제거하여 다시 조합함.
+         * 왜: 팀원들이 카톡 등에서 '1. 제목' 또는 '05.제목' 형태로 복사해 오더라도, DB와 화면에는 항상 통일된 '001 제목' 형식으로 깔끔하게 저장되도록 입력값을 강제 정제하기 위함.
+         */
         function startSearch() {
             let rawText = document.getElementById('song-input').value;
-            let cleanLines = rawText.split('\n').filter(line => line.trim() !== "");
+            
+            // [업데이트된 로직] 정규식을 활용한 자동 포맷팅 및 빈 줄 제거
+            let cleanLines = rawText.split('\n').map(line => {
+                let trimmed = line.trim();
+                if (!trimmed) return ""; // 빈 줄은 패스
+                
+                // 정규식 설명: ^(\d+) -> 맨 앞의 숫자 그룹, [\.\s]* -> 숫자 뒤의 점이나 공백들 무시, (.*) -> 나머지 진짜 제목
+                let match = trimmed.match(/^(\d+)[\.\s]*(.*)/);
+                if (match) {
+                    // 숫자는 무조건 3자리로 맞춤 (예: 1 -> 001, 15 -> 015)
+                    let formattedNum = String(match[1]).padStart(3, '0');
+                    let titleText = match[2].trim();
+                    return `${formattedNum} ${titleText}`;
+                }
+                return trimmed; // 매칭 안 되면(숫자가 없으면) 그냥 원본 출력
+            }).filter(line => line !== "");
+            
+            // 예쁘게 정리된 텍스트를 다시 입력창에 덮어씌워 줌 (DB 저장 시에도 이 예쁜 텍스트가 저장됨!)
             document.getElementById('song-input').value = cleanLines.join('\n');
             
             const lines = cleanLines;
