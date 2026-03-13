@@ -22,7 +22,6 @@
         header { background-color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #ddd; }
         main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
         
-        /* 제목 입력창 스타일 */
         .title-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; margin-bottom: 10px; font-weight: bold; color: #333; }
         
         textarea { width: 100%; height: 130px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 16px; box-sizing: border-box; resize: none; }
@@ -140,7 +139,6 @@
     </div>
 
     <script>
-        // 사용자님이 생성하신 구글 웹앱 URL 반영 완료!
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzygADMEEPXrcF7wOIlTgDmClVTnnerxOjoKQnyArWA3EcKLdwvNkjiI-2SKaZggN8G/exec"; 
         
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
@@ -149,13 +147,14 @@
         let wakeLock = null;
         let isWakeLockEnabled = true; 
 
-        // ---------------- 구글 시트 기반 이력 관리 로직 (제목 추가) ---------------- //
+        // ---------------- 구글 시트 기반 이력 관리 로직 ---------------- //
 
         /**
          * 목적: 미래의 내가 디버깅하기 위함.
          * Input: 없음
          * Output: 구글 시트로 POST 요청 전송 (제목 포함)
          * 핵심 로직: 다운로드 실행 시, 제목과 텍스트를 하나로 묶어 서버로 전송. 제목이 비어있으면 '제목 없음'으로 처리함.
+         * 왜: 팀원 모두가 조회할 수 있도록 중앙 DB(구글 시트)에 데이터를 영구 보관하기 위함.
          */
         async function saveToHistory() {
             if(!SCRIPT_URL || SCRIPT_URL === "여기에_URL을_붙여넣으세요") return; 
@@ -210,8 +209,14 @@
                         li.onclick = () => {
                             document.getElementById('setlist-title').value = displayTitle !== "제목 없는 콘티" ? displayTitle : "";
                             document.getElementById('song-input').value = item.text;
+                            
+                            // [추가된 로직] 이전 조회 결과물 및 다운로드 버튼 초기화 
+                            document.getElementById('result-container').innerHTML = "";
+                            document.getElementById('download-bar').style.display = 'none';
+                            foundImages = [];
+
                             closeHistoryModal();
-                            alert("✅ 서버에서 콘티를 불러왔습니다.");
+                            alert("✅ 서버에서 콘티를 불러왔습니다. '악보 찾기'를 눌러주세요!");
                         };
                         container.appendChild(li);
                     });
@@ -355,10 +360,10 @@
             closeSongModal(); 
         }
 
-        // ---------------- 기존 악보 찾기 및 다운로드 로직 ---------------- //
+        // ---------------- 악보 찾기 및 다운로드 로직 ---------------- //
 
         function resetAll() {
-            document.getElementById('setlist-title').value = ""; // 제목 입력창 초기화
+            document.getElementById('setlist-title').value = ""; 
             document.getElementById('song-input').value = "";
             document.getElementById('result-container').innerHTML = "";
             document.getElementById('download-bar').style.display = 'none';
@@ -366,17 +371,29 @@
             document.getElementById('song-input').focus();
         }
 
+        /**
+         * 목적: 미래의 내가 디버깅하기 위함.
+         * Input: 버튼 클릭 이벤트
+         * Output: 악보 이미지 UI 생성 및 다운로드용 파일명 생성
+         * 핵심 로직: 텍스트의 불필요한 빈 줄을 제거하고 다시 화면에 반영한 후, 날짜를 계산하고 이미지를 검색함.
+         * 왜: 사용자가 복사/붙여넣기 과정에서 실수로 넣은 빈 줄 때문에 빈 카드가 생기거나 오류가 나는 것을 방지하고 깔끔한 UX를 제공하기 위함.
+         */
         function startSearch() {
-            const inputText = document.getElementById('song-input').value;
+            let rawText = document.getElementById('song-input').value;
+            
+            // [추가된 로직] 불필요한 빈 줄 완벽 제거 후 텍스트 상자 업데이트
+            let cleanLines = rawText.split('\n').filter(line => line.trim() !== "");
+            document.getElementById('song-input').value = cleanLines.join('\n');
+            
+            const lines = cleanLines;
+            if (lines.length === 0) return alert("곡 리스트를 입력해주세요!");
+
             const resultContainer = document.getElementById('result-container');
             const downloadBar = document.getElementById('download-bar');
             
             resultContainer.innerHTML = ""; 
             foundImages = []; 
             downloadBar.style.display = 'none'; 
-
-            const lines = inputText.split('\n').filter(line => line.trim() !== "");
-            if (lines.length === 0) return alert("곡 리스트를 입력해주세요!");
 
             const today = new Date();
             const yyyy = today.getFullYear();
@@ -449,7 +466,7 @@
                 if (!confirm(`${validImages.length}개의 악보를 ${orderText} 저장합니다.`)) return;
             }
 
-            // 구글 시트로 저장 실행!
+            // 구글 시트로 저장 실행
             saveToHistory();
 
             const targetImages = isReverse ? [...foundImages].reverse() : [...foundImages];
