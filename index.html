@@ -28,7 +28,6 @@
     <main>
         <div style="background: white; padding: 20px; border-radius: 12px;">
             <h3 style="margin-top:0;">곡 리스트를 입력하세요</h3>
-            
             <textarea id="song-input" placeholder="[아래 예시처럼 붙여넣어 주세요]&#13;&#10;&#13;&#10;276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분&#13;&#10;165 세상이&#13;&#10;136 나의 주님은&#13;&#10;367 지극히 높은 주님의"></textarea>
             
             <div class="btn-group">
@@ -62,8 +61,8 @@
 
         /**
          * Input: 버튼 클릭 이벤트
-         * Output: 악보 이미지 UI 생성
-         * Logic: 곡 리스트를 파싱하여 각 곡의 이미지를 찾도록 요청함
+         * Output: 악보 이미지 UI 생성 및 다운로드용 파일명 생성
+         * Logic: 오늘 날짜를 구하고, 곡 리스트를 파싱하여 각 곡의 이미지를 찾도록 요청함
          */
         function startSearch() {
             const inputText = document.getElementById('song-input').value;
@@ -76,6 +75,13 @@
 
             const lines = inputText.split('\n').filter(line => line.trim() !== "");
             if (lines.length === 0) return alert("곡 리스트를 입력해주세요!");
+
+            // yyyymmdd 포맷의 오늘 날짜 문자열 만들기
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const dateStr = `${yyyy}${mm}${dd}`;
 
             lines.forEach((line, index) => {
                 const match = line.match(/^(\d+)/); 
@@ -92,14 +98,14 @@
                     card.appendChild(imgTag);
                     resultContainer.appendChild(card);
 
-                    // 이미지 로드 시도
                     tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
                         const fileExt = finalSrc.substring(finalSrc.lastIndexOf('.'));
-                        const fileName = `${String(index + 1).padStart(2, '0')}번_${songNumber}${fileExt}`;
+                        
+                        // 왜: 주차별 콘티 파일들이 섞이지 않고 시간순/순서대로 예쁘게 정렬되도록 하기 위함.
+                        const fileName = `${dateStr}_${String(index + 1).padStart(2, '0')}_${songNumber}${fileExt}`;
                         
                         foundImages[index] = { url: finalSrc, name: fileName };
                         
-                        // 모든 처리가 끝났는지 확인하여 저장 버튼 띄우기
                         if (foundImages.filter(x => x).length + document.querySelectorAll('.error-msg').length === lines.length) {
                              if(foundImages.filter(x => x).length > 0) downloadBar.style.display = 'flex';
                         }
