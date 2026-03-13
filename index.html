@@ -56,7 +56,7 @@
         .btn-download-normal { flex: 2; padding: 15px 5px; background-color: #17a2b8; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
         .btn-download-reverse { flex: 2; padding: 15px 5px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
         
-        /* 위로 가기 버튼 스타일 추가 */
+        /* 위로 가기 버튼 스타일 */
         .btn-top { flex: 1; padding: 15px 5px; background-color: #34495e; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; white-space: nowrap; }
 
         .modal-overlay {
@@ -114,7 +114,7 @@
     <div class="bottom-bar" id="download-bar">
         <button class="btn-download-normal" onclick="downloadAll(false)">순서대로<br>저장 ⬇️</button>
         <button class="btn-download-reverse" onclick="downloadAll(true)">역순으로<br>저장 ⬆️</button>
-        <button class="btn-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">맨 위로<br>🚀</button>
+        <button class="btn-top" onclick="document.querySelector('main').scrollTo({top: 0, behavior: 'smooth'})">맨 위로<br>🚀</button>
     </div>
 
     <div class="modal-overlay" id="songModal">
