@@ -49,10 +49,15 @@
     </div>
 
     <script>
-        // 대소문자 모두 대응하도록 확장자 리스트 구성
-        const EXTENSIONS = ['.jpg', '.png', '.gif', '.jpeg', '.JPG', '.PNG', '.GIF', '.JPEG'];
+        // 수정된 확장자 리스트 (jfif 포함, 대소문자 대응)
+        const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
         let foundImages = []; 
 
+        /**
+         * Input: 버튼 클릭 이벤트
+         * Output: UI 초기화
+         * Logic: 화면의 모든 입력값 및 검색 결과를 비우고 초기 상태로 되돌림
+         */
         function resetAll() {
             document.getElementById('song-input').value = "";
             document.getElementById('result-container').innerHTML = "";
@@ -61,6 +66,11 @@
             document.getElementById('song-input').focus();
         }
 
+        /**
+         * Input: 버튼 클릭 이벤트
+         * Output: 악보 이미지 UI 생성
+         * Logic: 곡 리스트를 파싱하여 각 곡의 이미지를 찾도록 요청함
+         */
         function startSearch() {
             const inputText = document.getElementById('song-input').value;
             const resultContainer = document.getElementById('result-container');
@@ -88,13 +98,14 @@
                     card.appendChild(imgTag);
                     resultContainer.appendChild(card);
 
+                    // 이미지 로드 시도
                     tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
                         const fileExt = finalSrc.substring(finalSrc.lastIndexOf('.'));
                         const fileName = `${String(index + 1).padStart(2, '0')}번_${songNumber}${fileExt}`;
                         
                         foundImages[index] = { url: finalSrc, name: fileName };
                         
-                        // 모든 처리가 끝났는지 확인 (성공/실패 포함)
+                        // 모든 처리가 끝났는지 확인하여 저장 버튼 띄우기
                         if (foundImages.filter(x => x).length + document.querySelectorAll('.error-msg').length === lines.length) {
                              if(foundImages.filter(x => x).length > 0) downloadBar.style.display = 'flex';
                         }
@@ -103,6 +114,12 @@
             });
         }
 
+        /**
+         * Input: 이미지 엘리먼트, 곡 번호, 시도할 확장자 인덱스, 성공 콜백
+         * Output: 이미지 src 할당 또는 에러 메시지 출력
+         * Logic: EXTENSIONS 배열을 순회하며 이미지가 로드될 때까지 재귀 호출함
+         * 왜: 사용자가 업로드한 파일의 확장자를 미리 알 수 없으므로 가능한 경우의 수를 모두 시도하기 위함
+         */
         function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
             if (extIndex >= EXTENSIONS.length) {
                 imgElement.style.display = 'none';
@@ -126,7 +143,10 @@
         }
 
         /**
-         * 핵심 수정사항: 1초 간격 + 마지막 파일부터 저장
+         * Input: 버튼 클릭 이벤트
+         * Output: 파일 다운로드 트리거
+         * Logic: 찾은 이미지들을 역순으로 1초 간격으로 다운로드함
+         * 왜: 모바일 갤러리에서 최신순으로 정렬될 때 순서가 맞게 보이도록 보정하기 위함
          */
         function downloadAll() {
             const validImages = foundImages.filter(img => img !== undefined);
@@ -134,7 +154,6 @@
             
             if (!confirm(`${validImages.length}개의 악보를 역순으로 저장합니다. (순서 정리용)`)) return;
 
-            // 정렬된 리스트를 뒤집어서 처리 (마지막 곡부터 다운로드)
             const reversedImages = [...foundImages].reverse();
             
             let delayCount = 0;
@@ -148,7 +167,7 @@
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                }, delayCount * 1000); // 1초씩 텀을 둠
+                }, delayCount * 1000); 
                 
                 delayCount++;
             });
