@@ -46,11 +46,6 @@
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
         let foundImages = []; 
 
-        /**
-         * Input: 버튼 클릭 이벤트
-         * Output: UI 초기화
-         * Logic: 화면의 모든 입력값 및 검색 결과를 비우고 초기 상태로 되돌림
-         */
         function resetAll() {
             document.getElementById('song-input').value = "";
             document.getElementById('result-container').innerHTML = "";
@@ -59,11 +54,6 @@
             document.getElementById('song-input').focus();
         }
 
-        /**
-         * Input: 버튼 클릭 이벤트
-         * Output: 악보 이미지 UI 생성 및 다운로드용 파일명 생성
-         * Logic: 오늘 날짜를 구하고, 곡 리스트를 파싱하여 각 곡의 이미지를 찾도록 요청함
-         */
         function startSearch() {
             const inputText = document.getElementById('song-input').value;
             const resultContainer = document.getElementById('result-container');
@@ -76,7 +66,6 @@
             const lines = inputText.split('\n').filter(line => line.trim() !== "");
             if (lines.length === 0) return alert("곡 리스트를 입력해주세요!");
 
-            // yyyymmdd 포맷의 오늘 날짜 문자열 만들기
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -101,7 +90,7 @@
                     tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
                         const fileExt = finalSrc.substring(finalSrc.lastIndexOf('.'));
                         
-                        // 왜: 주차별 콘티 파일들이 섞이지 않고 시간순/순서대로 예쁘게 정렬되도록 하기 위함.
+                        // 파일명 규칙 적용: yyyymmdd_순번_곡번호.확장자
                         const fileName = `${dateStr}_${String(index + 1).padStart(2, '0')}_${songNumber}${fileExt}`;
                         
                         foundImages[index] = { url: finalSrc, name: fileName };
@@ -114,12 +103,6 @@
             });
         }
 
-        /**
-         * Input: 이미지 엘리먼트, 곡 번호, 시도할 확장자 인덱스, 성공 콜백
-         * Output: 이미지 src 할당 또는 에러 메시지 출력
-         * Logic: EXTENSIONS 배열을 순회하며 이미지가 로드될 때까지 재귀 호출함
-         * 왜: 사용자가 업로드한 파일의 확장자를 미리 알 수 없으므로 가능한 경우의 수를 모두 시도하기 위함
-         */
         function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
             if (extIndex >= EXTENSIONS.length) {
                 imgElement.style.display = 'none';
@@ -144,15 +127,17 @@
 
         /**
          * Input: 버튼 클릭 이벤트
-         * Output: 파일 다운로드 트리거
-         * Logic: 찾은 이미지들을 역순으로 1초 간격으로 다운로드함
-         * 왜: 모바일 갤러리에서 최신순으로 정렬될 때 순서가 맞게 보이도록 보정하기 위함
+         * Output: Blob 객체 생성 및 다운로드 트리거
+         * Logic: fetch api를 통해 이미지 데이터를 직접 받아온 후, 
+         * 강제로 지정된 파일명(imgInfo.name)으로 다운로드 되도록 처리함
+         * 왜: 모바일 브라우저가 a 태그의 download 속성을 무시하고 
+         * 원본 서버 파일명으로 강제 저장하는 현상을 우회하기 위함.
          */
         function downloadAll() {
             const validImages = foundImages.filter(img => img !== undefined);
             if (validImages.length === 0) return alert("저장할 악보가 없습니다.");
             
-            if (!confirm(`${validImages.length}개의 악보를 역순으로 저장합니다. (순서 정리용)`)) return;
+            if (!confirm(`${validImages.length}개의 악보를 지정된 파일명으로 저장합니다.`)) return;
 
             const reversedImages = [...foundImages].reverse();
             
@@ -161,12 +146,20 @@
                 if(!imgInfo) return; 
                 
                 setTimeout(() => {
-                    const link = document.createElement('a');
-                    link.href = imgInfo.url;
-                    link.download = imgInfo.name; 
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                    // 이미지를 데이터(Blob)로 강제 변환해서 다운로드
+                    fetch(imgInfo.url)
+                        .then(response => response.blob())
+                        .then(blob => {
+                            const blobUrl = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = blobUrl;
+                            link.download = imgInfo.name; // 우리가 정한 이름 강제 주입
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(blobUrl); // 메모리 해제
+                        })
+                        .catch(err => console.error("다운로드 에러:", err));
                 }, delayCount * 1000); 
                 
                 delayCount++;
