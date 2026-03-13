@@ -56,7 +56,6 @@
         .btn-download-normal { flex: 2; padding: 15px 5px; background-color: #17a2b8; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
         .btn-download-reverse { flex: 2; padding: 15px 5px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
         
-        /* 위로 가기 버튼 스타일 */
         .btn-top { flex: 1; padding: 15px 5px; background-color: #34495e; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; white-space: nowrap; }
 
         .modal-overlay {
@@ -143,7 +142,8 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzygADMEEPXrcF7wOIlTgDmClVTnnerxOjoKQnyArWA3EcKLdwvNkjiI-2SKaZggN8G/exec"; 
+        // 사용자님의 파이어베이스 주소에 /history.json을 붙여서 완벽하게 세팅했습니다!
+        const FIREBASE_URL = "https://score-fetcher-db-default-rtdb.firebaseio.com/history.json"; 
         
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
         let foundImages = []; 
@@ -151,10 +151,17 @@
         let wakeLock = null;
         let isWakeLockEnabled = true; 
 
-        // ---------------- 구글 시트 기반 이력 관리 로직 ---------------- //
+        // ---------------- 초고속 파이어베이스 이력 관리 로직 ⚡ ---------------- //
 
+        /**
+         * 목적: 미래의 내가 디버깅하기 위함.
+         * Input: 없음
+         * Output: 파이어베이스 RTDB로 POST 요청 전송 (JSON 형식)
+         * 핵심 로직: 다운로드 실행 시, 제목/텍스트/정렬용 타임스탬프를 묶어 파이어베이스 REST API에 전송함.
+         * 왜: 구글 시트의 느린 속도를 개선하고, 밀리초 단위의 빠른 실시간 DB 통신을 구현하기 위함.
+         */
         async function saveToHistory() {
-            if(!SCRIPT_URL || SCRIPT_URL === "여기에_URL을_붙여넣으세요") return; 
+            if(!FIREBASE_URL) return; 
 
             const titleText = document.getElementById('setlist-title').value.trim() || "제목 없는 콘티";
             const inputText = document.getElementById('song-input').value.trim();
@@ -163,36 +170,51 @@
             const now = new Date();
             const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
+            const payload = {
+                date: dateStr,
+                title: titleText,
+                text: inputText,
+                timestamp: Date.now()
+            };
+
             try {
-                await fetch(SCRIPT_URL, {
+                await fetch(FIREBASE_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-                    body: JSON.stringify({ date: dateStr, title: titleText, text: inputText })
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(payload)
                 });
             } catch (error) {
                 console.error("이력 저장 실패:", error);
             }
         }
 
+        /**
+         * 목적: 미래의 내가 디버깅하기 위함.
+         * Input: 버튼 클릭 이벤트
+         * Output: 파이어베이스에서 GET 요청으로 데이터를 가져와 최신순 정렬 후 렌더링
+         * 핵심 로직: 파이어베이스가 내려준 고유 ID 기반의 객체를 배열로 변환하고, 타임스탬프 역순으로 정렬하여 최대 20개만 화면에 표시함.
+         * 왜: 언제든지 이전 주차의 콘티를 초고속으로 불러와 바로 적용하기 위함.
+         */
         async function openHistoryModal() {
-            if(!SCRIPT_URL || SCRIPT_URL === "여기에_URL을_붙여넣으세요") {
-                alert("아직 구글 웹앱 URL이 설정되지 않았습니다. 소스 코드를 확인해주세요!");
-                return;
-            }
+            if(!FIREBASE_URL) return;
 
             const container = document.getElementById('historyListContainer');
-            container.innerHTML = "<li class='song-item' style='text-align:center;'>서버에서 이력을 불러오는 중입니다... ⏳</li>";
+            container.innerHTML = "<li class='song-item' style='text-align:center;'>초고속 서버에서 이력을 불러오는 중입니다... ⚡</li>";
             document.getElementById('historyModal').style.display = 'flex';
 
             try {
-                const response = await fetch(SCRIPT_URL);
-                const history = await response.json();
+                const response = await fetch(FIREBASE_URL);
+                const data = await response.json();
 
                 container.innerHTML = ""; 
-                if (history.length === 0) {
+                if (!data) {
                     container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>서버에 저장된 콘티 이력이 없습니다.</li>";
                 } else {
-                    history.forEach((item) => {
+                    let historyArray = Object.values(data);
+                    historyArray.sort((a, b) => b.timestamp - a.timestamp);
+                    let topHistory = historyArray.slice(0, 20);
+
+                    topHistory.forEach((item) => {
                         const li = document.createElement('li');
                         li.className = 'song-item history-item';
                         
@@ -453,6 +475,7 @@
                 if (!confirm(`${validImages.length}개의 악보를 ${orderText} 저장합니다.`)) return;
             }
 
+            // 파이어베이스로 실시간 초고속 저장! ⚡
             saveToHistory();
 
             const targetImages = isReverse ? [...foundImages].reverse() : [...foundImages];
