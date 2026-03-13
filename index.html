@@ -72,10 +72,11 @@
         let foundImages = []; 
 
         /**
+         * 목적: 미래의 내가 디버깅하기 위함.
          * Input: 없음
          * Output: UI 초기화
          * 핵심 로직: 화면의 모든 입력값 및 검색 결과를 비우고 초기 상태로 되돌림.
-         * 왜: 사용자가 새로운 콘티 리스트를 작성할 때 잔여 데이터가 섞이는 것을 방지하여 깔끔한 상태를 제공하기 위함.
+         * 왜: 새로운 콘티를 검색할 때 이전 검색 결과나 다운로드 큐가 꼬이지 않고 깨끗한 상태에서 시작하도록 보장하기 위함.
          */
         function resetAll() {
             document.getElementById('song-input').value = "";
@@ -86,10 +87,11 @@
         }
 
         /**
+         * 목적: 미래의 내가 디버깅하기 위함.
          * Input: 없음
          * Output: 악보 이미지 UI 생성 및 다운로드용 파일명 생성
-         * 핵심 로직: 오늘 날짜를 구하고, 곡 리스트를 파싱하여 각 곡의 이미지를 찾도록 요청함.
-         * 왜: 사용자가 입력한 텍스트에서 곡 번호만 스마트하게 추출하고, 파일명에 오늘 날짜를 부여해 추후 관리가 용이하게 하기 위함.
+         * 핵심 로직: 오늘 날짜 및 오전/오후(AM/PM)를 계산하고, 곡 리스트를 파싱하여 이미지 로드를 요청함.
+         * 왜: 오전/오후 예배 콘티가 다를 경우 파일명이 겹치지 않고 시간대별로 완벽하게 분리되어 저장되도록 `yyyymmddAM_순번_곡번호` 형식을 부여하기 위함.
          */
         function startSearch() {
             const inputText = document.getElementById('song-input').value;
@@ -103,11 +105,15 @@
             const lines = inputText.split('\n').filter(line => line.trim() !== "");
             if (lines.length === 0) return alert("곡 리스트를 입력해주세요!");
 
+            // 날짜 및 AM/PM 계산 로직 추가
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
-            const dateStr = `${yyyy}${mm}${dd}`;
+            const hours = today.getHours();
+            const ampm = hours >= 12 ? 'PM' : 'AM'; // 12시 이상이면 PM, 아니면 AM
+            
+            const dateStr = `${yyyy}${mm}${dd}${ampm}`; // 예: 20260313PM
 
             lines.forEach((line, index) => {
                 const match = line.match(/^(\d+)/); 
@@ -140,10 +146,11 @@
         }
 
         /**
+         * 목적: 미래의 내가 디버깅하기 위함.
          * Input: 이미지 엘리먼트, 곡 번호, 시도할 확장자 인덱스, 성공 콜백
          * Output: 이미지 src 할당 또는 에러 메시지 출력
-         * 핵심 로직: EXTENSIONS 배열을 순회하며 이미지가 로드될 때까지 재귀 호출함.
-         * 왜: 사용자가 업로드한 파일의 확장자를 미리 예측할 수 없으므로, 가능한 모든 경우의 수를 확인해 엑박을 방지하기 위함.
+         * 핵심 로직: 재귀 함수를 사용해 EXTENSIONS 배열을 순회하며 존재하는 이미지를 찾음.
+         * 왜: 원본 이미지의 확장자가 다양하게 섞여 있어(jpg, png, jfif 등), 하드코딩된 단일 확장자로는 엑박이 뜨는 문제를 해결하기 위함.
          */
         function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
             if (extIndex >= EXTENSIONS.length) {
@@ -168,24 +175,22 @@
         }
 
         /**
-         * Input: isReverse (boolean) - 역순 저장 여부
-         * Output: 선택한 순서에 따른 파일 다운로드 트리거
-         * 핵심 로직: 기기 환경(모바일/PC)을 감지하고, 모바일에서 정순 저장 시 경고창을 띄워 사용자 의도를 재확인함.
-         * 왜: 모바일 갤러리는 다운로드 최신순으로 정렬되므로, 정순 다운로드 시 1번 곡이 맨 뒤로 밀리는 UX 문제를 사전에 방지하기 위함.
+         * 목적: 미래의 내가 디버깅하기 위함.
+         * Input: isReverse (boolean) - 역순 저장 여부 플래그
+         * Output: 순차적 파일 다운로드 실행
+         * 핵심 로직: 환경(모바일/PC)에 따른 경고창을 띄우고, Blob과 fetch API를 통해 강제 파일명 지정 및 시간차 다운로드를 실행함.
+         * 왜: 모바일 브라우저의 무분별한 다중 다운로드 차단을 우회하고(시간차), 원본 서버 파일명을 무시하려는 브라우저의 동작을 막아 우리가 정한 파일명 규칙을 강제하기 위함(Blob).
          */
         function downloadAll(isReverse) {
             const validImages = foundImages.filter(img => img !== undefined);
             if (validImages.length === 0) return alert("저장할 악보가 없습니다.");
             
-            // 모바일 기기인지 간단하게 체크하는 정규식
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-            // 모바일 환경이면서 순서대로(정순) 버튼을 누른 경우 팝업 띄우기
             if (isMobile && !isReverse) {
                 const proceed = confirm("모바일 환경에서는 역순으로 저장할 때 첫번째 곡이 최 상단에 표시됩니다.\n그래도 진행하시겠습니까?");
-                if (!proceed) return; // 취소 누르면 중단
+                if (!proceed) return; 
             } else {
-                // 그 외의 경우 (PC이거나 역순 저장일 때)
                 const orderText = isReverse ? "역순으로" : "정순(입력순)으로";
                 if (!confirm(`${validImages.length}개의 악보를 ${orderText} 저장합니다.`)) return;
             }
