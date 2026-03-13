@@ -4,22 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>찬양 악보 매니저 🎵</title>
+    
     <link rel="icon" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png"> <meta name="theme-color" content="#0070f3"> <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png"> 
+    <meta name="theme-color" content="#0070f3"> 
+    <link rel="manifest" href="manifest.json"> 
+
     <style>
-        body { margin: 0; padding: 0; font-family: -apple-system, sans-serif; background-color: #f5f5f5; display: flex; flex-direction: column; height: 100vh; }
+        /* PC 환경을 위해 바깥 배경(html)과 안쪽 배경(body)을 분리합니다 */
+        html {
+            background-color: #e2e8f0; /* PC에서 보이는 바깥쪽 배경색 */
+            display: flex;
+            justify-content: center; /* 화면을 가운데 정렬 */
+        }
+
+        body { 
+            width: 100%; 
+            max-width: 600px; /* 아무리 화면이 커져도 최대 600px까지만 늘어남 */
+            margin: 0; padding: 0; 
+            font-family: -apple-system, sans-serif; 
+            background-color: #f5f5f5; /* 실제 앱 안쪽 배경색 */
+            display: flex; flex-direction: column; height: 100vh; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.1); /* PC에서 스마트폰처럼 보이게 그림자 효과 */
+        }
+
         header { background-color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #ddd; }
         main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
         textarea { width: 100%; height: 150px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 16px; box-sizing: border-box; resize: none; }
+        
         .btn-group { display: flex; gap: 10px; margin-top: 10px; }
         .btn-search { flex: 2; padding: 15px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
         .btn-reset { flex: 1; padding: 15px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        
         .result-area { margin-top: 30px; }
         .sheet-music-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
         .sheet-music-card img { width: 100%; height: auto; border-radius: 4px; min-height: 100px; background: #f0f0f0; }
         .sheet-title { margin-bottom: 10px; font-weight: bold; color: #333; text-align: left; }
         .error-msg { color: #ff4d4f; font-size: 14px; margin-top: 10px; font-weight: bold; }
-        .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; border-top: 1px solid #eee; display: none; justify-content: center; z-index: 20; }
+        
+        /* 하단 고정 바 수정: 화면 가운데(max-width 영역)에만 딱 맞게 뜨도록 변경 */
+        .bottom-bar { 
+            position: fixed; bottom: 0; 
+            left: 50%; transform: translateX(-50%); /* 정확히 화면 중앙에 위치시킴 */
+            width: 100%; max-width: 600px; box-sizing: border-box;
+            background: white; padding: 15px; border-top: 1px solid #eee; 
+            display: none; justify-content: center; z-index: 20; 
+        }
         .btn-download-all { width: 100%; padding: 16px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
@@ -48,6 +78,11 @@
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
         let foundImages = []; 
 
+        /**
+         * Input: 버튼 클릭 이벤트
+         * Output: UI 초기화
+         * Logic: 화면의 모든 입력값 및 검색 결과를 비우고 초기 상태로 되돌림
+         */
         function resetAll() {
             document.getElementById('song-input').value = "";
             document.getElementById('result-container').innerHTML = "";
@@ -56,6 +91,11 @@
             document.getElementById('song-input').focus();
         }
 
+        /**
+         * Input: 버튼 클릭 이벤트
+         * Output: 악보 이미지 UI 생성 및 다운로드용 파일명 생성
+         * Logic: 오늘 날짜를 구하고, 곡 리스트를 파싱하여 각 곡의 이미지를 찾도록 요청함
+         */
         function startSearch() {
             const inputText = document.getElementById('song-input').value;
             const resultContainer = document.getElementById('result-container');
@@ -92,7 +132,7 @@
                     tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
                         const fileExt = finalSrc.substring(finalSrc.lastIndexOf('.'));
                         
-                        // 파일명 규칙 적용: yyyymmdd_순번_곡번호.확장자
+                        // 왜: 주차별 콘티 파일들이 섞이지 않고 시간순/순서대로 예쁘게 정렬되도록 하기 위함.
                         const fileName = `${dateStr}_${String(index + 1).padStart(2, '0')}_${songNumber}${fileExt}`;
                         
                         foundImages[index] = { url: finalSrc, name: fileName };
@@ -105,6 +145,12 @@
             });
         }
 
+        /**
+         * Input: 이미지 엘리먼트, 곡 번호, 시도할 확장자 인덱스, 성공 콜백
+         * Output: 이미지 src 할당 또는 에러 메시지 출력
+         * Logic: EXTENSIONS 배열을 순회하며 이미지가 로드될 때까지 재귀 호출함
+         * 왜: 사용자가 업로드한 파일의 확장자를 미리 알 수 없으므로 가능한 경우의 수를 모두 시도하기 위함
+         */
         function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
             if (extIndex >= EXTENSIONS.length) {
                 imgElement.style.display = 'none';
@@ -148,18 +194,17 @@
                 if(!imgInfo) return; 
                 
                 setTimeout(() => {
-                    // 이미지를 데이터(Blob)로 강제 변환해서 다운로드
                     fetch(imgInfo.url)
                         .then(response => response.blob())
                         .then(blob => {
                             const blobUrl = window.URL.createObjectURL(blob);
                             const link = document.createElement('a');
                             link.href = blobUrl;
-                            link.download = imgInfo.name; // 우리가 정한 이름 강제 주입
+                            link.download = imgInfo.name; 
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
-                            window.URL.revokeObjectURL(blobUrl); // 메모리 해제
+                            window.URL.revokeObjectURL(blobUrl); 
                         })
                         .catch(err => console.error("다운로드 에러:", err));
                 }, delayCount * 1000); 
@@ -170,4 +215,3 @@
     </script>
 </body>
 </html>
-
