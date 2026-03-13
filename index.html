@@ -1,93 +1,361 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>찬양 악보 매니저 🎵</title>
-    
+
     <script src="config.js"></script>
 
     <link rel="icon" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png"> 
-    <meta name="theme-color" content="#0070f3"> 
-    <link rel="manifest" href="manifest.json"> 
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="theme-color" content="#0070f3">
+    <link rel="manifest" href="manifest.json">
 
     <style>
-        html { background-color: #e2e8f0; display: flex; justify-content: center; }
-        body { 
-            width: 100%; max-width: 600px; margin: 0; padding: 0; 
-            font-family: -apple-system, sans-serif; background-color: #f5f5f5; 
-            display: flex; flex-direction: column; height: 100vh; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.1); position: relative;
+        html {
+            background-color: #e2e8f0;
+            display: flex;
+            justify-content: center;
         }
 
-        header { background-color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #ddd; }
-        main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
-        
-        .title-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; margin-bottom: 10px; font-weight: bold; color: #333; }
-        
-        textarea { width: 100%; height: 130px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 16px; box-sizing: border-box; resize: none; }
-        
-        .top-btn-group { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
-        .top-btn { flex: 1; min-width: 30%; padding: 12px 8px; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; }
-        
-        .btn-show-list { background-color: #6c757d; }
-        .btn-history { background-color: #8e44ad; }
-        
-        .btn-wakelock { background-color: #444; transition: background-color 0.3s; }
-        .btn-wakelock.active { background-color: #f5a623; color: white; }
-
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-search { flex: 2; padding: 15px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .btn-reset { flex: 1; padding: 15px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        
-        .result-area { margin-top: 30px; }
-        .sheet-music-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
-        .sheet-music-card img { width: 100%; height: auto; border-radius: 4px; min-height: 100px; background: #f0f0f0; }
-        .sheet-title { margin-bottom: 10px; font-weight: bold; color: #333; text-align: left; }
-        .error-msg { color: #ff4d4f; font-size: 14px; margin-top: 10px; font-weight: bold; }
-        
-        .bottom-bar { 
-            position: fixed; bottom: 0; 
-            left: 50%; transform: translateX(-50%); 
-            width: 100%; max-width: 600px; box-sizing: border-box;
-            background: white; padding: 15px; border-top: 1px solid #eee; 
-            display: none; justify-content: center; gap: 8px; z-index: 20; 
+        body {
+            width: 100%;
+            max-width: 600px;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
-        
-        .btn-download-normal { flex: 2; padding: 15px 5px; background-color: #17a2b8; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
-        .btn-download-reverse { flex: 2; padding: 15px 5px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
-        
-        .btn-top { flex: 1; padding: 15px 5px; background-color: #34495e; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+
+        header {
+            background-color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid #ddd;
+        }
+
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .title-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            height: 130px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+            resize: none;
+        }
+
+        .top-btn-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .top-btn {
+            flex: 1;
+            min-width: 30%;
+            padding: 12px 8px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-show-list {
+            background-color: #6c757d;
+        }
+
+        .btn-history {
+            background-color: #8e44ad;
+        }
+
+        .btn-wakelock {
+            background-color: #444;
+            transition: background-color 0.3s;
+        }
+
+        .btn-wakelock.active {
+            background-color: #f5a623;
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-search {
+            flex: 2;
+            padding: 15px;
+            background-color: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-reset {
+            flex: 1;
+            padding: 15px;
+            background-color: #e0e0e0;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .result-area {
+            margin-top: 30px;
+        }
+
+        .sheet-music-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .sheet-music-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            min-height: 100px;
+            background: #f0f0f0;
+        }
+
+        .sheet-title {
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+            text-align: left;
+        }
+
+        .error-msg {
+            color: #ff4d4f;
+            font-size: 14px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            background: white;
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: none;
+            justify-content: center;
+            gap: 8px;
+            z-index: 20;
+        }
+
+        .btn-download-normal {
+            flex: 2;
+            padding: 15px 5px;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-download-reverse {
+            flex: 2;
+            padding: 15px 5px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-top {
+            flex: 1;
+            padding: 15px 5px;
+            background-color: #34495e;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
 
         .modal-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 100; display: none;
-            justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
+
         .modal-content {
-            background: white; width: 100%; max-height: 90%; border-radius: 12px;
-            display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            background: white;
+            width: 100%;
+            max-height: 90%;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
+
         .modal-header {
-            padding: 15px; background: #0070f3; color: white; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px;
+            background: #0070f3;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .modal-header.history { background: #8e44ad; } 
-        .modal-header h3 { margin: 0; font-size: 18px; }
-        .btn-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
-        .modal-search { padding: 10px; border-bottom: 1px solid #ddd; background: #f9f9f9; }
-        .modal-search input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
-        .modal-body { flex: 1; overflow-y: auto; padding: 0; margin: 0; list-style: none; }
-        .song-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 15px; color: #333; transition: background 0.2s; }
-        .song-item:hover { background-color: #f0f8ff; }
-        .song-item strong { color: #0070f3; margin-right: 8px; }
-        
-        .history-item { flex-direction: column; align-items: flex-start; }
-        .history-title-badge { font-size: 15px; font-weight: bold; color: #8e44ad; margin-bottom: 5px; display: block; } 
-        .history-date { font-size: 12px; color: #888; margin-bottom: 8px; }
-        .history-text { font-size: 14px; white-space: pre-wrap; line-height: 1.4; padding-left: 5px; border-left: 3px solid #eee; color: #555; }
+
+        .modal-header.history {
+            background: #8e44ad;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-search {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            background: #f9f9f9;
+        }
+
+        .modal-search input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .song-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            font-size: 15px;
+            color: #333;
+            transition: background 0.2s;
+        }
+
+        .song-item:hover {
+            background-color: #f0f8ff;
+        }
+
+        .song-item strong {
+            color: #0070f3;
+            margin-right: 8px;
+        }
+
+        .history-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .history-title-badge {
+            font-size: 15px;
+            font-weight: bold;
+            color: #8e44ad;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .history-date {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .history-text {
+            font-size: 14px;
+            white-space: pre-wrap;
+            line-height: 1.4;
+            padding-left: 5px;
+            border-left: 3px solid #eee;
+            color: #555;
+        }
     </style>
 </head>
+
 <body>
 
     <header>이번 주 찬양 콘티 🎶</header>
@@ -97,13 +365,15 @@
             <div class="top-btn-group">
                 <button class="top-btn btn-show-list" onclick="openSongModal()">📖 전체 곡</button>
                 <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 지난 콘티</button>
-                <button id="btn-wakelock" class="top-btn btn-wakelock active" onclick="toggleWakeLock(true)">💡 화면: ON</button>
+                <button id="btn-wakelock" class="top-btn btn-wakelock active" onclick="toggleWakeLock(true)">💡 화면:
+                    ON</button>
             </div>
-            
+
             <input type="text" id="setlist-title" class="title-input" placeholder="콘티 제목 (예: 2026-03-15 수요예배)">
-            
-            <textarea id="song-input" placeholder="[아래 예시처럼 붙여넣어 주세요]&#13;&#10;&#13;&#10;276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분"></textarea>
-            
+
+            <textarea id="song-input"
+                placeholder="[아래 예시처럼 붙여넣어 주세요]&#13;&#10;&#13;&#10;276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분"></textarea>
+
             <div class="btn-group">
                 <button class="btn-reset" onclick="resetAll()">초기화 🔄</button>
                 <button class="btn-search" onclick="startSearch()">악보 찾기 🔍</button>
@@ -115,7 +385,8 @@
     <div class="bottom-bar" id="download-bar">
         <button class="btn-download-normal" onclick="downloadAll(false)">순서대로<br>저장 ⬇️</button>
         <button class="btn-download-reverse" onclick="downloadAll(true)">역순으로<br>저장 ⬆️</button>
-        <button class="btn-top" onclick="document.querySelector('main').scrollTo({top: 0, behavior: 'smooth'})">맨 위로<br>🚀</button>
+        <button class="btn-top" onclick="document.querySelector('main').scrollTo({top: 0, behavior: 'smooth'})">맨
+            위로<br>🚀</button>
     </div>
 
     <div class="modal-overlay" id="songModal">
@@ -153,15 +424,15 @@
         }
 
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
-        let foundImages = []; 
-        let songArray = []; 
+        let foundImages = [];
+        let songArray = [];
         let wakeLock = null;
-        let isWakeLockEnabled = true; 
+        let isWakeLockEnabled = true;
 
         // ---------------- 이력 관리 로직 ---------------- //
 
         async function saveToHistory() {
-            if(!window.FIREBASE_URL) return; 
+            if (!window.FIREBASE_URL) return;
 
             const titleText = document.getElementById('setlist-title').value.trim() || "제목 없는 콘티";
             const inputText = document.getElementById('song-input').value.trim();
@@ -180,7 +451,7 @@
             try {
                 await fetch(FIREBASE_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }, 
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
             } catch (error) {
@@ -189,7 +460,7 @@
         }
 
         async function openHistoryModal() {
-            if(!window.FIREBASE_URL) {
+            if (!window.FIREBASE_URL) {
                 alert("FIREBASE_URL이 설정되지 않았습니다.");
                 return;
             }
@@ -202,7 +473,7 @@
                 const response = await fetch(FIREBASE_URL);
                 const data = await response.json();
 
-                container.innerHTML = ""; 
+                container.innerHTML = "";
                 if (!data) {
                     container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>서버에 저장된 콘티 이력이 없습니다.</li>";
                 } else {
@@ -307,7 +578,7 @@
 
         function renderSongList(list) {
             const container = document.getElementById('songListContainer');
-            container.innerHTML = ""; 
+            container.innerHTML = "";
             if (list.length === 0) {
                 container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>검색 결과 없음</li>";
                 return;
@@ -316,7 +587,7 @@
                 const li = document.createElement('li');
                 li.className = 'song-item';
                 const match = song.match(/^(\d+)/);
-                if(match) {
+                if (match) {
                     const num = match[1];
                     const title = song.substring(num.length).trim();
                     li.innerHTML = `<strong>${num}</strong> ${title}`;
@@ -330,15 +601,15 @@
             const textarea = document.getElementById('song-input');
             let currentText = textarea.value;
             if (currentText.includes("아래 예시처럼 붙여넣어 주세요")) currentText = "";
-            else if (currentText.trim() !== "") currentText += "\n"; 
+            else if (currentText.trim() !== "") currentText += "\n";
             textarea.value = currentText + songLine;
-            closeSongModal(); 
+            closeSongModal();
         }
 
         // ---------------- 악보 찾기 및 다운로드 ---------------- //
 
         function resetAll() {
-            document.getElementById('setlist-title').value = ""; 
+            document.getElementById('setlist-title').value = "";
             document.getElementById('song-input').value = "";
             document.getElementById('result-container').innerHTML = "";
             document.getElementById('download-bar').style.display = 'none';
@@ -347,7 +618,7 @@
 
         function startSearch() {
             let rawText = document.getElementById('song-input').value;
-            
+
             // [정규식 로직] 점 제거 및 3자리 포맷팅
             let cleanLines = rawText.split('\n').map(line => {
                 let trimmed = line.trim();
@@ -360,30 +631,30 @@
                 }
                 return trimmed;
             }).filter(line => line !== "");
-            
+
             document.getElementById('song-input').value = cleanLines.join('\n');
             if (cleanLines.length === 0) return alert("곡 리스트를 입력해주세요!");
 
             const resultContainer = document.getElementById('result-container');
             const downloadBar = document.getElementById('download-bar');
-            resultContainer.innerHTML = ""; 
-            foundImages = []; 
-            downloadBar.style.display = 'none'; 
+            resultContainer.innerHTML = "";
+            foundImages = [];
+            downloadBar.style.display = 'none';
 
             const today = new Date();
-            const ampm = today.getHours() >= 12 ? 'PM' : 'AM'; 
-            const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}${ampm}`; 
+            const ampm = today.getHours() >= 12 ? 'PM' : 'AM';
+            const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}${ampm}`;
 
             cleanLines.forEach((line, index) => {
-                const match = line.match(/^(\d+)/); 
+                const match = line.match(/^(\d+)/);
                 if (match) {
                     const songNumber = match[1]; // 이미 위에서 3자리로 만든 값 사용
                     const songTitle = line.substring(songNumber.length).trim();
-                    
+
                     const card = document.createElement('div');
                     card.className = 'sheet-music-card';
                     card.innerHTML = `<div class="sheet-title">${index + 1}. No.${songNumber} ${songTitle}</div>`;
-                    
+
                     const imgTag = document.createElement('img');
                     imgTag.alt = `${songNumber} 악보 찾는 중...`;
                     card.appendChild(imgTag);
@@ -394,7 +665,7 @@
                         const fileName = `${dateStr}_${String(index + 1).padStart(2, '0')}_${songNumber}${fileExt}`;
                         foundImages[index] = { url: finalSrc, name: fileName };
                         if (foundImages.filter(x => x).length + document.querySelectorAll('.error-msg').length === cleanLines.length) {
-                             if(foundImages.filter(x => x).length > 0) downloadBar.style.display = 'flex';
+                            if (foundImages.filter(x => x).length > 0) downloadBar.style.display = 'flex';
                         }
                     });
                 }
@@ -412,16 +683,16 @@
             const tempImg = new Image();
             tempImg.onload = () => { imgElement.src = trySrc; onSuccess(trySrc); };
             tempImg.onerror = () => { tryLoadImage(imgElement, songNum, extIndex + 1, onSuccess); };
-            tempImg.src = trySrc; 
+            tempImg.src = trySrc;
         }
 
         function downloadAll(isReverse) {
             const validImages = foundImages.filter(img => img !== undefined);
             if (validImages.length === 0) return alert("저장할 악보가 없습니다.");
-            
+
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             if (isMobile && !isReverse) {
-                if (!confirm("모바일은 역순 저장을 권장합니다. 진행할까요?")) return; 
+                if (!confirm("모바일은 역순 저장을 권장합니다. 진행할까요?")) return;
             }
 
             saveToHistory();
@@ -429,20 +700,21 @@
             const targetImages = isReverse ? [...foundImages].reverse() : [...foundImages];
             let delayCount = 0;
             targetImages.forEach((imgInfo) => {
-                if(!imgInfo) return; 
+                if (!imgInfo) return;
                 setTimeout(() => {
                     fetch(imgInfo.url).then(r => r.blob()).then(blob => {
                         const blobUrl = window.URL.createObjectURL(blob);
                         const link = document.createElement('a');
-                        link.href = blobUrl; link.download = imgInfo.name; 
+                        link.href = blobUrl; link.download = imgInfo.name;
                         document.body.appendChild(link); link.click();
                         document.body.removeChild(link);
-                        window.URL.revokeObjectURL(blobUrl); 
+                        window.URL.revokeObjectURL(blobUrl);
                     }).catch(err => console.error(err));
-                }, delayCount * 1000); 
+                }, delayCount * 1000);
                 delayCount++;
             });
         }
     </script>
 </body>
+
 </html>
