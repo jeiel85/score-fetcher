@@ -28,13 +28,8 @@
     <main>
         <div style="background: white; padding: 20px; border-radius: 12px;">
             <h3 style="margin-top:0;">곡 리스트를 입력하세요</h3>
-            <textarea id="song-input" placeholder="예: 276 햇살보다 밝게">
-276 햇살보다 밝게 빛나는 주의
-123 당신은 지금 어디로 
-168 하나님은 너를 만드신 분
-165 세상이
-136 나의 주님은
-367 지극히 높은 주님의</textarea>
+            
+            <textarea id="song-input" placeholder="[아래 예시처럼 붙여넣어 주세요]&#13;&#10;&#13;&#10;276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분&#13;&#10;165 세상이&#13;&#10;136 나의 주님은&#13;&#10;367 지극히 높은 주님의"></textarea>
             
             <div class="btn-group">
                 <button class="btn-reset" onclick="resetAll()">초기화 🔄</button>
@@ -49,7 +44,6 @@
     </div>
 
     <script>
-        // 수정된 확장자 리스트 (jfif 포함, 대소문자 대응)
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
         let foundImages = []; 
 
