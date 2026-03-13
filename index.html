@@ -24,7 +24,11 @@
         textarea { width: 100%; height: 130px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 16px; box-sizing: border-box; resize: none; }
         
         .top-btn-group { display: flex; gap: 10px; margin-bottom: 10px; }
-        .btn-show-list { flex: 1; padding: 12px; background-color: #6c757d; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .btn-show-list { flex: 1; padding: 12px; background-color: #6c757d; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        
+        /* 화면 꺼짐 방지 버튼 스타일 */
+        .btn-wakelock { flex: 1; padding: 12px; background-color: #444; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
+        .btn-wakelock.active { background-color: #f5a623; color: white; } /* 켜졌을 때 눈에 띄는 주황색으로 변경 */
 
         .btn-group { display: flex; gap: 10px; margin-top: 10px; }
         .btn-search { flex: 2; padding: 15px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
@@ -76,9 +80,10 @@
     <main>
         <div style="background: white; padding: 20px; border-radius: 12px;">
             <div class="top-btn-group">
-                <button class="btn-show-list" onclick="openSongModal()">📖 전체 곡 리스트 찾기</button>
+                <button class="btn-show-list" onclick="openSongModal()">📖 곡 리스트 찾기</button>
+                <button id="btn-wakelock" class="btn-wakelock" onclick="toggleWakeLock()">💡 화면 켜짐: OFF</button>
             </div>
-            <textarea id="song-input" placeholder="[아래 예시처럼 붙여넣어 주세요]&#13;&#10;&#13;&#10;276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분&#13;&#10;165 세상이"></textarea>
+            <textarea id="song-input" placeholder="[아래 예시처럼 붙여넣어 주세요]&#13;&#10;&#13;&#10;276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분"></textarea>
             
             <div class="btn-group">
                 <button class="btn-reset" onclick="resetAll()">초기화 🔄</button>
@@ -110,27 +115,87 @@
     <script>
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
         let foundImages = []; 
-        let songArray = []; // 외부 텍스트 파일에서 읽어올 배열
+        let songArray = []; 
+        
+        // 화면 꺼짐 방지(Wake Lock)를 위한 변수
+        let wakeLock = null;
+        let isWakeLockEnabled = false;
+
+        // ---------------- 화면 꺼짐 방지 (Wake Lock) 로직 ---------------- //
 
         /**
          * 목적: 미래의 내가 디버깅하기 위함.
-         * Input: 없음
-         * Output: 텍스트 파일을 비동기로 읽어와 모달 리스트에 렌더링
-         * 핵심 로직: fetch API를 사용해 같은 폴더에 있는 hymn_list.txt 파일을 불러와 줄바꿈 단위로 쪼개어 배열에 저장함.
-         * 왜: 곡 리스트를 하드코딩하지 않고 외부 파일로 분리하여 데이터 관리와 유지보수를 편하게 하기 위함.
+         * Input: 버튼 클릭 이벤트
+         * Output: Wake Lock API 요청 및 해제, 버튼 UI 변경
+         * 핵심 로직: 브라우저가 WakeLock API를 지원하는지 확인 후, 화면 켜짐 상태를 토글(ON/OFF)함.
+         * 왜: 연주 중에 악보를 보다가 스마트폰 화면이 절전 모드로 인해 꺼지는 것을 방지하여 원활한 예배 진행을 돕기 위함.
          */
+        async function toggleWakeLock() {
+            if (!('wakeLock' in navigator)) {
+                alert("현재 사용 중인 브라우저에서는 '화면 켜짐 유지' 기능을 지원하지 않습니다.\n(최신 크롬, 사파리, 삼성 인터넷을 권장합니다.)");
+                return;
+            }
+
+            const btn = document.getElementById('btn-wakelock');
+
+            if (!isWakeLockEnabled) {
+                try {
+                    // 화면 꺼짐 방지 요청
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    isWakeLockEnabled = true;
+                    btn.innerText = "💡 화면 켜짐: ON";
+                    btn.classList.add('active');
+
+                    // 시스템에 의해 락이 풀렸을 때(예: 배터리 부족 등) 처리
+                    wakeLock.addEventListener('release', () => {
+                        if (!isWakeLockEnabled) {
+                            btn.innerText = "💡 화면 켜짐: OFF";
+                            btn.classList.remove('active');
+                        }
+                    });
+                } catch (err) {
+                    console.error(`${err.name}, ${err.message}`);
+                    alert("화면 켜짐 유지를 실행할 수 없습니다.");
+                }
+            } else {
+                // 수동으로 화면 꺼짐 방지 해제
+                if (wakeLock !== null) {
+                    wakeLock.release()
+                        .then(() => {
+                            wakeLock = null;
+                            isWakeLockEnabled = false;
+                            btn.innerText = "💡 화면 켜짐: OFF";
+                            btn.classList.remove('active');
+                        });
+                }
+            }
+        }
+
+        /**
+         * 핵심 로직: 사용자가 다른 앱을 보다가 다시 우리 앱으로 돌아왔을 때, 화면 켜짐 유지가 켜져있었다면 다시 활성화 시켜줌.
+         * 왜: 모바일 브라우저는 사용자가 탭을 전환하거나 앱을 내리면 Wake Lock을 강제로 해제해버리기 때문.
+         */
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible' && isWakeLockEnabled) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                } catch (err) {
+                    console.error("Wake Lock 재요청 실패:", err);
+                }
+            }
+        });
+
+        // ---------------- 리스트 불러오기 (fetch) 로직 ---------------- //
+
         async function initSongList() {
             const container = document.getElementById('songListContainer');
             container.innerHTML = "<li class='song-item' style='text-align:center;'>목록을 불러오는 중입니다... ⏳</li>";
             
             try {
-                // 깃허브에 올린 텍스트 파일을 불러옵니다
                 const response = await fetch('hymn_list.txt');
                 if (!response.ok) throw new Error('네트워크 응답이 정상이 아닙니다.');
                 
                 const text = await response.text();
-                
-                // 같은 불필요한 태그가 있으면 싹 청소해줍니다.
                 const cleanText = text.replace(/\\s*/g, '');
                 
                 songArray = cleanText.split('\n').filter(line => line.trim() !== "");
@@ -145,7 +210,6 @@
             document.getElementById('songModal').style.display = 'flex';
             document.getElementById('searchInput').value = "";
             
-            // 아직 리스트를 불러오지 않았다면 한 번만 불러오기
             if (songArray.length === 0) {
                 await initSongList();
             } else {
@@ -329,4 +393,3 @@
     </script>
 </body>
 </html>
-
