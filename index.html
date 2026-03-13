@@ -16,13 +16,16 @@
             width: 100%; max-width: 600px; margin: 0; padding: 0; 
             font-family: -apple-system, sans-serif; background-color: #f5f5f5; 
             display: flex; flex-direction: column; height: 100vh; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+            box-shadow: 0 0 20px rgba(0,0,0,0.1); position: relative;
         }
 
         header { background-color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #ddd; }
         main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
-        textarea { width: 100%; height: 150px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 16px; box-sizing: border-box; resize: none; }
+        textarea { width: 100%; height: 130px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 16px; box-sizing: border-box; resize: none; }
         
+        .top-btn-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-show-list { flex: 1; padding: 12px; background-color: #6c757d; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
+
         .btn-group { display: flex; gap: 10px; margin-top: 10px; }
         .btn-search { flex: 2; padding: 15px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
         .btn-reset { flex: 1; padding: 15px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
@@ -43,6 +46,27 @@
         
         .btn-download-normal { flex: 1; padding: 15px; background-color: #17a2b8; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .btn-download-reverse { flex: 1; padding: 15px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 100; display: none;
+            justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        }
+        .modal-content {
+            background: white; width: 100%; max-height: 90%; border-radius: 12px;
+            display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            padding: 15px; background: #0070f3; color: white; display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { margin: 0; font-size: 18px; }
+        .btn-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        .modal-search { padding: 10px; border-bottom: 1px solid #ddd; background: #f9f9f9; }
+        .modal-search input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
+        .modal-body { flex: 1; overflow-y: auto; padding: 0; margin: 0; list-style: none; }
+        .song-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 15px; color: #333; transition: background 0.2s; }
+        .song-item:hover { background-color: #f0f8ff; }
+        .song-item strong { color: #0070f3; margin-right: 8px; }
     </style>
 </head>
 <body>
@@ -51,7 +75,9 @@
 
     <main>
         <div style="background: white; padding: 20px; border-radius: 12px;">
-            <h3 style="margin-top:0;">곡 리스트를 입력하세요</h3>
+            <div class="top-btn-group">
+                <button class="btn-show-list" onclick="openSongModal()">📖 전체 곡 리스트 찾기</button>
+            </div>
             <textarea id="song-input" placeholder="[아래 예시처럼 붙여넣어 주세요]&#13;&#10;&#13;&#10;276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분&#13;&#10;165 세상이&#13;&#10;136 나의 주님은"></textarea>
             
             <div class="btn-group">
@@ -67,17 +93,119 @@
         <button class="btn-download-reverse" onclick="downloadAll(true)">역순으로<br>저장 ⬆️</button>
     </div>
 
+    <div class="modal-overlay" id="songModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📖 전체 곡 리스트</h3>
+                <button class="btn-close" onclick="closeSongModal()">&times;</button>
+            </div>
+            <div class="modal-search">
+                <input type="text" id="searchInput" placeholder="검색어 또는 번호를 입력하세요..." onkeyup="filterSongs()">
+            </div>
+            <ul class="modal-body" id="songListContainer">
+            </ul>
+        </div>
+    </div>
+
     <script>
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
         let foundImages = []; 
+        let songArray = []; // 외부 텍스트 파일에서 읽어올 배열
 
         /**
          * 목적: 미래의 내가 디버깅하기 위함.
          * Input: 없음
-         * Output: UI 초기화
-         * 핵심 로직: 화면의 모든 입력값 및 검색 결과를 비우고 초기 상태로 되돌림.
-         * 왜: 새로운 콘티를 검색할 때 이전 검색 결과나 다운로드 큐가 꼬이지 않고 깨끗한 상태에서 시작하도록 보장하기 위함.
+         * Output: 텍스트 파일을 비동기로 읽어와 모달 리스트에 렌더링
+         * 핵심 로직: fetch API를 사용해 같은 폴더에 있는 hymn_list.txt 파일을 불러와 줄바꿈 단위로 쪼개어 배열에 저장함.
+         * 왜: 곡 리스트를 하드코딩하지 않고 외부 파일로 분리하여 데이터 관리와 유지보수를 편하게 하기 위함.
          */
+        async function initSongList() {
+            const container = document.getElementById('songListContainer');
+            container.innerHTML = "<li class='song-item' style='text-align:center;'>목록을 불러오는 중입니다... ⏳</li>";
+            
+            try {
+                // 깃허브에 올린 텍스트 파일을 불러옵니다
+                const response = await fetch('hymn_list.txt');
+                if (!response.ok) throw new Error('네트워크 응답이 정상이 아닙니다.');
+                
+                const text = await response.text();
+                
+                // 같은 불필요한 태그가 있으면 싹 청소해줍니다.
+                const cleanText = text.replace(/\\s*/g, '');
+                
+                songArray = cleanText.split('\n').filter(line => line.trim() !== "");
+                renderSongList(songArray);
+            } catch (error) {
+                console.error('곡 목록 로드 에러:', error);
+                container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ hymn_list.txt 파일을 찾을 수 없습니다.<br>깃허브에 파일이 있는지 확인해주세요!</li>";
+            }
+        }
+
+        async function openSongModal() {
+            document.getElementById('songModal').style.display = 'flex';
+            document.getElementById('searchInput').value = "";
+            
+            // 아직 리스트를 불러오지 않았다면 한 번만 불러오기
+            if (songArray.length === 0) {
+                await initSongList();
+            } else {
+                renderSongList(songArray);
+            }
+        }
+
+        function closeSongModal() {
+            document.getElementById('songModal').style.display = 'none';
+        }
+
+        function filterSongs() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = songArray.filter(song => song.toLowerCase().includes(keyword));
+            renderSongList(filtered);
+        }
+
+        function renderSongList(list) {
+            const container = document.getElementById('songListContainer');
+            container.innerHTML = ""; 
+
+            if (list.length === 0) {
+                container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>검색 결과가 없습니다.</li>";
+                return;
+            }
+
+            list.forEach(song => {
+                const li = document.createElement('li');
+                li.className = 'song-item';
+                
+                const match = song.match(/^(\d+)/);
+                if(match) {
+                    const num = match[1];
+                    const title = song.substring(num.length).trim();
+                    li.innerHTML = `<strong>${num}</strong> ${title}`;
+                } else {
+                    li.textContent = song;
+                }
+
+                li.onclick = () => addSongToInput(song);
+                container.appendChild(li);
+            });
+        }
+
+        function addSongToInput(songLine) {
+            const textarea = document.getElementById('song-input');
+            let currentText = textarea.value;
+            
+            if (currentText.includes("아래 예시처럼 붙여넣어 주세요")) {
+                currentText = "";
+            } else if (currentText.trim() !== "") {
+                currentText += "\n"; 
+            }
+            
+            textarea.value = currentText + songLine;
+            closeSongModal(); 
+        }
+
+        // ---------------- 기존 악보 찾기 및 저장 기능들 ---------------- //
+
         function resetAll() {
             document.getElementById('song-input').value = "";
             document.getElementById('result-container').innerHTML = "";
@@ -86,13 +214,6 @@
             document.getElementById('song-input').focus();
         }
 
-        /**
-         * 목적: 미래의 내가 디버깅하기 위함.
-         * Input: 없음
-         * Output: 악보 이미지 UI 생성 및 다운로드용 파일명 생성
-         * 핵심 로직: 오늘 날짜 및 오전/오후(AM/PM)를 계산하고, 곡 리스트를 파싱하여 이미지 로드를 요청함.
-         * 왜: 오전/오후 예배 콘티가 다를 경우 파일명이 겹치지 않고 시간대별로 완벽하게 분리되어 저장되도록 `yyyymmddAM_순번_곡번호` 형식을 부여하기 위함.
-         */
         function startSearch() {
             const inputText = document.getElementById('song-input').value;
             const resultContainer = document.getElementById('result-container');
@@ -105,15 +226,14 @@
             const lines = inputText.split('\n').filter(line => line.trim() !== "");
             if (lines.length === 0) return alert("곡 리스트를 입력해주세요!");
 
-            // 날짜 및 AM/PM 계산 로직 추가
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
             const hours = today.getHours();
-            const ampm = hours >= 12 ? 'PM' : 'AM'; // 12시 이상이면 PM, 아니면 AM
+            const ampm = hours >= 12 ? 'PM' : 'AM'; 
             
-            const dateStr = `${yyyy}${mm}${dd}${ampm}`; // 예: 20260313PM
+            const dateStr = `${yyyy}${mm}${dd}${ampm}`; 
 
             lines.forEach((line, index) => {
                 const match = line.match(/^(\d+)/); 
@@ -145,13 +265,6 @@
             });
         }
 
-        /**
-         * 목적: 미래의 내가 디버깅하기 위함.
-         * Input: 이미지 엘리먼트, 곡 번호, 시도할 확장자 인덱스, 성공 콜백
-         * Output: 이미지 src 할당 또는 에러 메시지 출력
-         * 핵심 로직: 재귀 함수를 사용해 EXTENSIONS 배열을 순회하며 존재하는 이미지를 찾음.
-         * 왜: 원본 이미지의 확장자가 다양하게 섞여 있어(jpg, png, jfif 등), 하드코딩된 단일 확장자로는 엑박이 뜨는 문제를 해결하기 위함.
-         */
         function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
             if (extIndex >= EXTENSIONS.length) {
                 imgElement.style.display = 'none';
@@ -174,13 +287,6 @@
             tempImg.src = trySrc; 
         }
 
-        /**
-         * 목적: 미래의 내가 디버깅하기 위함.
-         * Input: isReverse (boolean) - 역순 저장 여부 플래그
-         * Output: 순차적 파일 다운로드 실행
-         * 핵심 로직: 환경(모바일/PC)에 따른 경고창을 띄우고, Blob과 fetch API를 통해 강제 파일명 지정 및 시간차 다운로드를 실행함.
-         * 왜: 모바일 브라우저의 무분별한 다중 다운로드 차단을 우회하고(시간차), 원본 서버 파일명을 무시하려는 브라우저의 동작을 막아 우리가 정한 파일명 규칙을 강제하기 위함(Blob).
-         */
         function downloadAll(isReverse) {
             const validImages = foundImages.filter(img => img !== undefined);
             if (validImages.length === 0) return alert("저장할 악보가 없습니다.");
