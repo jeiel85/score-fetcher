@@ -11,21 +11,12 @@
     <link rel="manifest" href="manifest.json"> 
 
     <style>
-        /* PC 환경을 위해 바깥 배경(html)과 안쪽 배경(body)을 분리합니다 */
-        html {
-            background-color: #e2e8f0; /* PC에서 보이는 바깥쪽 배경색 */
-            display: flex;
-            justify-content: center; /* 화면을 가운데 정렬 */
-        }
-
+        html { background-color: #e2e8f0; display: flex; justify-content: center; }
         body { 
-            width: 100%; 
-            max-width: 600px; /* 아무리 화면이 커져도 최대 600px까지만 늘어남 */
-            margin: 0; padding: 0; 
-            font-family: -apple-system, sans-serif; 
-            background-color: #f5f5f5; /* 실제 앱 안쪽 배경색 */
+            width: 100%; max-width: 600px; margin: 0; padding: 0; 
+            font-family: -apple-system, sans-serif; background-color: #f5f5f5; 
             display: flex; flex-direction: column; height: 100vh; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.1); /* PC에서 스마트폰처럼 보이게 그림자 효과 */
+            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
         }
 
         header { background-color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #ddd; }
@@ -42,15 +33,16 @@
         .sheet-title { margin-bottom: 10px; font-weight: bold; color: #333; text-align: left; }
         .error-msg { color: #ff4d4f; font-size: 14px; margin-top: 10px; font-weight: bold; }
         
-        /* 하단 고정 바 수정: 화면 가운데(max-width 영역)에만 딱 맞게 뜨도록 변경 */
         .bottom-bar { 
             position: fixed; bottom: 0; 
-            left: 50%; transform: translateX(-50%); /* 정확히 화면 중앙에 위치시킴 */
+            left: 50%; transform: translateX(-50%); 
             width: 100%; max-width: 600px; box-sizing: border-box;
             background: white; padding: 15px; border-top: 1px solid #eee; 
-            display: none; justify-content: center; z-index: 20; 
+            display: none; justify-content: center; gap: 10px; z-index: 20; 
         }
-        .btn-download-all { width: 100%; padding: 16px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        
+        .btn-download-normal { flex: 1; padding: 15px; background-color: #17a2b8; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-download-reverse { flex: 1; padding: 15px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -71,7 +63,8 @@
     </main>
 
     <div class="bottom-bar" id="download-bar">
-        <button class="btn-download-all" onclick="downloadAll()">전체 악보 역순 저장 (순서보정) 📥</button>
+        <button class="btn-download-normal" onclick="downloadAll(false)">순서대로<br>저장 ⬇️</button>
+        <button class="btn-download-reverse" onclick="downloadAll(true)">역순으로<br>저장 ⬆️</button>
     </div>
 
     <script>
@@ -79,9 +72,10 @@
         let foundImages = []; 
 
         /**
-         * Input: 버튼 클릭 이벤트
+         * Input: 없음
          * Output: UI 초기화
-         * Logic: 화면의 모든 입력값 및 검색 결과를 비우고 초기 상태로 되돌림
+         * 핵심 로직: 화면의 모든 입력값 및 검색 결과를 비우고 초기 상태로 되돌림.
+         * 왜: 사용자가 새로운 콘티 리스트를 작성할 때 잔여 데이터가 섞이는 것을 방지하여 깔끔한 상태를 제공하기 위함.
          */
         function resetAll() {
             document.getElementById('song-input').value = "";
@@ -92,9 +86,10 @@
         }
 
         /**
-         * Input: 버튼 클릭 이벤트
+         * Input: 없음
          * Output: 악보 이미지 UI 생성 및 다운로드용 파일명 생성
-         * Logic: 오늘 날짜를 구하고, 곡 리스트를 파싱하여 각 곡의 이미지를 찾도록 요청함
+         * 핵심 로직: 오늘 날짜를 구하고, 곡 리스트를 파싱하여 각 곡의 이미지를 찾도록 요청함.
+         * 왜: 사용자가 입력한 텍스트에서 곡 번호만 스마트하게 추출하고, 파일명에 오늘 날짜를 부여해 추후 관리가 용이하게 하기 위함.
          */
         function startSearch() {
             const inputText = document.getElementById('song-input').value;
@@ -132,7 +127,6 @@
                     tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
                         const fileExt = finalSrc.substring(finalSrc.lastIndexOf('.'));
                         
-                        // 왜: 주차별 콘티 파일들이 섞이지 않고 시간순/순서대로 예쁘게 정렬되도록 하기 위함.
                         const fileName = `${dateStr}_${String(index + 1).padStart(2, '0')}_${songNumber}${fileExt}`;
                         
                         foundImages[index] = { url: finalSrc, name: fileName };
@@ -148,8 +142,8 @@
         /**
          * Input: 이미지 엘리먼트, 곡 번호, 시도할 확장자 인덱스, 성공 콜백
          * Output: 이미지 src 할당 또는 에러 메시지 출력
-         * Logic: EXTENSIONS 배열을 순회하며 이미지가 로드될 때까지 재귀 호출함
-         * 왜: 사용자가 업로드한 파일의 확장자를 미리 알 수 없으므로 가능한 경우의 수를 모두 시도하기 위함
+         * 핵심 로직: EXTENSIONS 배열을 순회하며 이미지가 로드될 때까지 재귀 호출함.
+         * 왜: 사용자가 업로드한 파일의 확장자를 미리 예측할 수 없으므로, 가능한 모든 경우의 수를 확인해 엑박을 방지하기 위함.
          */
         function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
             if (extIndex >= EXTENSIONS.length) {
@@ -174,23 +168,32 @@
         }
 
         /**
-         * Input: 버튼 클릭 이벤트
-         * Output: Blob 객체 생성 및 다운로드 트리거
-         * Logic: fetch api를 통해 이미지 데이터를 직접 받아온 후, 
-         * 강제로 지정된 파일명(imgInfo.name)으로 다운로드 되도록 처리함
-         * 왜: 모바일 브라우저가 a 태그의 download 속성을 무시하고 
-         * 원본 서버 파일명으로 강제 저장하는 현상을 우회하기 위함.
+         * Input: isReverse (boolean) - 역순 저장 여부
+         * Output: 선택한 순서에 따른 파일 다운로드 트리거
+         * 핵심 로직: 기기 환경(모바일/PC)을 감지하고, 모바일에서 정순 저장 시 경고창을 띄워 사용자 의도를 재확인함.
+         * 왜: 모바일 갤러리는 다운로드 최신순으로 정렬되므로, 정순 다운로드 시 1번 곡이 맨 뒤로 밀리는 UX 문제를 사전에 방지하기 위함.
          */
-        function downloadAll() {
+        function downloadAll(isReverse) {
             const validImages = foundImages.filter(img => img !== undefined);
             if (validImages.length === 0) return alert("저장할 악보가 없습니다.");
             
-            if (!confirm(`${validImages.length}개의 악보를 지정된 파일명으로 저장합니다.`)) return;
+            // 모바일 기기인지 간단하게 체크하는 정규식
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-            const reversedImages = [...foundImages].reverse();
+            // 모바일 환경이면서 순서대로(정순) 버튼을 누른 경우 팝업 띄우기
+            if (isMobile && !isReverse) {
+                const proceed = confirm("모바일 환경에서는 역순으로 저장할 때 첫번째 곡이 최 상단에 표시됩니다.\n그래도 진행하시겠습니까?");
+                if (!proceed) return; // 취소 누르면 중단
+            } else {
+                // 그 외의 경우 (PC이거나 역순 저장일 때)
+                const orderText = isReverse ? "역순으로" : "정순(입력순)으로";
+                if (!confirm(`${validImages.length}개의 악보를 ${orderText} 저장합니다.`)) return;
+            }
+
+            const targetImages = isReverse ? [...foundImages].reverse() : [...foundImages];
             
             let delayCount = 0;
-            reversedImages.forEach((imgInfo) => {
+            targetImages.forEach((imgInfo) => {
                 if(!imgInfo) return; 
                 
                 setTimeout(() => {
@@ -215,4 +218,3 @@
     </script>
 </body>
 </html>
-
