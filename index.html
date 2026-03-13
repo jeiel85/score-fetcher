@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>찬양 악보 매니저 🎵</title>
     
+    <script src="config.js"></script>
+
     <link rel="icon" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png"> 
     <meta name="theme-color" content="#0070f3"> 
@@ -53,8 +55,8 @@
             display: none; justify-content: center; gap: 8px; z-index: 20; 
         }
         
-        .btn-download-normal { flex: 1; padding: 15px 5px; background-color: #17a2b8; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
-        .btn-download-reverse { flex: 1; padding: 15px 5px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .btn-download-normal { flex: 2; padding: 15px 5px; background-color: #17a2b8; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .btn-download-reverse { flex: 2; padding: 15px 5px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
         
         .btn-top { flex: 1; padding: 15px 5px; background-color: #34495e; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; white-space: nowrap; }
 
@@ -142,26 +144,21 @@
     </div>
 
     <script>
-        // 사용자님의 파이어베이스 주소에 /history.json을 붙여서 완벽하게 세팅했습니다!
-        const FIREBASE_URL = "https://score-fetcher-db-default-rtdb.firebaseio.com/history.json"; 
-        
+        // config.js에 FIREBASE_URL이 정의되어 있어야 합니다.
+        if (typeof FIREBASE_URL === 'undefined') {
+            console.warn("FIREBASE_URL이 설정되지 않았습니다. config.js 파일을 확인하세요.");
+        }
+
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
         let foundImages = []; 
         let songArray = []; 
         let wakeLock = null;
         let isWakeLockEnabled = true; 
 
-        // ---------------- 초고속 파이어베이스 이력 관리 로직 ⚡ ---------------- //
+        // ---------------- 이력 관리 로직 ---------------- //
 
-        /**
-         * 목적: 미래의 내가 디버깅하기 위함.
-         * Input: 없음
-         * Output: 파이어베이스 RTDB로 POST 요청 전송 (JSON 형식)
-         * 핵심 로직: 다운로드 실행 시, 제목/텍스트/정렬용 타임스탬프를 묶어 파이어베이스 REST API에 전송함.
-         * 왜: 구글 시트의 느린 속도를 개선하고, 밀리초 단위의 빠른 실시간 DB 통신을 구현하기 위함.
-         */
         async function saveToHistory() {
-            if(!FIREBASE_URL) return; 
+            if(!window.FIREBASE_URL) return; 
 
             const titleText = document.getElementById('setlist-title').value.trim() || "제목 없는 콘티";
             const inputText = document.getElementById('song-input').value.trim();
@@ -188,15 +185,11 @@
             }
         }
 
-        /**
-         * 목적: 미래의 내가 디버깅하기 위함.
-         * Input: 버튼 클릭 이벤트
-         * Output: 파이어베이스에서 GET 요청으로 데이터를 가져와 최신순 정렬 후 렌더링
-         * 핵심 로직: 파이어베이스가 내려준 고유 ID 기반의 객체를 배열로 변환하고, 타임스탬프 역순으로 정렬하여 최대 20개만 화면에 표시함.
-         * 왜: 언제든지 이전 주차의 콘티를 초고속으로 불러와 바로 적용하기 위함.
-         */
         async function openHistoryModal() {
-            if(!FIREBASE_URL) return;
+            if(!window.FIREBASE_URL) {
+                alert("FIREBASE_URL이 설정되지 않았습니다.");
+                return;
+            }
 
             const container = document.getElementById('historyListContainer');
             container.innerHTML = "<li class='song-item' style='text-align:center;'>초고속 서버에서 이력을 불러오는 중입니다... ⚡</li>";
@@ -217,22 +210,18 @@
                     topHistory.forEach((item) => {
                         const li = document.createElement('li');
                         li.className = 'song-item history-item';
-                        
                         const displayTitle = item.title ? item.title : "제목 없음";
                         li.innerHTML = `
                             <div class="history-title-badge">📌 ${displayTitle}</div>
                             <div class="history-date">🕒 저장일시: ${item.date}</div>
                             <div class="history-text">${item.text}</div>
                         `;
-                        
                         li.onclick = () => {
                             document.getElementById('setlist-title').value = displayTitle !== "제목 없는 콘티" ? displayTitle : "";
                             document.getElementById('song-input').value = item.text;
-                            
                             document.getElementById('result-container').innerHTML = "";
                             document.getElementById('download-bar').style.display = 'none';
                             foundImages = [];
-
                             closeHistoryModal();
                             alert("✅ 서버에서 콘티를 불러왔습니다. '악보 찾기'를 눌러주세요!");
                         };
@@ -258,73 +247,43 @@
                 const btn = document.getElementById('btn-wakelock');
                 btn.innerText = "💡 화면: ON";
                 btn.classList.add('active');
-                
-                wakeLock.addEventListener('release', () => {
-                    if (!isWakeLockEnabled) {
-                        btn.innerText = "💡 화면: OFF";
-                        btn.classList.remove('active');
-                    }
-                });
             } catch (err) { }
         }
 
         function toggleWakeLock(manualToggle = false) {
-            if (!('wakeLock' in navigator)) {
-                if(manualToggle) alert("현재 브라우저에서는 '화면 켜짐 유지' 기능을 지원하지 않습니다.");
-                return;
-            }
-
+            if (!('wakeLock' in navigator)) return;
             const btn = document.getElementById('btn-wakelock');
-
-            if (manualToggle) {
-                isWakeLockEnabled = !isWakeLockEnabled;
-            }
+            if (manualToggle) isWakeLockEnabled = !isWakeLockEnabled;
 
             if (isWakeLockEnabled) {
                 initWakeLock();
             } else {
                 if (wakeLock !== null) {
-                    wakeLock.release()
-                        .then(() => {
-                            wakeLock = null;
-                            btn.innerText = "💡 화면: OFF";
-                            btn.classList.remove('active');
-                        });
-                } else {
-                    btn.innerText = "💡 화면: OFF";
-                    btn.classList.remove('active');
+                    wakeLock.release().then(() => {
+                        wakeLock = null;
+                        btn.innerText = "💡 화면: OFF";
+                        btn.classList.remove('active');
+                    });
                 }
             }
         }
 
-        document.addEventListener('click', () => {
-            if (isWakeLockEnabled && wakeLock === null) initWakeLock();
-        }, { once: true });
+        document.addEventListener('click', () => { if (isWakeLockEnabled && wakeLock === null) initWakeLock(); }, { once: true });
 
-        document.addEventListener('visibilitychange', async () => {
-            if (wakeLock !== null && document.visibilityState === 'visible' && isWakeLockEnabled) {
-                try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                } catch (err) { }
-            }
-        });
-
-        // ---------------- 전체 곡 리스트 (fetch) 로직 ---------------- //
+        // ---------------- 전체 곡 리스트 로직 ---------------- //
 
         async function initSongList() {
             const container = document.getElementById('songListContainer');
             container.innerHTML = "<li class='song-item' style='text-align:center;'>목록을 불러오는 중입니다... ⏳</li>";
             try {
                 const response = await fetch('hymn_list.txt');
-                if (!response.ok) throw new Error('네트워크 응답이 정상이 아닙니다.');
-                
                 const text = await response.text();
+                // [오타 수정] 텍스트 안의 태그만 제거하고 공백은 유지함
                 const cleanText = text.replace(/\\s*/g, '');
-                
                 songArray = cleanText.split('\n').filter(line => line.trim() !== "");
                 renderSongList(songArray);
             } catch (error) {
-                container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ hymn_list.txt 파일을 찾을 수 없습니다.</li>";
+                container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ hymn_list.txt 에러</li>";
             }
         }
 
@@ -335,9 +294,7 @@
             else renderSongList(songArray);
         }
 
-        function closeSongModal() {
-            document.getElementById('songModal').style.display = 'none';
-        }
+        function closeSongModal() { document.getElementById('songModal').style.display = 'none'; }
 
         function filterSongs() {
             const keyword = document.getElementById('searchInput').value.toLowerCase();
@@ -349,7 +306,7 @@
             const container = document.getElementById('songListContainer');
             container.innerHTML = ""; 
             if (list.length === 0) {
-                container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>검색 결과가 없습니다.</li>";
+                container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>검색 결과 없음</li>";
                 return;
             }
             list.forEach(song => {
@@ -360,9 +317,7 @@
                     const num = match[1];
                     const title = song.substring(num.length).trim();
                     li.innerHTML = `<strong>${num}</strong> ${title}`;
-                } else {
-                    li.textContent = song;
-                }
+                } else { li.textContent = song; }
                 li.onclick = () => addSongToInput(song);
                 container.appendChild(li);
             });
@@ -373,12 +328,11 @@
             let currentText = textarea.value;
             if (currentText.includes("아래 예시처럼 붙여넣어 주세요")) currentText = "";
             else if (currentText.trim() !== "") currentText += "\n"; 
-            
             textarea.value = currentText + songLine;
             closeSongModal(); 
         }
 
-        // ---------------- 악보 찾기 및 다운로드 로직 ---------------- //
+        // ---------------- 악보 찾기 및 다운로드 ---------------- //
 
         function resetAll() {
             document.getElementById('setlist-title').value = ""; 
@@ -386,60 +340,41 @@
             document.getElementById('result-container').innerHTML = "";
             document.getElementById('download-bar').style.display = 'none';
             foundImages = [];
-            document.getElementById('song-input').focus();
         }
 
-        /**
-         * 목적: 미래의 내가 디버깅하기 위함.
-         * Input: 버튼 클릭 이벤트 (textarea에 입력된 원본 텍스트)
-         * Output: 포맷팅된 텍스트 업데이트 및 악보 이미지 UI 생성
-         * 핵심 로직: 정규식을 이용해 각 줄의 맨 앞 숫자와 제목을 분리한 뒤, 숫자는 무조건 3자리(padStart)로 만들고 불필요한 점(.)을 제거하여 다시 조합함.
-         * 왜: 팀원들이 카톡 등에서 '1. 제목' 또는 '05.제목' 형태로 복사해 오더라도, DB와 화면에는 항상 통일된 '001 제목' 형식으로 깔끔하게 저장되도록 입력값을 강제 정제하기 위함.
-         */
         function startSearch() {
             let rawText = document.getElementById('song-input').value;
             
-            // [업데이트된 로직] 정규식을 활용한 자동 포맷팅 및 빈 줄 제거
+            // [정규식 로직] 점 제거 및 3자리 포맷팅
             let cleanLines = rawText.split('\n').map(line => {
                 let trimmed = line.trim();
-                if (!trimmed) return ""; // 빈 줄은 패스
-                
-                // 정규식 설명: ^(\d+) -> 맨 앞의 숫자 그룹, [\.\s]* -> 숫자 뒤의 점이나 공백들 무시, (.*) -> 나머지 진짜 제목
+                if (!trimmed) return "";
                 let match = trimmed.match(/^(\d+)[\.\s]*(.*)/);
                 if (match) {
-                    // 숫자는 무조건 3자리로 맞춤 (예: 1 -> 001, 15 -> 015)
                     let formattedNum = String(match[1]).padStart(3, '0');
                     let titleText = match[2].trim();
                     return `${formattedNum} ${titleText}`;
                 }
-                return trimmed; // 매칭 안 되면(숫자가 없으면) 그냥 원본 출력
+                return trimmed;
             }).filter(line => line !== "");
             
-            // 예쁘게 정리된 텍스트를 다시 입력창에 덮어씌워 줌 (DB 저장 시에도 이 예쁜 텍스트가 저장됨!)
             document.getElementById('song-input').value = cleanLines.join('\n');
-            
-            const lines = cleanLines;
-            if (lines.length === 0) return alert("곡 리스트를 입력해주세요!");
+            if (cleanLines.length === 0) return alert("곡 리스트를 입력해주세요!");
 
             const resultContainer = document.getElementById('result-container');
             const downloadBar = document.getElementById('download-bar');
-            
             resultContainer.innerHTML = ""; 
             foundImages = []; 
             downloadBar.style.display = 'none'; 
 
             const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const hours = today.getHours();
-            const ampm = hours >= 12 ? 'PM' : 'AM'; 
-            const dateStr = `${yyyy}${mm}${dd}${ampm}`; 
+            const ampm = today.getHours() >= 12 ? 'PM' : 'AM'; 
+            const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}${ampm}`; 
 
-            lines.forEach((line, index) => {
+            cleanLines.forEach((line, index) => {
                 const match = line.match(/^(\d+)/); 
                 if (match) {
-                    const songNumber = match[1];
+                    const songNumber = match[1]; // 이미 위에서 3자리로 만든 값 사용
                     const songTitle = line.substring(songNumber.length).trim();
                     
                     const card = document.createElement('div');
@@ -454,10 +389,8 @@
                     tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
                         const fileExt = finalSrc.substring(finalSrc.lastIndexOf('.'));
                         const fileName = `${dateStr}_${String(index + 1).padStart(2, '0')}_${songNumber}${fileExt}`;
-                        
                         foundImages[index] = { url: finalSrc, name: fileName };
-                        
-                        if (foundImages.filter(x => x).length + document.querySelectorAll('.error-msg').length === lines.length) {
+                        if (foundImages.filter(x => x).length + document.querySelectorAll('.error-msg').length === cleanLines.length) {
                              if(foundImages.filter(x => x).length > 0) downloadBar.style.display = 'flex';
                         }
                     });
@@ -468,20 +401,14 @@
         function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
             if (extIndex >= EXTENSIONS.length) {
                 imgElement.style.display = 'none';
-                imgElement.parentElement.innerHTML += `<p class="error-msg">❌ images/${songNum} 파일을 찾을 수 없습니다.</p>`;
+                imgElement.parentElement.innerHTML += `<p class="error-msg">❌ images/${songNum} 없음</p>`;
                 return;
             }
             const currentExt = EXTENSIONS[extIndex];
             const trySrc = `images/${songNum}${currentExt}`;
             const tempImg = new Image();
-            tempImg.onload = function() {
-                imgElement.src = trySrc;
-                imgElement.alt = `${songNum} 악보`;
-                onSuccess(trySrc); 
-            };
-            tempImg.onerror = function() {
-                tryLoadImage(imgElement, songNum, extIndex + 1, onSuccess);
-            };
+            tempImg.onload = () => { imgElement.src = trySrc; onSuccess(trySrc); };
+            tempImg.onerror = () => { tryLoadImage(imgElement, songNum, extIndex + 1, onSuccess); };
             tempImg.src = trySrc; 
         }
 
@@ -490,37 +417,25 @@
             if (validImages.length === 0) return alert("저장할 악보가 없습니다.");
             
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
             if (isMobile && !isReverse) {
-                const proceed = confirm("모바일 환경에서는 역순으로 저장할 때 첫번째 곡이 최 상단에 표시됩니다.\n그래도 진행하시겠습니까?");
-                if (!proceed) return; 
-            } else {
-                const orderText = isReverse ? "역순으로" : "정순(입력순)으로";
-                if (!confirm(`${validImages.length}개의 악보를 ${orderText} 저장합니다.`)) return;
+                if (!confirm("모바일은 역순 저장을 권장합니다. 진행할까요?")) return; 
             }
 
-            // 파이어베이스로 실시간 초고속 저장! ⚡
             saveToHistory();
 
             const targetImages = isReverse ? [...foundImages].reverse() : [...foundImages];
-            
             let delayCount = 0;
             targetImages.forEach((imgInfo) => {
                 if(!imgInfo) return; 
                 setTimeout(() => {
-                    fetch(imgInfo.url)
-                        .then(response => response.blob())
-                        .then(blob => {
-                            const blobUrl = window.URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = blobUrl;
-                            link.download = imgInfo.name; 
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            window.URL.revokeObjectURL(blobUrl); 
-                        })
-                        .catch(err => console.error("다운로드 에러:", err));
+                    fetch(imgInfo.url).then(r => r.blob()).then(blob => {
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = blobUrl; link.download = imgInfo.name; 
+                        document.body.appendChild(link); link.click();
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(blobUrl); 
+                    }).catch(err => console.error(err));
                 }, delayCount * 1000); 
                 delayCount++;
             });
