@@ -449,7 +449,7 @@
             };
 
             try {
-                await fetch(FIREBASE_URL, {
+                await fetch(FINAL_FIREBASE_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -470,7 +470,7 @@
             document.getElementById('historyModal').style.display = 'flex';
 
             try {
-                const response = await fetch(FIREBASE_URL);
+                const response = await fetch(FINAL_FIREBASE_URL);
                 const data = await response.json();
 
                 container.innerHTML = "";
