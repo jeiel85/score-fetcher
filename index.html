@@ -3,48 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>찬양 악보 찾기 완성판 🎵</title>
+    <title>찬양 악보 매니저 🎵</title>
     <style>
-        /* 기본 스타일 */
         body { margin: 0; padding: 0; font-family: -apple-system, sans-serif; background-color: #f5f5f5; display: flex; flex-direction: column; height: 100vh; }
         header { background-color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #ddd; }
-        main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px; }
+        main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
         textarea { width: 100%; height: 150px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 16px; box-sizing: border-box; resize: none; }
-        
-        /* 버튼 그룹 스타일 (가로 배치용) */
         .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        
-        .btn-search { 
-            flex: 2; /* 공간을 2배 더 차지함 */
-            padding: 15px; background-color: #0070f3; color: white; 
-            border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; 
-        }
-        
-        .btn-reset { 
-            flex: 1; /* 공간을 1만큼 차지함 */
-            padding: 15px; background-color: #e0e0e0; color: #333; 
-            border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; 
-        }
-
+        .btn-search { flex: 2; padding: 15px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .btn-reset { flex: 1; padding: 15px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
         .result-area { margin-top: 30px; }
         .sheet-music-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
         .sheet-music-card img { width: 100%; height: auto; border-radius: 4px; min-height: 100px; background: #f0f0f0; }
         .sheet-title { margin-bottom: 10px; font-weight: bold; color: #333; text-align: left; }
-        .error-msg { color: red; font-size: 14px; margin-top: 5px; }
-        
-        /* 하단 고정 버튼 */
-        .bottom-bar {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: white; padding: 15px;
-            border-top: 1px solid #eee;
-            display: flex; justify-content: center;
-            display: none; 
-        }
-        .btn-download-all {
-            width: 100%; padding: 15px;
-            background-color: #28a745; color: white; border: none; border-radius: 8px;
-            font-size: 18px; font-weight: bold; cursor: pointer;
-        }
+        .error-msg { color: #ff4d4f; font-size: 14px; margin-top: 10px; font-weight: bold; }
+        .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; border-top: 1px solid #eee; display: none; justify-content: center; z-index: 20; }
+        .btn-download-all { width: 100%; padding: 16px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -53,8 +27,8 @@
 
     <main>
         <div style="background: white; padding: 20px; border-radius: 12px;">
-            <h3>곡 리스트를 붙여넣으세요</h3>
-            <textarea id="song-input" placeholder="예:&#13;&#10;276 햇살보다 밝게&#13;&#10;123 당신은 지금 어디로">
+            <h3 style="margin-top:0;">곡 리스트를 입력하세요</h3>
+            <textarea id="song-input" placeholder="예: 276 햇살보다 밝게">
 276 햇살보다 밝게 빛나는 주의
 123 당신은 지금 어디로 
 168 하나님은 너를 만드신 분
@@ -67,27 +41,23 @@
                 <button class="btn-search" onclick="startSearch()">악보 찾기 🔍</button>
             </div>
         </div>
-
         <div id="result-container" class="result-area"></div>
     </main>
 
     <div class="bottom-bar" id="download-bar">
-        <button class="btn-download-all" onclick="downloadAll()">전체 악보 순서대로 저장 📥</button>
+        <button class="btn-download-all" onclick="downloadAll()">전체 악보 역순 저장 (순서보정) 📥</button>
     </div>
 
     <script>
-        const EXTENSIONS = ['.jpg', '.png', '.gif', '.bmp', '.jpeg'];
-        let foundImages = [];
+        // 대소문자 모두 대응하도록 확장자 리스트 구성
+        const EXTENSIONS = ['.jpg', '.png', '.gif', '.jpeg', '.JPG', '.PNG', '.GIF', '.JPEG'];
+        let foundImages = []; 
 
-        // --- 새로 추가된 초기화 함수 ---
         function resetAll() {
-            // 1. 입력창 비우기
             document.getElementById('song-input').value = "";
-            // 2. 결과 화면 비우기
             document.getElementById('result-container').innerHTML = "";
-            // 3. 다운로드 버튼 숨기기
             document.getElementById('download-bar').style.display = 'none';
-            // 4. 입력창에 커서 깜빡이게 하기 (바로 붙여넣기 좋게)
+            foundImages = [];
             document.getElementById('song-input').focus();
         }
 
@@ -111,10 +81,10 @@
                     
                     const card = document.createElement('div');
                     card.className = 'sheet-music-card';
-                    card.innerHTML = `<div class="sheet-title">${index + 1}. No. ${songNumber} ${songTitle}</div>`;
+                    card.innerHTML = `<div class="sheet-title">${index + 1}. No.${songNumber} ${songTitle}</div>`;
                     
                     const imgTag = document.createElement('img');
-                    imgTag.alt = `${songNumber} 악보 로딩중...`;
+                    imgTag.alt = `${songNumber} 악보 찾는 중...`;
                     card.appendChild(imgTag);
                     resultContainer.appendChild(card);
 
@@ -123,10 +93,10 @@
                         const fileName = `${String(index + 1).padStart(2, '0')}번_${songNumber}${fileExt}`;
                         
                         foundImages[index] = { url: finalSrc, name: fileName };
-
-                        const foundCount = foundImages.filter(item => item !== undefined).length;
-                        if (foundCount > 0 && foundCount === lines.length) {
-                             downloadBar.style.display = 'flex';
+                        
+                        // 모든 처리가 끝났는지 확인 (성공/실패 포함)
+                        if (foundImages.filter(x => x).length + document.querySelectorAll('.error-msg').length === lines.length) {
+                             if(foundImages.filter(x => x).length > 0) downloadBar.style.display = 'flex';
                         }
                     });
                 }
@@ -135,8 +105,8 @@
 
         function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
             if (extIndex >= EXTENSIONS.length) {
-                imgElement.alt = "❌ 이미지를 찾을 수 없습니다.";
-                imgElement.parentElement.innerHTML += `<p class="error-msg">⚠️ 파일 없음 (jpg, png, gif 등 확인 필요)</p>`;
+                imgElement.style.display = 'none';
+                imgElement.parentElement.innerHTML += `<p class="error-msg">❌ images/${songNum} 파일을 찾을 수 없습니다.</p>`;
                 return;
             }
 
@@ -150,18 +120,27 @@
                 onSuccess(trySrc); 
             };
             tempImg.onerror = function() {
-                // 실패 시 다음 확장자 시도 (재귀)
                 tryLoadImage(imgElement, songNum, extIndex + 1, onSuccess);
             };
             tempImg.src = trySrc; 
         }
 
+        /**
+         * 핵심 수정사항: 1초 간격 + 마지막 파일부터 저장
+         */
         function downloadAll() {
-            if (foundImages.length === 0) return alert("저장할 악보가 없습니다.");
-            if (!confirm(`${foundImages.length}개의 악보를 순서대로 저장하시겠습니까?\n(팝업 차단이 해제되어 있어야 합니다)`)) return;
+            const validImages = foundImages.filter(img => img !== undefined);
+            if (validImages.length === 0) return alert("저장할 악보가 없습니다.");
+            
+            if (!confirm(`${validImages.length}개의 악보를 역순으로 저장합니다. (순서 정리용)`)) return;
 
-            foundImages.forEach((imgInfo, idx) => {
+            // 정렬된 리스트를 뒤집어서 처리 (마지막 곡부터 다운로드)
+            const reversedImages = [...foundImages].reverse();
+            
+            let delayCount = 0;
+            reversedImages.forEach((imgInfo) => {
                 if(!imgInfo) return; 
+                
                 setTimeout(() => {
                     const link = document.createElement('a');
                     link.href = imgInfo.url;
@@ -169,7 +148,9 @@
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                }, idx * 500); 
+                }, delayCount * 1000); // 1초씩 텀을 둠
+                
+                delayCount++;
             });
         }
     </script>
