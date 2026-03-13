@@ -151,8 +151,34 @@
 
         // ---------------- 이력 관리 로직 (Firebase) ---------------- //
 
+        /**
+         * 목적: 서버에 콘티 이력을 저장함. 권한이 없으면 다운로드만 진행되도록 스킵함.
+         * 핵심 로직: 
+         * 1. localStorage에서 저장된 비번이 있는지 확인.
+         * 2. 없으면 prompt로 물어보고, 입력받으면 localStorage에 저장.
+         * 3. 비번이 없으면(취소 시) console에 로그만 남기고 함수를 종료(스킵).
+         * 4. 비번이 있으면 Firebase의 ?auth= 파라미터에 붙여서 전송.
+         */
         async function saveToHistory() {
             if (!FIREBASE_URL) return;
+
+            // 1. 브라우저에 저장된 비밀번호가 있는지 먼저 확인합니다.
+            let savedPassword = localStorage.getItem('worship_auth_key');
+
+            // 2. 저장된 비번이 없다면 새로 물어봅니다.
+            if (!savedPassword) {
+                const inputPassword = prompt("저장 권한 비밀번호를 입력하세요 (취소 시 서버 저장 스킵):");
+                
+                // 입력을 안 하거나 취소했다면 권한 없음으로 간주하고 '저장 단계만' 스킵합니다.
+                if (!inputPassword) {
+                    console.log("저장 권한이 없어 서버 기록을 스킵합니다.");
+                    return; 
+                }
+                
+                // 입력했다면 다음을 위해 브라우저에 저장해둡니다.
+                savedPassword = inputPassword;
+                localStorage.setItem('worship_auth_key', savedPassword);
+            }
 
             const titleText = document.getElementById('setlist-title').value.trim() || "제목 없는 콘티";
             const inputText = document.getElementById('song-input').value.trim();
@@ -168,14 +194,24 @@
                 timestamp: Date.now()
             };
 
+            // 3. 보안 규칙에 맞춰 URL 뒤에 인증 키를 붙입니다.
+            const AUTH_URL = `${FIREBASE_URL}?auth=${savedPassword}`;
+
             try {
-                await fetch(FIREBASE_URL, {
+                const response = await fetch(AUTH_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+
+                if (!response.ok) {
+                    // 만약 비번이 틀려서 서버에서 거절(401, 403)당했다면 저장된 비번을 삭제합니다.
+                    // 그래야 다음에 다시 물어볼 수 있으니까요!
+                    localStorage.removeItem('worship_auth_key');
+                    console.error("저장 실패: 비밀번호가 틀렸거나 권한이 없습니다.");
+                }
             } catch (error) {
-                console.error("이력 저장 실패:", error);
+                console.error("이력 저장 중 에러 발생:", error);
             }
         }
 
@@ -435,3 +471,4 @@
 </body>
 
 </html>
+
