@@ -23,12 +23,14 @@
         main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
         textarea { width: 100%; height: 130px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 16px; box-sizing: border-box; resize: none; }
         
-        .top-btn-group { display: flex; gap: 10px; margin-bottom: 10px; }
-        .btn-show-list { flex: 1; padding: 12px; background-color: #6c757d; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .top-btn-group { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .top-btn { flex: 1; min-width: 30%; padding: 12px 8px; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; }
         
-        /* 화면 꺼짐 방지 버튼 스타일 */
-        .btn-wakelock { flex: 1; padding: 12px; background-color: #444; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
-        .btn-wakelock.active { background-color: #f5a623; color: white; } /* 켜졌을 때 눈에 띄는 주황색으로 변경 */
+        .btn-show-list { background-color: #6c757d; }
+        .btn-history { background-color: #8e44ad; }
+        
+        .btn-wakelock { background-color: #444; transition: background-color 0.3s; }
+        .btn-wakelock.active { background-color: #f5a623; color: white; }
 
         .btn-group { display: flex; gap: 10px; margin-top: 10px; }
         .btn-search { flex: 2; padding: 15px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
@@ -63,6 +65,7 @@
         .modal-header {
             padding: 15px; background: #0070f3; color: white; display: flex; justify-content: space-between; align-items: center;
         }
+        .modal-header.history { background: #8e44ad; } 
         .modal-header h3 { margin: 0; font-size: 18px; }
         .btn-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
         .modal-search { padding: 10px; border-bottom: 1px solid #ddd; background: #f9f9f9; }
@@ -71,6 +74,10 @@
         .song-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 15px; color: #333; transition: background 0.2s; }
         .song-item:hover { background-color: #f0f8ff; }
         .song-item strong { color: #0070f3; margin-right: 8px; }
+        
+        .history-item { flex-direction: column; align-items: flex-start; }
+        .history-date { font-size: 12px; color: #888; margin-bottom: 5px; }
+        .history-text { font-size: 14px; white-space: pre-wrap; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -80,8 +87,9 @@
     <main>
         <div style="background: white; padding: 20px; border-radius: 12px;">
             <div class="top-btn-group">
-                <button class="btn-show-list" onclick="openSongModal()">📖 곡 리스트 찾기</button>
-                <button id="btn-wakelock" class="btn-wakelock" onclick="toggleWakeLock()">💡 화면 켜짐: OFF</button>
+                <button class="top-btn btn-show-list" onclick="openSongModal()">📖 전체 곡</button>
+                <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 지난 콘티</button>
+                <button id="btn-wakelock" class="top-btn btn-wakelock active" onclick="toggleWakeLock(true)">💡 화면: ON</button>
             </div>
             <textarea id="song-input" placeholder="[아래 예시처럼 붙여넣어 주세요]&#13;&#10;&#13;&#10;276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분"></textarea>
             
@@ -112,85 +120,172 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal-content">
+            <div class="modal-header history">
+                <h3>🕒 서버에서 불러오기</h3>
+                <button class="btn-close" onclick="closeHistoryModal()">&times;</button>
+            </div>
+            <ul class="modal-body" id="historyListContainer">
+            </ul>
+        </div>
+    </div>
+
     <script>
+        // ★★★여기에 3단계에서 복사한 구글 웹앱 URL을 붙여넣어 주세요!★★★
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzygADMEEPXrcF7wOIlTgDmClVTnnerxOjoKQnyArWA3EcKLdwvNkjiI-2SKaZggN8G/exec"; 
+        
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
         let foundImages = []; 
         let songArray = []; 
-        
-        // 화면 꺼짐 방지(Wake Lock)를 위한 변수
         let wakeLock = null;
-        let isWakeLockEnabled = false;
+        let isWakeLockEnabled = true; 
 
-        // ---------------- 화면 꺼짐 방지 (Wake Lock) 로직 ---------------- //
+        // ---------------- 구글 시트 기반 이력 관리 로직 ---------------- //
+
+        /**
+         * 목적: 미래의 내가 디버깅하기 위함.
+         * Input: 없음
+         * Output: 구글 시트로 POST 요청 전송
+         * 핵심 로직: 다운로드 실행 시 비동기 fetch를 통해 SCRIPT_URL로 현재 텍스트 정보를 전송함. (CORS 우회를 위해 text/plain 사용)
+         * 왜: 모든 팀원이 접속하는 브라우저에 상관없이 동일한 중앙 DB(구글 시트)에 이력을 누적하기 위함.
+         */
+        async function saveToHistory() {
+            if(SCRIPT_URL === "여기에_URL을_붙여넣으세요") return; // URL 미설정 시 패스
+
+            const inputText = document.getElementById('song-input').value.trim();
+            if (!inputText || inputText.includes("아래 예시처럼 붙여넣어 주세요")) return;
+
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            try {
+                // 구글 시트로 데이터 조용히 쏘기 (비동기로 진행되어 화면 멈춤 없음)
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                    body: JSON.stringify({ date: dateStr, text: inputText })
+                });
+            } catch (error) {
+                console.error("이력 저장 실패:", error);
+            }
+        }
 
         /**
          * 목적: 미래의 내가 디버깅하기 위함.
          * Input: 버튼 클릭 이벤트
-         * Output: Wake Lock API 요청 및 해제, 버튼 UI 변경
-         * 핵심 로직: 브라우저가 WakeLock API를 지원하는지 확인 후, 화면 켜짐 상태를 토글(ON/OFF)함.
-         * 왜: 연주 중에 악보를 보다가 스마트폰 화면이 절전 모드로 인해 꺼지는 것을 방지하여 원활한 예배 진행을 돕기 위함.
+         * Output: 구글 시트에서 GET 요청으로 데이터를 가져와 렌더링
+         * 핵심 로직: 모달 창을 띄우고 fetch API로 JSON 배열을 받아와 UI 리스트로 만들어 붙여줌.
+         * 왜: 언제든지 이전 주차의 콘티를 서버(시트)에서 불러와 재활용하거나 확인할 수 있도록 편의성을 제공하기 위함.
          */
-        async function toggleWakeLock() {
+        async function openHistoryModal() {
+            if(SCRIPT_URL === "여기에_URL을_붙여넣으세요") {
+                alert("아직 구글 웹앱 URL이 설정되지 않았습니다. 소스 코드를 확인해주세요!");
+                return;
+            }
+
+            const container = document.getElementById('historyListContainer');
+            container.innerHTML = "<li class='song-item' style='text-align:center;'>서버에서 이력을 불러오는 중입니다... ⏳</li>";
+            document.getElementById('historyModal').style.display = 'flex';
+
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const history = await response.json();
+
+                container.innerHTML = ""; 
+                if (history.length === 0) {
+                    container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>서버에 저장된 콘티 이력이 없습니다.</li>";
+                } else {
+                    history.forEach((item) => {
+                        const li = document.createElement('li');
+                        li.className = 'song-item history-item';
+                        li.innerHTML = `
+                            <div class="history-date">📅 ${item.date}</div>
+                            <div class="history-text">${item.text}</div>
+                        `;
+                        li.onclick = () => {
+                            document.getElementById('song-input').value = item.text;
+                            closeHistoryModal();
+                            alert("✅ 서버에서 콘티를 불러왔습니다.");
+                        };
+                        container.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ 서버 통신 에러가 발생했습니다.</li>";
+            }
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+
+        // ---------------- 화면 꺼짐 방지 로직 ---------------- //
+
+        async function initWakeLock() {
+            if (!('wakeLock' in navigator)) return;
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                isWakeLockEnabled = true;
+                const btn = document.getElementById('btn-wakelock');
+                btn.innerText = "💡 화면: ON";
+                btn.classList.add('active');
+                
+                wakeLock.addEventListener('release', () => {
+                    if (!isWakeLockEnabled) {
+                        btn.innerText = "💡 화면: OFF";
+                        btn.classList.remove('active');
+                    }
+                });
+            } catch (err) { }
+        }
+
+        function toggleWakeLock(manualToggle = false) {
             if (!('wakeLock' in navigator)) {
-                alert("현재 사용 중인 브라우저에서는 '화면 켜짐 유지' 기능을 지원하지 않습니다.\n(최신 크롬, 사파리, 삼성 인터넷을 권장합니다.)");
+                if(manualToggle) alert("현재 브라우저에서는 '화면 켜짐 유지' 기능을 지원하지 않습니다.");
                 return;
             }
 
             const btn = document.getElementById('btn-wakelock');
 
-            if (!isWakeLockEnabled) {
-                try {
-                    // 화면 꺼짐 방지 요청
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    isWakeLockEnabled = true;
-                    btn.innerText = "💡 화면 켜짐: ON";
-                    btn.classList.add('active');
+            if (manualToggle) {
+                isWakeLockEnabled = !isWakeLockEnabled;
+            }
 
-                    // 시스템에 의해 락이 풀렸을 때(예: 배터리 부족 등) 처리
-                    wakeLock.addEventListener('release', () => {
-                        if (!isWakeLockEnabled) {
-                            btn.innerText = "💡 화면 켜짐: OFF";
-                            btn.classList.remove('active');
-                        }
-                    });
-                } catch (err) {
-                    console.error(`${err.name}, ${err.message}`);
-                    alert("화면 켜짐 유지를 실행할 수 없습니다.");
-                }
+            if (isWakeLockEnabled) {
+                initWakeLock();
             } else {
-                // 수동으로 화면 꺼짐 방지 해제
                 if (wakeLock !== null) {
                     wakeLock.release()
                         .then(() => {
                             wakeLock = null;
-                            isWakeLockEnabled = false;
-                            btn.innerText = "💡 화면 켜짐: OFF";
+                            btn.innerText = "💡 화면: OFF";
                             btn.classList.remove('active');
                         });
+                } else {
+                    btn.innerText = "💡 화면: OFF";
+                    btn.classList.remove('active');
                 }
             }
         }
 
-        /**
-         * 핵심 로직: 사용자가 다른 앱을 보다가 다시 우리 앱으로 돌아왔을 때, 화면 켜짐 유지가 켜져있었다면 다시 활성화 시켜줌.
-         * 왜: 모바일 브라우저는 사용자가 탭을 전환하거나 앱을 내리면 Wake Lock을 강제로 해제해버리기 때문.
-         */
+        document.addEventListener('click', () => {
+            if (isWakeLockEnabled && wakeLock === null) initWakeLock();
+        }, { once: true });
+
         document.addEventListener('visibilitychange', async () => {
             if (wakeLock !== null && document.visibilityState === 'visible' && isWakeLockEnabled) {
                 try {
                     wakeLock = await navigator.wakeLock.request('screen');
-                } catch (err) {
-                    console.error("Wake Lock 재요청 실패:", err);
-                }
+                } catch (err) { }
             }
         });
 
-        // ---------------- 리스트 불러오기 (fetch) 로직 ---------------- //
+        // ---------------- 전체 곡 리스트 (fetch) 로직 ---------------- //
 
         async function initSongList() {
             const container = document.getElementById('songListContainer');
             container.innerHTML = "<li class='song-item' style='text-align:center;'>목록을 불러오는 중입니다... ⏳</li>";
-            
             try {
                 const response = await fetch('hymn_list.txt');
                 if (!response.ok) throw new Error('네트워크 응답이 정상이 아닙니다.');
@@ -201,20 +296,15 @@
                 songArray = cleanText.split('\n').filter(line => line.trim() !== "");
                 renderSongList(songArray);
             } catch (error) {
-                console.error('곡 목록 로드 에러:', error);
-                container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ hymn_list.txt 파일을 찾을 수 없습니다.<br>깃허브에 파일이 있는지 확인해주세요!</li>";
+                container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ hymn_list.txt 파일을 찾을 수 없습니다.</li>";
             }
         }
 
         async function openSongModal() {
             document.getElementById('songModal').style.display = 'flex';
             document.getElementById('searchInput').value = "";
-            
-            if (songArray.length === 0) {
-                await initSongList();
-            } else {
-                renderSongList(songArray);
-            }
+            if (songArray.length === 0) await initSongList();
+            else renderSongList(songArray);
         }
 
         function closeSongModal() {
@@ -230,16 +320,13 @@
         function renderSongList(list) {
             const container = document.getElementById('songListContainer');
             container.innerHTML = ""; 
-
             if (list.length === 0) {
                 container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>검색 결과가 없습니다.</li>";
                 return;
             }
-
             list.forEach(song => {
                 const li = document.createElement('li');
                 li.className = 'song-item';
-                
                 const match = song.match(/^(\d+)/);
                 if(match) {
                     const num = match[1];
@@ -248,7 +335,6 @@
                 } else {
                     li.textContent = song;
                 }
-
                 li.onclick = () => addSongToInput(song);
                 container.appendChild(li);
             });
@@ -257,18 +343,14 @@
         function addSongToInput(songLine) {
             const textarea = document.getElementById('song-input');
             let currentText = textarea.value;
-            
-            if (currentText.includes("아래 예시처럼 붙여넣어 주세요")) {
-                currentText = "";
-            } else if (currentText.trim() !== "") {
-                currentText += "\n"; 
-            }
+            if (currentText.includes("아래 예시처럼 붙여넣어 주세요")) currentText = "";
+            else if (currentText.trim() !== "") currentText += "\n"; 
             
             textarea.value = currentText + songLine;
             closeSongModal(); 
         }
 
-        // ---------------- 기존 악보 찾기 및 저장 기능들 ---------------- //
+        // ---------------- 기존 악보 찾기 및 다운로드 로직 ---------------- //
 
         function resetAll() {
             document.getElementById('song-input').value = "";
@@ -296,7 +378,6 @@
             const dd = String(today.getDate()).padStart(2, '0');
             const hours = today.getHours();
             const ampm = hours >= 12 ? 'PM' : 'AM'; 
-            
             const dateStr = `${yyyy}${mm}${dd}${ampm}`; 
 
             lines.forEach((line, index) => {
@@ -316,7 +397,6 @@
 
                     tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
                         const fileExt = finalSrc.substring(finalSrc.lastIndexOf('.'));
-                        
                         const fileName = `${dateStr}_${String(index + 1).padStart(2, '0')}_${songNumber}${fileExt}`;
                         
                         foundImages[index] = { url: finalSrc, name: fileName };
@@ -335,10 +415,8 @@
                 imgElement.parentElement.innerHTML += `<p class="error-msg">❌ images/${songNum} 파일을 찾을 수 없습니다.</p>`;
                 return;
             }
-
             const currentExt = EXTENSIONS[extIndex];
             const trySrc = `images/${songNum}${currentExt}`;
-
             const tempImg = new Image();
             tempImg.onload = function() {
                 imgElement.src = trySrc;
@@ -365,12 +443,14 @@
                 if (!confirm(`${validImages.length}개의 악보를 ${orderText} 저장합니다.`)) return;
             }
 
+            // 시트로 저장 실행! (비동기라 화면 멈춤 없음)
+            saveToHistory();
+
             const targetImages = isReverse ? [...foundImages].reverse() : [...foundImages];
             
             let delayCount = 0;
             targetImages.forEach((imgInfo) => {
                 if(!imgInfo) return; 
-                
                 setTimeout(() => {
                     fetch(imgInfo.url)
                         .then(response => response.blob())
@@ -386,7 +466,6 @@
                         })
                         .catch(err => console.error("다운로드 에러:", err));
                 }, delayCount * 1000); 
-                
                 delayCount++;
             });
         }
