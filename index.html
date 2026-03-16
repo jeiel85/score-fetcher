@@ -44,9 +44,14 @@
         .btn-history { background-color: #8e44ad; }
         .btn-wakelock { background-color: #444; transition: background-color 0.3s; }
         .btn-wakelock.active { background-color: #f5a623; color: white; }
+        
         .btn-group { display: flex; gap: 10px; margin-top: 10px; }
         .btn-search { flex: 2; padding: 15px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .btn-reset { flex: 1; padding: 15px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .btn-reset { flex: 1; padding: 15px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        
+        /* 비밀번호 초기화 버튼 스타일 */
+        .btn-auth-reset { flex: 1; padding: 15px; background-color: #ffeded; color: #d32f2f; border: 1px solid #ffcdd2; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+
         .result-area { margin-top: 30px; }
         .sheet-music-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); text-align: center; }
         .sheet-music-card img { width: 100%; height: auto; border-radius: 4px; min-height: 100px; background: #f0f0f0; }
@@ -61,6 +66,7 @@
         .btn-download-normal { flex: 2; padding: 15px 5px; background-color: #17a2b8; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
         .btn-download-reverse { flex: 2; padding: 15px 5px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
         .btn-top { flex: 1; padding: 15px 5px; background-color: #34495e; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        
         .modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.6); z-index: 100; display: none;
@@ -103,9 +109,10 @@
             <textarea id="song-input" placeholder="[아래 예시처럼 붙여넣어 주세요]&#13;&#10;&#13;&#10;276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분"></textarea>
 
             <div class="btn-group">
-                <button class="btn-reset" onclick="resetAll()">초기화 🔄</button>
-                <button class="btn-search" onclick="startSearch()">악보 찾기 🔍</button>
+                <button class="btn-reset" onclick="resetAll()">내용 초기화 🔄</button>
+                <button class="btn-auth-reset" onclick="resetAuth()">🔑 비번 초기화</button>
             </div>
+            <button class="btn-search" style="width:100%; margin-top:10px;" onclick="startSearch()">악보 찾기 🔍</button>
         </div>
         <div id="result-container" class="result-area"></div>
     </main>
@@ -140,7 +147,6 @@
     </div>
 
     <script>
-        // ★★★ 여기에 본인의 파이어베이스 주소를 직접 입력하세요! ★★★
         const FIREBASE_URL = "https://score-fetcher-db-default-rtdb.firebaseio.com/history.json";
 
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
@@ -149,33 +155,32 @@
         let wakeLock = null;
         let isWakeLockEnabled = true;
 
+        // ---------------- 비밀번호 초기화 로직 ---------------- //
+        
+        /**
+         * 목적: 기기에 저장된 인증 비밀번호를 삭제함.
+         * 핵심 로직: localStorage의 키를 제거하고 사용자에게 알림.
+         */
+        function resetAuth() {
+            if (confirm("기기에 저장된 저장 권한 비밀번호를 초기화할까요?\n다음 저장 시 다시 입력해야 합니다.")) {
+                localStorage.removeItem('worship_auth_key');
+                alert("비밀번호가 초기화되었습니다. 🔑");
+            }
+        }
+
         // ---------------- 이력 관리 로직 (Firebase) ---------------- //
 
-        /**
-         * 목적: 서버에 콘티 이력을 저장함. 권한이 없으면 다운로드만 진행되도록 스킵함.
-         * 핵심 로직: 
-         * 1. localStorage에서 저장된 비번이 있는지 확인.
-         * 2. 없으면 prompt로 물어보고, 입력받으면 localStorage에 저장.
-         * 3. 비번이 없으면(취소 시) console에 로그만 남기고 함수를 종료(스킵).
-         * 4. 비번이 있으면 Firebase의 ?auth= 파라미터에 붙여서 전송.
-         */
         async function saveToHistory() {
             if (!FIREBASE_URL) return;
 
-            // 1. 브라우저에 저장된 비밀번호가 있는지 먼저 확인합니다.
             let savedPassword = localStorage.getItem('worship_auth_key');
 
-            // 2. 저장된 비번이 없다면 새로 물어봅니다.
             if (!savedPassword) {
                 const inputPassword = prompt("저장 권한 비밀번호를 입력하세요 (취소 시 서버 저장 스킵):");
-                
-                // 입력을 안 하거나 취소했다면 권한 없음으로 간주하고 '저장 단계만' 스킵합니다.
                 if (!inputPassword) {
                     console.log("저장 권한이 없어 서버 기록을 스킵합니다.");
                     return; 
                 }
-                
-                // 입력했다면 다음을 위해 브라우저에 저장해둡니다.
                 savedPassword = inputPassword;
                 localStorage.setItem('worship_auth_key', savedPassword);
             }
@@ -194,7 +199,6 @@
                 timestamp: Date.now()
             };
 
-            // 3. 보안 규칙에 맞춰 URL 뒤에 인증 키를 붙입니다.
             const AUTH_URL = `${FIREBASE_URL}?auth=${savedPassword}`;
 
             try {
@@ -205,13 +209,11 @@
                 });
 
                 if (!response.ok) {
-                    // 만약 비번이 틀려서 서버에서 거절(401, 403)당했다면 저장된 비번을 삭제합니다.
-                    // 그래야 다음에 다시 물어볼 수 있으니까요!
                     localStorage.removeItem('worship_auth_key');
-                    console.error("저장 실패: 비밀번호가 틀렸거나 권한이 없습니다.");
+                    alert("비밀번호가 틀렸거나 권한이 없습니다. 다시 시도해 주세요.");
                 }
             } catch (error) {
-                console.error("이력 저장 중 에러 발생:", error);
+                console.error("이력 저장 실패:", error);
             }
         }
 
@@ -253,13 +255,12 @@
                             document.getElementById('download-bar').style.display = 'none';
                             foundImages = [];
                             closeHistoryModal();
-                            alert("✅ 서버에서 콘티를 불러왔습니다. '악보 찾기'를 눌러주세요!");
                         };
                         container.appendChild(li);
                     });
                 }
             } catch (error) {
-                container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ 서버 통신 에러가 발생했습니다.</li>";
+                container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ 서버 통신 에러</li>";
             }
         }
 
@@ -306,12 +307,11 @@
             try {
                 const response = await fetch('hymn_list.txt');
                 const text = await response.text();
-                // [정규식 수정] 텍스트 안의 태그만 제거
                 const cleanText = text.replace(/\\s*/g, '');
                 songArray = cleanText.split('\n').filter(line => line.trim() !== "");
                 renderSongList(songArray);
             } catch (error) {
-                container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ hymn_list.txt 에러</li>";
+                container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ 파일 에러</li>";
             }
         }
 
@@ -333,10 +333,6 @@
         function renderSongList(list) {
             const container = document.getElementById('songListContainer');
             container.innerHTML = ""; 
-            if (list.length === 0) {
-                container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>검색 결과 없음</li>";
-                return;
-            }
             list.forEach(song => {
                 const li = document.createElement('li');
                 li.className = 'song-item';
@@ -372,7 +368,6 @@
 
         function startSearch() {
             let rawText = document.getElementById('song-input').value;
-            
             let cleanLines = rawText.split('\n').map(line => {
                 let trimmed = line.trim();
                 if (!trimmed) return "";
@@ -390,9 +385,7 @@
 
             const resultContainer = document.getElementById('result-container');
             const downloadBar = document.getElementById('download-bar');
-            resultContainer.innerHTML = ""; 
-            foundImages = []; 
-            downloadBar.style.display = 'none'; 
+            resultContainer.innerHTML = ""; foundImages = []; downloadBar.style.display = 'none'; 
 
             const today = new Date();
             const ampm = today.getHours() >= 12 ? 'PM' : 'AM'; 
@@ -403,11 +396,9 @@
                 if (match) {
                     const songNumber = match[1];
                     const songTitle = line.substring(songNumber.length).trim();
-                    
                     const card = document.createElement('div');
                     card.className = 'sheet-music-card';
                     card.innerHTML = `<div class="sheet-title">${index + 1}. No.${songNumber} ${songTitle}</div>`;
-                    
                     const imgTag = document.createElement('img');
                     imgTag.alt = `${songNumber} 악보 찾는 중...`;
                     card.appendChild(imgTag);
@@ -442,14 +433,10 @@
         function downloadAll(isReverse) {
             const validImages = foundImages.filter(img => img !== undefined);
             if (validImages.length === 0) return alert("저장할 악보가 없습니다.");
-            
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            if (isMobile && !isReverse) {
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && !isReverse) {
                 if (!confirm("모바일은 역순 저장을 권장합니다. 진행할까요?")) return; 
             }
-
             saveToHistory();
-
             const targetImages = isReverse ? [...foundImages].reverse() : [...foundImages];
             let delayCount = 0;
             targetImages.forEach((imgInfo) => {
@@ -462,7 +449,7 @@
                         document.body.appendChild(link); link.click();
                         document.body.removeChild(link);
                         window.URL.revokeObjectURL(blobUrl); 
-                    }).catch(err => console.error(err));
+                    });
                 }, delayCount * 1000); 
                 delayCount++;
             });
@@ -471,4 +458,3 @@
 </body>
 
 </html>
-
