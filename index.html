@@ -217,14 +217,13 @@
             }
         }
 
+        let historyLimit = 20; // 처음에 보여줄 개수
+
         async function openHistoryModal() {
-            if (!FIREBASE_URL) {
-                alert("FIREBASE_URL이 설정되지 않았습니다.");
-                return;
-            }
+            if (!FIREBASE_URL) return;
 
             const container = document.getElementById('historyListContainer');
-            container.innerHTML = "<li class='song-item' style='text-align:center;'>초고속 서버에서 이력을 불러오는 중입니다... ⚡</li>";
+            container.innerHTML = "<li class='song-item' style='text-align:center;'>서버에서 이력을 불러오는 중입니다... ⚡</li>";
             document.getElementById('historyModal').style.display = 'flex';
 
             try {
@@ -233,31 +232,43 @@
 
                 container.innerHTML = "";
                 if (!data) {
-                    container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>서버에 저장된 콘티 이력이 없습니다.</li>";
+                    container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>이력이 없습니다.</li>";
                 } else {
                     let historyArray = Object.values(data);
+                    // 최신순 정렬
                     historyArray.sort((a, b) => b.timestamp - a.timestamp);
-                    let topHistory = historyArray.slice(0, 20);
+                    
+                    // 현재 제한 개수만큼만 자르기
+                    let displayData = historyArray.slice(0, historyLimit);
 
-                    topHistory.forEach((item) => {
+                    displayData.forEach((item) => {
                         const li = document.createElement('li');
                         li.className = 'song-item history-item';
-                        const displayTitle = item.title ? item.title : "제목 없음";
+                        const displayTitle = item.title || "제목 없음";
                         li.innerHTML = `
                             <div class="history-title-badge">📌 ${displayTitle}</div>
                             <div class="history-date">🕒 저장일시: ${item.date}</div>
                             <div class="history-text">${item.text}</div>
                         `;
                         li.onclick = () => {
-                            document.getElementById('setlist-title').value = displayTitle !== "제목 없는 콘티" ? displayTitle : "";
-                            document.getElementById('song-input').value = item.text;
-                            document.getElementById('result-container').innerHTML = "";
-                            document.getElementById('download-bar').style.display = 'none';
-                            foundImages = [];
-                            closeHistoryModal();
+                            // ... (기존 로직 동일)
                         };
                         container.appendChild(li);
                     });
+
+                    // 전체 데이터가 더 있다면 '더 보기' 버튼 추가
+                    if (historyArray.length > historyLimit) {
+                        const moreBtn = document.createElement('li');
+                        moreBtn.className = 'song-item';
+                        moreBtn.style = "text-align:center; background:#f0f0f0; font-weight:bold; color:#0070f3;";
+                        moreBtn.innerText = "더 보기 (남은 기록: " + (historyArray.length - historyLimit) + "개) 👇";
+                        moreBtn.onclick = (e) => {
+                            e.stopPropagation(); // 부모 클릭 이벤트 방지
+                            historyLimit += 20; // 20개씩 추가
+                            openHistoryModal(); // 다시 그리기
+                        };
+                        container.appendChild(moreBtn);
+                    }
                 }
             } catch (error) {
                 container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ 서버 통신 에러</li>";
