@@ -49,11 +49,12 @@
         .btn-wakelock { background-color: #444; transition: background-color 0.3s; }
         .btn-wakelock.active { background-color: #f5a623; color: white; }
 
-        /* 한 줄 버튼 그룹 */
-        .btn-group { display: flex; gap: 8px; margin-top: 10px; }
+        /* 두 줄 버튼 그룹 */
+        .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .btn-row   { display: flex; gap: 8px; }
         .btn-reset { flex: 1; padding: 13px 8px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
         .btn-save  { flex: 1; padding: 13px 8px; background-color: #28a745; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
-        .btn-search { flex: 2; padding: 13px 8px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-search { width: 100%; padding: 14px 8px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
 
         .result-area { margin-top: 30px; }
         .sheet-music-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: box-shadow 0.2s; }
@@ -85,12 +86,14 @@
         /* 전체화면 이전/다음 버튼 */
         .fullscreen-nav {
             position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(255,255,255,0.15); border: none; color: white;
+            background: rgba(255,255,255,0.2); border: none; color: white;
             font-size: 44px; line-height: 1; padding: 10px 14px; cursor: pointer;
             border-radius: 8px; z-index: 10; user-select: none;
-            transition: background 0.2s; -webkit-user-select: none;
+            transition: background 0.2s, opacity 0.2s; -webkit-user-select: none;
+            opacity: 1;
         }
-        .fullscreen-nav:active { background: rgba(255,255,255,0.3); }
+        .fullscreen-nav:active { background: rgba(255,255,255,0.4); }
+        .fullscreen-nav.hidden { opacity: 0; pointer-events: none; }
         .nav-prev { left: 6px; }
         .nav-next { right: 6px; }
 
@@ -135,11 +138,13 @@
 
             <textarea id="song-input" placeholder="[아래 예시처럼 붙여넣어 주세요]&#13;&#10;&#13;&#10;276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분"></textarea>
 
-            <!-- 한 줄 버튼 배치 -->
+            <!-- 두 줄 버튼 배치 -->
             <div class="btn-group">
-                <button class="btn-reset" onclick="resetAll()">초기화 🔄</button>
-                <button class="btn-save" onclick="saveConti()">저장 💾</button>
                 <button class="btn-search" onclick="startSearch()">악보 찾기 🔍</button>
+                <div class="btn-row">
+                    <button class="btn-reset" onclick="resetAll()">초기화 🔄</button>
+                    <button class="btn-save" onclick="saveConti()">저장 💾</button>
+                </div>
             </div>
         </div>
         <div id="result-container" class="result-area"></div>
@@ -498,10 +503,8 @@
 
             const prev = document.querySelector('.nav-prev');
             const next = document.querySelector('.nav-next');
-            prev.style.opacity       = hasPrev ? '1' : '0.15';
-            prev.style.pointerEvents = hasPrev ? 'auto' : 'none';
-            next.style.opacity       = hasNext ? '1' : '0.15';
-            next.style.pointerEvents = hasNext ? 'auto' : 'none';
+            prev.classList.toggle('hidden', !hasPrev);
+            next.classList.toggle('hidden', !hasNext);
         }
 
         function closeFullscreen() {
