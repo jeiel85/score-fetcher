@@ -130,9 +130,9 @@
     <main>
         <div style="background: white; padding: 20px; border-radius: 12px;">
             <div class="top-btn-group">
-                <button class="top-btn btn-show-list" onclick="openSongModal()">📖 전체 곡</button>
+                <button class="top-btn btn-show-list" onclick="openSongModal()">📖 악보 검색</button>
                 <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 지난 콘티</button>
-                <button id="btn-wakelock" class="top-btn btn-wakelock active" onclick="toggleWakeLock(true)">💡 화면: ON</button>
+                <button id="btn-wakelock" class="top-btn btn-wakelock active" onclick="toggleWakeLock(true)">💡 화면 켜짐 유지</button>
             </div>
 
             <input type="text" id="setlist-title" class="title-input" placeholder="콘티 제목 (예: 2026-03-15 수요예배)">
@@ -169,7 +169,7 @@
     <div class="modal-overlay" id="songModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>📖 전체 곡 리스트</h3>
+                <h3>📖 악보 검색</h3>
                 <button class="btn-close" onclick="closeSongModal()">&times;</button>
             </div>
             <div class="modal-search">
@@ -325,7 +325,7 @@
                 wakeLock = await navigator.wakeLock.request('screen');
                 isWakeLockEnabled = true;
                 const btn = document.getElementById('btn-wakelock');
-                btn.innerText = "💡 화면: ON";
+                btn.innerText = "💡 화면 켜짐 유지";
                 btn.classList.add('active');
             } catch (err) {}
         }
@@ -341,7 +341,7 @@
                 if (wakeLock !== null) {
                     wakeLock.release().then(() => {
                         wakeLock = null;
-                        btn.innerText = "💡 화면: OFF";
+                        btn.innerText = "💡 화면 꺼짐";
                         btn.classList.remove('active');
                     });
                 }
@@ -478,11 +478,30 @@
 
         // ─── 전체화면 뷰어 ───────────────────────────────────────────────────
 
+        function visibleSheetCount() {
+            return sheetList.filter(s => s !== null).length;
+        }
+
+        function visibleSheetRank(index) {
+            // null이 아닌 항목 중 몇 번째인지 (1-based)
+            let rank = 0;
+            for (let i = 0; i <= index; i++) if (sheetList[i]) rank++;
+            return rank;
+        }
+
+        function updateFullscreenTitle(index) {
+            const sheet = sheetList[index];
+            const rank  = visibleSheetRank(index);
+            const total = visibleSheetCount();
+            document.getElementById('fullscreen-title').textContent =
+                `${sheet.label}  (${rank}/${total})`;
+        }
+
         function openFullscreen(index) {
             currentSheetIndex = index;
             const sheet = sheetList[index];
-            document.getElementById('fullscreen-img').src   = sheet.src;
-            document.getElementById('fullscreen-title').textContent = sheet.label;
+            document.getElementById('fullscreen-img').src = sheet.src;
+            updateFullscreenTitle(index);
             document.getElementById('fullscreenViewer').style.display = 'flex';
             updateNavBtns();
         }
@@ -494,8 +513,8 @@
             if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;
             currentSheetIndex = newIndex;
             const sheet = sheetList[currentSheetIndex];
-            document.getElementById('fullscreen-img').src   = sheet.src;
-            document.getElementById('fullscreen-title').textContent = sheet.label;
+            document.getElementById('fullscreen-img').src = sheet.src;
+            updateFullscreenTitle(currentSheetIndex);
             updateNavBtns();
         }
 
@@ -514,14 +533,24 @@
             document.getElementById('fullscreenViewer').style.display = 'none';
         }
 
-        // 터치 스와이프 지원
+        // 터치 스와이프(좌우: 페이지 이동, 하단: 닫기) 지원
         (() => {
-            let touchStartX = 0;
+            let touchStartX = 0, touchStartY = 0;
             const viewer = document.getElementById('fullscreenViewer');
-            viewer.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
-            viewer.addEventListener('touchend',   e => {
+            viewer.addEventListener('touchstart', e => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+            viewer.addEventListener('touchend', e => {
                 const dx = e.changedTouches[0].clientX - touchStartX;
-                if (Math.abs(dx) > 50) navigateSheet(dx < 0 ? 1 : -1);
+                const dy = e.changedTouches[0].clientY - touchStartY;
+                if (dy > 80 && Math.abs(dy) > Math.abs(dx)) {
+                    // 하단 드래그: 닫기
+                    closeFullscreen();
+                } else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                    // 좌우 스와이프: 페이지 이동
+                    navigateSheet(dx < 0 ? 1 : -1);
+                }
             }, { passive: true });
         })();
 
