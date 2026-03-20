@@ -11,46 +11,56 @@
     <meta name="theme-color" content="#0070f3">
     <link rel="manifest" href="manifest.json">
 
+    <!-- Firebase SDK (Cloud Messaging 푸시 알림용) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+
     <style>
         html { background-color: #e2e8f0; display: flex; justify-content: center; }
-        body { 
-            width: 100%; max-width: 600px; margin: 0; padding: 0; 
-            font-family: -apple-system, sans-serif; background-color: #f5f5f5; 
-            display: flex; flex-direction: column; height: 100vh; 
+        body {
+            width: 100%; max-width: 600px; margin: 0; padding: 0;
+            font-family: -apple-system, sans-serif; background-color: #f5f5f5;
+            display: flex; flex-direction: column; height: 100vh;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); position: relative;
         }
-        header { 
-            background-color: white; padding: 15px; text-align: center; 
-            font-weight: bold; font-size: 18px; position: sticky; top: 0; 
-            z-index: 10; border-bottom: 1px solid #ddd; 
+        header {
+            background-color: white; padding: 15px; text-align: center;
+            font-weight: bold; font-size: 18px; position: sticky; top: 0;
+            z-index: 10; border-bottom: 1px solid #ddd;
         }
-        main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
-        .title-input { 
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; 
-            font-size: 16px; box-sizing: border-box; margin-bottom: 10px; 
-            font-weight: bold; color: #333; 
+        main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 40px; }
+        .title-input {
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 16px; box-sizing: border-box; margin-bottom: 10px;
+            font-weight: bold; color: #333;
         }
-        textarea { 
-            width: 100%; height: 130px; border: 1px solid #ddd; border-radius: 8px; 
-            padding: 10px; font-size: 16px; box-sizing: border-box; resize: none; 
+        textarea {
+            width: 100%; height: 130px; border: 1px solid #ddd; border-radius: 8px;
+            padding: 10px; font-size: 16px; box-sizing: border-box; resize: none;
         }
         .top-btn-group { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
-        .top-btn { 
-            flex: 1; min-width: 30%; padding: 12px 8px; color: white; 
-            border: none; border-radius: 8px; font-size: 13px; font-weight: bold; 
-            cursor: pointer; text-align: center; 
+        .top-btn {
+            flex: 1; min-width: 30%; padding: 12px 8px; color: white;
+            border: none; border-radius: 8px; font-size: 13px; font-weight: bold;
+            cursor: pointer; text-align: center;
         }
         .btn-show-list { background-color: #6c757d; }
         .btn-history { background-color: #8e44ad; }
         .btn-wakelock { background-color: #444; transition: background-color 0.3s; }
         .btn-wakelock.active { background-color: #f5a623; color: white; }
-        
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-search { flex: 2; padding: 15px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .btn-reset { flex: 1; padding: 15px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        
+
+        /* 한 줄 버튼 그룹 */
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-reset { flex: 1; padding: 13px 8px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .btn-save  { flex: 1; padding: 13px 8px; background-color: #28a745; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .btn-search { flex: 2; padding: 13px 8px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
 
         .result-area { margin-top: 30px; }
+        .sheet-music-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: box-shadow 0.2s; }
+        .sheet-music-card:active { box-shadow: 0 4px 12px rgba(0,112,243,0.25); }
+        .sheet-music-card img { width: 100%; height: auto; border-radius: 4px; min-height: 100px; background: #f0f0f0; }
+        .sheet-title { margin-bottom: 10px; font-weight: bold; color: #333; text-align: left; }
+        .error-msg { color: #ff4d4f; font-size: 14px; margin-top: 10px; font-weight: bold; }
 
         /* 악보 전체화면 뷰어 */
         .fullscreen-overlay {
@@ -60,32 +70,41 @@
         }
         .fullscreen-header {
             background: rgba(0,0,0,0.8); color: white;
-            padding: 12px 16px; font-size: 16px; font-weight: bold;
+            padding: 12px 16px; font-size: 15px; font-weight: bold;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
+            border-bottom: 1px solid rgba(255,255,255,0.15); flex-shrink: 0;
         }
-        .fullscreen-header .btn-close { font-size: 28px; }
+        .fullscreen-header .fs-title { flex: 1; margin-right: 10px; }
+        .fullscreen-header .btn-close { font-size: 28px; background: none; border: none; color: white; cursor: pointer; flex-shrink: 0; }
         .fullscreen-body {
-            flex: 1; overflow-y: auto; display: flex;
+            flex: 1; overflow-y: auto; display: flex; position: relative;
             justify-content: center; align-items: flex-start; padding: 10px;
         }
         .fullscreen-body img { width: 100%; height: auto; border-radius: 4px; }
-        .sheet-music-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); text-align: center; }
-        .sheet-music-card img { width: 100%; height: auto; border-radius: 4px; min-height: 100px; background: #f0f0f0; }
-        .sheet-title { margin-bottom: 10px; font-weight: bold; color: #333; text-align: left; }
-        .error-msg { color: #ff4d4f; font-size: 14px; margin-top: 10px; font-weight: bold; }
-        
+
+        /* 전체화면 이전/다음 버튼 */
+        .fullscreen-nav {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.15); border: none; color: white;
+            font-size: 44px; line-height: 1; padding: 10px 14px; cursor: pointer;
+            border-radius: 8px; z-index: 10; user-select: none;
+            transition: background 0.2s; -webkit-user-select: none;
+        }
+        .fullscreen-nav:active { background: rgba(255,255,255,0.3); }
+        .nav-prev { left: 6px; }
+        .nav-next { right: 6px; }
+
         .modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); z-index: 100; display: none;
+            background: rgba(0,0,0,0.6); z-index: 100; display: none;
             justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
         }
         .modal-content {
             background: white; width: 100%; max-height: 90%; border-radius: 12px;
-            display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         .modal-header { padding: 15px; background: #0070f3; color: white; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header.history { background: #8e44ad; } 
+        .modal-header.history { background: #8e44ad; }
         .modal-header h3 { margin: 0; font-size: 18px; }
         .btn-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
         .modal-search { padding: 10px; border-bottom: 1px solid #ddd; background: #f9f9f9; }
@@ -95,7 +114,7 @@
         .song-item:hover { background-color: #f0f8ff; }
         .song-item strong { color: #0070f3; margin-right: 8px; }
         .history-item { flex-direction: column; align-items: flex-start; }
-        .history-title-badge { font-size: 15px; font-weight: bold; color: #8e44ad; margin-bottom: 5px; display: block; } 
+        .history-title-badge { font-size: 15px; font-weight: bold; color: #8e44ad; margin-bottom: 5px; display: block; }
         .history-date { font-size: 12px; color: #888; margin-bottom: 8px; }
         .history-text { font-size: 14px; white-space: pre-wrap; line-height: 1.4; padding-left: 5px; border-left: 3px solid #eee; color: #555; }
     </style>
@@ -116,14 +135,28 @@
 
             <textarea id="song-input" placeholder="[아래 예시처럼 붙여넣어 주세요]&#13;&#10;&#13;&#10;276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분"></textarea>
 
+            <!-- 한 줄 버튼 배치 -->
             <div class="btn-group">
-                <button class="btn-reset" onclick="resetAll()">내용 초기화 🔄</button>
+                <button class="btn-reset" onclick="resetAll()">초기화 🔄</button>
+                <button class="btn-save" onclick="saveConti()">저장 💾</button>
+                <button class="btn-search" onclick="startSearch()">악보 찾기 🔍</button>
             </div>
-            <button class="btn-search" style="width:100%; margin-top:10px;" onclick="startSearch()">악보 찾기 🔍</button>
         </div>
         <div id="result-container" class="result-area"></div>
     </main>
 
+    <!-- 악보 전체화면 뷰어 (좌우 이동 포함) -->
+    <div class="fullscreen-overlay" id="fullscreenViewer">
+        <div class="fullscreen-header">
+            <span class="fs-title" id="fullscreen-title"></span>
+            <button class="btn-close" onclick="closeFullscreen()">&times;</button>
+        </div>
+        <div class="fullscreen-body" id="fullscreen-body">
+            <button class="fullscreen-nav nav-prev" onclick="navigateSheet(-1)">&#8249;</button>
+            <img id="fullscreen-img" src="" alt="">
+            <button class="fullscreen-nav nav-next" onclick="navigateSheet(1)">&#8250;</button>
+        </div>
+    </div>
 
     <div class="modal-overlay" id="songModal">
         <div class="modal-content">
@@ -138,16 +171,6 @@
         </div>
     </div>
 
-    <div class="fullscreen-overlay" id="fullscreenViewer">
-        <div class="fullscreen-header">
-            <span id="fullscreen-title"></span>
-            <button class="btn-close" onclick="closeFullscreen()">&times;</button>
-        </div>
-        <div class="fullscreen-body">
-            <img id="fullscreen-img" src="" alt="">
-        </div>
-    </div>
-
     <div class="modal-overlay" id="historyModal">
         <div class="modal-content">
             <div class="modal-header history">
@@ -159,14 +182,34 @@
     </div>
 
     <script>
-        const FIREBASE_URL = "https://score-fetcher-db-default-rtdb.firebaseio.com/history.json";
+        // ─── Firebase / FCM 설정 ───────────────────────────────────────────────
+        // ⚠️ Firebase 콘솔 > 프로젝트 설정 > 일반 탭에서 복사해서 붙여넣으세요
+        const FIREBASE_CONFIG = {
+            apiKey:            "YOUR_API_KEY",
+            authDomain:        "score-fetcher-db.firebaseapp.com",
+            databaseURL:       "https://score-fetcher-db-default-rtdb.firebaseio.com",
+            projectId:         "score-fetcher-db",
+            storageBucket:     "score-fetcher-db.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId:             "YOUR_APP_ID"
+        };
+        // ⚠️ Firebase 콘솔 > 프로젝트 설정 > Cloud Messaging > 웹 푸시 인증서 > 키 쌍
+        const VAPID_KEY = "YOUR_VAPID_KEY";
+        // ─────────────────────────────────────────────────────────────────────
 
+        const FIREBASE_URL    = "https://score-fetcher-db-default-rtdb.firebaseio.com/history.json";
+        const FCM_TOKENS_URL  = "https://score-fetcher-db-default-rtdb.firebaseio.com/fcm_tokens.json";
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
+
         let songArray = [];
-        let wakeLock = null;
+        let wakeLock  = null;
         let isWakeLockEnabled = true;
 
-        // ---------------- 이력 관리 로직 (Firebase) ---------------- //
+        // 전체화면 뷰어용 악보 목록
+        let sheetList = [];          // { src, label } | null
+        let currentSheetIndex = 0;
+
+        // ─── 이력 관리 (Firebase) ────────────────────────────────────────────
 
         async function saveToHistory() {
             if (!FIREBASE_URL) return;
@@ -176,14 +219,9 @@
             if (!inputText || inputText.includes("아래 예시처럼 붙여넣어 주세요")) return;
 
             const now = new Date();
-            const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-            const payload = {
-                date: dateStr,
-                title: titleText,
-                text: inputText,
-                timestamp: Date.now()
-            };
+            const payload = { date: dateStr, title: titleText, text: inputText, timestamp: Date.now() };
 
             try {
                 await fetch(FIREBASE_URL, {
@@ -196,7 +234,24 @@
             }
         }
 
-        let historyLimit = 20; // 처음에 보여줄 개수
+        // 저장 버튼 클릭 시 (제목 필수 체크)
+        async function saveConti() {
+            const title = document.getElementById('setlist-title').value.trim();
+            if (!title) {
+                alert("콘티 제목을 입력해주세요!\n예) 2026-03-20 금요예배");
+                document.getElementById('setlist-title').focus();
+                return;
+            }
+            const inputText = document.getElementById('song-input').value.trim();
+            if (!inputText || inputText.includes("아래 예시처럼 붙여넣어 주세요")) {
+                alert("곡 목록을 입력해주세요!");
+                return;
+            }
+            await saveToHistory();
+            alert("콘티가 저장되었습니다! ✅");
+        }
+
+        let historyLimit = 20;
 
         async function openHistoryModal() {
             if (!FIREBASE_URL) return;
@@ -214,10 +269,7 @@
                     container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>이력이 없습니다.</li>";
                 } else {
                     let historyArray = Object.values(data);
-                    // 최신순 정렬
                     historyArray.sort((a, b) => b.timestamp - a.timestamp);
-                    
-                    // 현재 제한 개수만큼만 자르기
                     let displayData = historyArray.slice(0, historyLimit);
 
                     displayData.forEach((item) => {
@@ -237,16 +289,15 @@
                         container.appendChild(li);
                     });
 
-                    // 전체 데이터가 더 있다면 '더 보기' 버튼 추가
                     if (historyArray.length > historyLimit) {
                         const moreBtn = document.createElement('li');
                         moreBtn.className = 'song-item';
                         moreBtn.style = "text-align:center; background:#f0f0f0; font-weight:bold; color:#0070f3;";
                         moreBtn.innerText = "더 보기 (남은 기록: " + (historyArray.length - historyLimit) + "개) 👇";
                         moreBtn.onclick = (e) => {
-                            e.stopPropagation(); // 부모 클릭 이벤트 방지
-                            historyLimit += 20; // 20개씩 추가
-                            openHistoryModal(); // 다시 그리기
+                            e.stopPropagation();
+                            historyLimit += 20;
+                            openHistoryModal();
                         };
                         container.appendChild(moreBtn);
                     }
@@ -258,7 +309,7 @@
 
         function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
 
-        // ---------------- 화면 꺼짐 방지 로직 ---------------- //
+        // ─── 화면 꺼짐 방지 ──────────────────────────────────────────────────
 
         async function initWakeLock() {
             if (!('wakeLock' in navigator)) return;
@@ -268,7 +319,7 @@
                 const btn = document.getElementById('btn-wakelock');
                 btn.innerText = "💡 화면: ON";
                 btn.classList.add('active');
-            } catch (err) { }
+            } catch (err) {}
         }
 
         function toggleWakeLock(manualToggle = false) {
@@ -291,7 +342,7 @@
 
         document.addEventListener('click', () => { if (isWakeLockEnabled && wakeLock === null) initWakeLock(); }, { once: true });
 
-        // ---------------- 전체 곡 리스트 로직 ---------------- //
+        // ─── 전체 곡 리스트 ──────────────────────────────────────────────────
 
         async function initSongList() {
             const container = document.getElementById('songListContainer');
@@ -324,12 +375,12 @@
 
         function renderSongList(list) {
             const container = document.getElementById('songListContainer');
-            container.innerHTML = ""; 
+            container.innerHTML = "";
             list.forEach(song => {
                 const li = document.createElement('li');
                 li.className = 'song-item';
                 const match = song.match(/^(\d+)/);
-                if(match) {
+                if (match) {
                     const num = match[1];
                     const title = song.substring(num.length).trim();
                     li.innerHTML = `<strong>${num}</strong> ${title}`;
@@ -343,17 +394,18 @@
             const textarea = document.getElementById('song-input');
             let currentText = textarea.value;
             if (currentText.includes("아래 예시처럼 붙여넣어 주세요")) currentText = "";
-            else if (currentText.trim() !== "") currentText += "\n"; 
+            else if (currentText.trim() !== "") currentText += "\n";
             textarea.value = currentText + songLine;
-            closeSongModal(); 
+            closeSongModal();
         }
 
-        // ---------------- 악보 찾기 및 다운로드 ---------------- //
+        // ─── 악보 찾기 ────────────────────────────────────────────────────────
 
         function resetAll() {
             document.getElementById('setlist-title').value = "";
             document.getElementById('song-input').value = "";
             document.getElementById('result-container').innerHTML = "";
+            sheetList = [];
         }
 
         function startSearch() {
@@ -375,6 +427,7 @@
 
             const resultContainer = document.getElementById('result-container');
             resultContainer.innerHTML = "";
+            sheetList = new Array(cleanLines.length).fill(null);
 
             saveToHistory();
 
@@ -382,32 +435,24 @@
                 const match = line.match(/^(\d+)/);
                 if (match) {
                     const songNumber = match[1];
-                    const songTitle = line.substring(songNumber.length).trim();
+                    const songTitle  = line.substring(songNumber.length).trim();
                     const label = `${index + 1}. No.${songNumber} ${songTitle}`;
+
                     const card = document.createElement('div');
                     card.className = 'sheet-music-card';
-                    card.style.cursor = 'pointer';
                     card.innerHTML = `<div class="sheet-title">${label}</div>`;
+
                     const imgTag = document.createElement('img');
                     imgTag.alt = `${songNumber} 악보 찾는 중...`;
                     card.appendChild(imgTag);
                     resultContainer.appendChild(card);
 
                     tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
-                        card.onclick = () => openFullscreen(finalSrc, label);
+                        sheetList[index] = { src: finalSrc, label };
+                        card.onclick = () => openFullscreen(index);
                     });
                 }
             });
-        }
-
-        function openFullscreen(src, label) {
-            document.getElementById('fullscreen-img').src = src;
-            document.getElementById('fullscreen-title').textContent = label;
-            document.getElementById('fullscreenViewer').style.display = 'flex';
-        }
-
-        function closeFullscreen() {
-            document.getElementById('fullscreenViewer').style.display = 'none';
         }
 
         function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
@@ -416,14 +461,112 @@
                 imgElement.parentElement.innerHTML += `<p class="error-msg">❌ images/${songNum} 없음</p>`;
                 return;
             }
-            const currentExt = EXTENSIONS[extIndex];
-            const trySrc = `images/${songNum}${currentExt}`;
+            const trySrc = `images/${songNum}${EXTENSIONS[extIndex]}`;
             const tempImg = new Image();
             tempImg.onload = () => { imgElement.src = trySrc; onSuccess(trySrc); };
             tempImg.onerror = () => { tryLoadImage(imgElement, songNum, extIndex + 1, onSuccess); };
-            tempImg.src = trySrc; 
+            tempImg.src = trySrc;
         }
 
+        // ─── 전체화면 뷰어 ───────────────────────────────────────────────────
+
+        function openFullscreen(index) {
+            currentSheetIndex = index;
+            const sheet = sheetList[index];
+            document.getElementById('fullscreen-img').src   = sheet.src;
+            document.getElementById('fullscreen-title').textContent = sheet.label;
+            document.getElementById('fullscreenViewer').style.display = 'flex';
+            updateNavBtns();
+        }
+
+        function navigateSheet(dir) {
+            let newIndex = currentSheetIndex + dir;
+            // null(이미지 없음) 항목 건너뜀
+            while (newIndex >= 0 && newIndex < sheetList.length && !sheetList[newIndex]) newIndex += dir;
+            if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;
+            currentSheetIndex = newIndex;
+            const sheet = sheetList[currentSheetIndex];
+            document.getElementById('fullscreen-img').src   = sheet.src;
+            document.getElementById('fullscreen-title').textContent = sheet.label;
+            updateNavBtns();
+        }
+
+        function updateNavBtns() {
+            let hasPrev = false, hasNext = false;
+            for (let i = currentSheetIndex - 1; i >= 0; i--)                if (sheetList[i]) { hasPrev = true; break; }
+            for (let i = currentSheetIndex + 1; i < sheetList.length; i++) if (sheetList[i]) { hasNext = true; break; }
+
+            const prev = document.querySelector('.nav-prev');
+            const next = document.querySelector('.nav-next');
+            prev.style.opacity       = hasPrev ? '1' : '0.15';
+            prev.style.pointerEvents = hasPrev ? 'auto' : 'none';
+            next.style.opacity       = hasNext ? '1' : '0.15';
+            next.style.pointerEvents = hasNext ? 'auto' : 'none';
+        }
+
+        function closeFullscreen() {
+            document.getElementById('fullscreenViewer').style.display = 'none';
+        }
+
+        // 터치 스와이프 지원
+        (() => {
+            let touchStartX = 0;
+            const viewer = document.getElementById('fullscreenViewer');
+            viewer.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+            viewer.addEventListener('touchend',   e => {
+                const dx = e.changedTouches[0].clientX - touchStartX;
+                if (Math.abs(dx) > 50) navigateSheet(dx < 0 ? 1 : -1);
+            }, { passive: true });
+        })();
+
+        // ─── PWA 푸시 알림 (FCM) ─────────────────────────────────────────────
+
+        async function initPushNotification() {
+            if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+            // VAPID_KEY가 설정되지 않으면 스킵
+            if (VAPID_KEY === "YOUR_VAPID_KEY") return;
+
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                await navigator.serviceWorker.ready;
+
+                if (Notification.permission === 'default') {
+                    await Notification.requestPermission();
+                }
+                if (Notification.permission !== 'granted') return;
+
+                const messaging = firebase.messaging();
+                const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
+
+                if (token) {
+                    const storedToken = localStorage.getItem('fcm_token');
+                    if (storedToken !== token) {
+                        await fetch(FCM_TOKENS_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(token)
+                        });
+                        localStorage.setItem('fcm_token', token);
+                    }
+                }
+
+                // 앱이 열려있을 때 포그라운드 알림 처리
+                messaging.onMessage((payload) => {
+                    const toast = document.createElement('div');
+                    toast.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#222;color:white;padding:14px 20px;border-radius:10px;z-index:9999;font-size:14px;max-width:90%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);';
+                    toast.textContent = `🎶 ${payload.notification?.body || '새 콘티가 등록되었습니다'}`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 5000);
+                });
+
+            } catch (error) {
+                console.error('Push 설정 실패:', error);
+            }
+        }
+
+        window.addEventListener('load', initPushNotification);
     </script>
 </body>
 
