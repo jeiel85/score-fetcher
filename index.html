@@ -251,7 +251,9 @@
                             <div class="history-text">${item.text}</div>
                         `;
                         li.onclick = () => {
-                            // ... (기존 로직 동일)
+                            document.getElementById('setlist-title').value = item.title || "";
+                            document.getElementById('song-input').value = item.text || "";
+                            closeHistoryModal();
                         };
                         container.appendChild(li);
                     });
