@@ -321,13 +321,17 @@
 
         async function initWakeLock() {
             if (!('wakeLock' in navigator)) return;
+            if (wakeLock !== null) return; // 이미 획득 중
             try {
                 wakeLock = await navigator.wakeLock.request('screen');
-                isWakeLockEnabled = true;
+                // 브라우저가 자동 해제하면 상태만 초기화 (재획득은 visibilitychange가 담당)
+                wakeLock.addEventListener('release', () => { wakeLock = null; });
                 const btn = document.getElementById('btn-wakelock');
                 btn.innerText = "💡 화면 켜짐 유지";
                 btn.classList.add('active');
-            } catch (err) {}
+            } catch (err) {
+                console.warn('WakeLock 획득 실패:', err);
+            }
         }
 
         function toggleWakeLock(manualToggle = false) {
@@ -344,11 +348,22 @@
                         btn.innerText = "💡 화면 꺼짐";
                         btn.classList.remove('active');
                     });
+                } else {
+                    btn.innerText = "💡 화면 꺼짐";
+                    btn.classList.remove('active');
                 }
             }
         }
 
+        // 첫 사용자 인터랙션 시 Wake Lock 획득 (브라우저 정책상 필요)
         document.addEventListener('click', () => { if (isWakeLockEnabled && wakeLock === null) initWakeLock(); }, { once: true });
+
+        // 탭 복귀 시 Wake Lock 재획득 (백그라운드/화면꺼짐으로 자동 해제된 경우)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && isWakeLockEnabled && wakeLock === null) {
+                initWakeLock();
+            }
+        });
 
         // ─── 전체 곡 리스트 ──────────────────────────────────────────────────
 
