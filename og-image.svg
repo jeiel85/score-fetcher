@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0070f3"/>
+      <stop offset="100%" style="stop-color:#7928ca"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- 배경 -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- 배경 장식 원 -->
+  <circle cx="1050" cy="150" r="200" fill="#0070f3" opacity="0.07"/>
+  <circle cx="150" cy="500" r="160" fill="#7928ca" opacity="0.07"/>
+
+  <!-- 상단 악센트 바 -->
+  <rect x="80" y="80" width="120" height="6" rx="3" fill="url(#accent)"/>
+
+  <!-- 음표 아이콘 영역 -->
+  <text x="80" y="230" font-size="90" font-family="Arial, sans-serif" fill="white" opacity="0.15">🎵</text>
+
+  <!-- 메인 타이틀 -->
+  <text x="80" y="310" font-family="'Apple SD Gothic Neo', 'Noto Sans KR', Arial, sans-serif"
+        font-size="72" font-weight="700" fill="white" filter="url(#glow)">찬양 악보 매니저</text>
+
+  <!-- 서브타이틀 -->
+  <text x="84" y="375" font-family="'Apple SD Gothic Neo', 'Noto Sans KR', Arial, sans-serif"
+        font-size="34" font-weight="400" fill="#94a3b8">예배 콘티 · 악보 뷰어 · 실시간 공유</text>
+
+  <!-- 구분선 -->
+  <rect x="80" y="415" width="1040" height="1" fill="#334155"/>
+
+  <!-- 기능 태그 -->
+  <rect x="80" y="447" width="160" height="44" rx="22" fill="#0070f3" opacity="0.2"/>
+  <text x="160" y="475" text-anchor="middle" font-family="'Apple SD Gothic Neo', 'Noto Sans KR', Arial, sans-serif"
+        font-size="22" fill="#60a5fa">📖 전체 리스트</text>
+
+  <rect x="260" y="447" width="160" height="44" rx="22" fill="#7928ca" opacity="0.2"/>
+  <text x="340" y="475" text-anchor="middle" font-family="'Apple SD Gothic Neo', 'Noto Sans KR', Arial, sans-serif"
+        font-size="22" fill="#c084fc">🕒 지난 콘티</text>
+
+  <rect x="440" y="447" width="160" height="44" rx="22" fill="#059669" opacity="0.2"/>
+  <text x="520" y="475" text-anchor="middle" font-family="'Apple SD Gothic Neo', 'Noto Sans KR', Arial, sans-serif"
+        font-size="22" fill="#34d399">🔔 푸시 알림</text>
+
+  <rect x="620" y="447" width="160" height="44" rx="22" fill="#d97706" opacity="0.2"/>
+  <text x="700" y="475" text-anchor="middle" font-family="'Apple SD Gothic Neo', 'Noto Sans KR', Arial, sans-serif"
+        font-size="22" fill="#fbbf24">💡 화면 유지</text>
+
+  <!-- URL 표시 -->
+  <text x="80" y="565" font-family="'SF Mono', 'Consolas', monospace"
+        font-size="26" fill="#475569">score-fetcher.vercel.app</text>
+
+  <!-- 우측 장식 -->
+  <text x="1060" y="340" text-anchor="middle" font-size="140" font-family="Arial"
+        fill="white" opacity="0.06">♪</text>
+</svg>
