@@ -133,10 +133,12 @@
         .song-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 15px; color: #333; transition: background 0.2s; }
         .song-item:hover { background-color: #f0f8ff; }
         .song-item strong { color: #0070f3; margin-right: 8px; }
-        .history-item { flex-direction: column; align-items: flex-start; }
+        .history-item { flex-direction: column; align-items: flex-start; position: relative; }
         .history-title-badge { font-size: 15px; font-weight: bold; color: #8e44ad; margin-bottom: 5px; display: block; }
         .history-date { font-size: 12px; color: #888; margin-bottom: 8px; }
         .history-text { font-size: 14px; white-space: pre-wrap; line-height: 1.4; padding-left: 5px; border-left: 3px solid #eee; color: #555; }
+        .history-item.pressing { background-color: #fde8f0 !important; }
+        .history-delete-hint { font-size: 11px; color: #bbb; margin-top: 6px; }
 
         footer {
             text-align: center; padding: 10px; background: white;
@@ -313,11 +315,11 @@
                 if (!data) {
                     container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>이력이 없습니다.</li>";
                 } else {
-                    let historyArray = Object.values(data);
-                    historyArray.sort((a, b) => b.timestamp - a.timestamp);
-                    let displayData = historyArray.slice(0, historyLimit);
+                    let historyEntries = Object.entries(data);
+                    historyEntries.sort((a, b) => b[1].timestamp - a[1].timestamp);
+                    let displayData = historyEntries.slice(0, historyLimit);
 
-                    displayData.forEach((item) => {
+                    displayData.forEach(([key, item]) => {
                         const li = document.createElement('li');
                         li.className = 'song-item history-item';
                         const displayTitle = item.title || "제목 없음";
@@ -325,8 +327,40 @@
                             <div class="history-title-badge">📌 ${displayTitle}</div>
                             <div class="history-date">🕒 저장일시: ${item.date}</div>
                             <div class="history-text">${item.text}</div>
+                            <div class="history-delete-hint">길게 누르면 삭제</div>
                         `;
+
+                        // 탭(클릭)으로 불러오기
+                        let pressTimer = null;
+                        let didLongPress = false;
+
+                        const startPress = () => {
+                            didLongPress = false;
+                            li.classList.add('pressing');
+                            pressTimer = setTimeout(async () => {
+                                didLongPress = true;
+                                li.classList.remove('pressing');
+                                if (confirm(`"${displayTitle}" 이력을 삭제할까요?`)) {
+                                    const BASE = "https://score-fetcher-db-default-rtdb.firebaseio.com";
+                                    await fetch(`${BASE}/history/${key}.json`, { method: 'DELETE' });
+                                    openHistoryModal();
+                                }
+                            }, 700);
+                        };
+                        const cancelPress = () => {
+                            clearTimeout(pressTimer);
+                            li.classList.remove('pressing');
+                        };
+
+                        li.addEventListener('touchstart', startPress, { passive: true });
+                        li.addEventListener('touchend', cancelPress);
+                        li.addEventListener('touchmove', cancelPress, { passive: true });
+                        li.addEventListener('mousedown', startPress);
+                        li.addEventListener('mouseup', cancelPress);
+                        li.addEventListener('mouseleave', cancelPress);
+
                         li.onclick = () => {
+                            if (didLongPress) return;
                             document.getElementById('setlist-title').value = item.title || "";
                             document.getElementById('song-input').value = item.text || "";
                             closeHistoryModal();
@@ -334,11 +368,11 @@
                         container.appendChild(li);
                     });
 
-                    if (historyArray.length > historyLimit) {
+                    if (historyEntries.length > historyLimit) {
                         const moreBtn = document.createElement('li');
                         moreBtn.className = 'song-item';
                         moreBtn.style = "text-align:center; background:#f0f0f0; font-weight:bold; color:#0070f3;";
-                        moreBtn.innerText = "더 보기 (남은 기록: " + (historyArray.length - historyLimit) + "개) 👇";
+                        moreBtn.innerText = "더 보기 (남은 기록: " + (historyEntries.length - historyLimit) + "개) 👇";
                         moreBtn.onclick = (e) => {
                             e.stopPropagation();
                             historyLimit += 20;
