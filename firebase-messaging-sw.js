@@ -1,18 +1,11 @@
 // Firebase Messaging Service Worker
 // ⚠️ 아래 설정값을 index.html의 FIREBASE_CONFIG와 동일하게 맞춰주세요
 
+importScripts('firebase-config.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
-firebase.initializeApp({
-    apiKey:            "YOUR_API_KEY",
-    authDomain:        "score-fetcher-db.firebaseapp.com",
-    databaseURL:       "https://score-fetcher-db-default-rtdb.firebaseio.com",
-    projectId:         "score-fetcher-db",
-    storageBucket:     "score-fetcher-db.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId:             "YOUR_APP_ID"
-});
+firebase.initializeApp(self.FIREBASE_CONFIG);
 
 const messaging = firebase.messaging();
 
