@@ -152,11 +152,44 @@
         }
         footer a:hover { color: #0070f3; }
         footer svg { width: 20px; height: 20px; fill: currentColor; }
+        .footer-btn-group { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; }
+        .footer-btn {
+            padding: 10px 18px; border: none; border-radius: 8px; font-size: 14px;
+            cursor: pointer; display: none;
+        }
+        .btn-install   { background: #0070f3; color: white; }
+        .btn-notify    { background: #27ae60; color: white; }
+
+        /* 카카오 인앱 브라우저 안내 배너 */
+        #kakao-banner {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+            background: #FEE500; color: #1a1a1a; padding: 14px 16px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+        }
+        #kakao-banner .kb-title { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
+        #kakao-banner .kb-desc  { font-size: 13px; line-height: 1.5; }
+        #kakao-banner .kb-btn {
+            display: block; margin-top: 10px; padding: 10px;
+            background: #1a1a1a; color: #FEE500; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: bold; cursor: pointer; width: 100%;
+        }
+        #kakao-banner .kb-close {
+            position: absolute; top: 10px; right: 12px;
+            background: none; border: none; font-size: 20px; cursor: pointer; color: #555;
+        }
     </style>
 </head>
 
 <body>
     <header>이번 주 찬양 콘티 🎶</header>
+
+    <!-- 카카오톡 인앱 브라우저 안내 배너 -->
+    <div id="kakao-banner">
+        <button class="kb-close" onclick="document.getElementById('kakao-banner').style.display='none'">&times;</button>
+        <div class="kb-title">📲 앱으로 설치하려면 외부 브라우저를 사용해 주세요</div>
+        <div class="kb-desc" id="kakao-banner-desc"></div>
+        <button class="kb-btn" id="kakao-banner-btn"></button>
+    </div>
 
     <main>
         <div style="background: white; padding: 20px; border-radius: 12px;">
@@ -183,6 +216,10 @@
     </main>
 
     <footer>
+        <div class="footer-btn-group">
+            <button class="footer-btn btn-install" id="btn-install" onclick="installApp()">📲 앱 설치</button>
+            <button class="footer-btn btn-notify"  id="btn-notify"  onclick="enableNotification()">🔔 알림 활성화</button>
+        </div>
         <a href="https://github.com/jeiel85/score-fetcher" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
@@ -698,7 +735,99 @@
             }
         }
 
-        window.addEventListener('load', initPushNotification);
+        // ─── 앱 설치 (PWA) ───────────────────────────────────────────────────
+        let deferredInstallPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', e => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            document.getElementById('btn-install').style.display = 'inline-block';
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            document.getElementById('btn-install').style.display = 'none';
+        });
+
+        function showInstallToast(msg) {
+            const t = document.createElement('div');
+            t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:14px 20px;border-radius:10px;z-index:9999;font-size:14px;max-width:90%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);line-height:1.5;';
+            t.innerHTML = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 6000);
+        }
+
+        async function installApp() {
+            if (!deferredInstallPrompt) {
+                // beforeinstallprompt 미지원 기기 안내
+                const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+                if (isIOS) {
+                    showInstallToast('iOS는 자동 설치를 지원하지 않습니다.<br>Safari 하단 <b>공유 버튼 → 홈 화면에 추가</b>를 눌러주세요.');
+                } else {
+                    showInstallToast('브라우저 주소창 우측의 설치 아이콘을 눌러 설치하거나<br>메뉴 → <b>앱 설치 / 홈 화면에 추가</b>를 이용해 주세요.');
+                }
+                return;
+            }
+
+            // 열린 모달이 있으면 닫고 진행 (Chrome overlay 정책 대응)
+            document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+
+            try {
+                await deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                if (outcome === 'accepted') deferredInstallPrompt = null;
+            } catch (e) {
+                showInstallToast('설치 창을 열 수 없습니다.<br>브라우저 메뉴 → <b>앱 설치 / 홈 화면에 추가</b>를 이용해 주세요.');
+            }
+        }
+
+        // ─── 알림 버튼 ───────────────────────────────────────────────────────
+        function updateNotifyBtn() {
+            const btn = document.getElementById('btn-notify');
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'granted') {
+                btn.style.display = 'none';
+            } else {
+                btn.style.display = 'inline-block';
+            }
+        }
+
+        async function enableNotification() {
+            await initPushNotification();
+            updateNotifyBtn();
+        }
+
+        window.addEventListener('load', () => {
+            initPushNotification();
+            updateNotifyBtn();
+            checkKakaoBrowser();
+        });
+
+        function checkKakaoBrowser() {
+            const ua = navigator.userAgent;
+            if (!/KAKAOTALK/i.test(ua)) return;
+
+            const banner = document.getElementById('kakao-banner');
+            const desc   = document.getElementById('kakao-banner-desc');
+            const btn    = document.getElementById('kakao-banner-btn');
+            const isIOS  = /iphone|ipad|ipod/i.test(ua);
+
+            if (isIOS) {
+                desc.textContent = '우측 하단 ••• 메뉴를 열고 "Safari로 열기"를 선택하면 앱을 설치할 수 있습니다.';
+                btn.textContent  = '닫기 (Safari에서 직접 열어주세요)';
+                btn.onclick      = () => banner.style.display = 'none';
+            } else {
+                desc.textContent = '아래 버튼을 누르거나, 우측 상단 ··· 메뉴 → "다른 브라우저로 열기"를 선택해 주세요.';
+                btn.textContent  = '크롬으로 열기 🌐';
+                btn.onclick      = () => {
+                    // intent URL로 Chrome 강제 열기 (Android)
+                    location.href = 'intent://' + location.host + location.pathname + location.search
+                        + '#Intent;scheme=https;package=com.android.chrome;end';
+                };
+            }
+
+            banner.style.display = 'block';
+        }
     </script>
 </body>
 
