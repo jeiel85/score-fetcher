@@ -158,11 +158,37 @@
         }
         .btn-install   { background: #0070f3; color: white; }
         .btn-notify    { background: #27ae60; color: white; }
+
+        /* 카카오 인앱 브라우저 안내 배너 */
+        #kakao-banner {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+            background: #FEE500; color: #1a1a1a; padding: 14px 16px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+        }
+        #kakao-banner .kb-title { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
+        #kakao-banner .kb-desc  { font-size: 13px; line-height: 1.5; }
+        #kakao-banner .kb-btn {
+            display: block; margin-top: 10px; padding: 10px;
+            background: #1a1a1a; color: #FEE500; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: bold; cursor: pointer; width: 100%;
+        }
+        #kakao-banner .kb-close {
+            position: absolute; top: 10px; right: 12px;
+            background: none; border: none; font-size: 20px; cursor: pointer; color: #555;
+        }
     </style>
 </head>
 
 <body>
     <header>이번 주 찬양 콘티 🎶</header>
+
+    <!-- 카카오톡 인앱 브라우저 안내 배너 -->
+    <div id="kakao-banner">
+        <button class="kb-close" onclick="document.getElementById('kakao-banner').style.display='none'">&times;</button>
+        <div class="kb-title">📲 앱으로 설치하려면 외부 브라우저를 사용해 주세요</div>
+        <div class="kb-desc" id="kakao-banner-desc"></div>
+        <button class="kb-btn" id="kakao-banner-btn"></button>
+    </div>
 
     <main>
         <div style="background: white; padding: 20px; border-radius: 12px;">
@@ -770,7 +796,34 @@
         window.addEventListener('load', () => {
             initPushNotification();
             updateNotifyBtn();
+            checkKakaoBrowser();
         });
+
+        function checkKakaoBrowser() {
+            const ua = navigator.userAgent;
+            if (!/KAKAOTALK/i.test(ua)) return;
+
+            const banner = document.getElementById('kakao-banner');
+            const desc   = document.getElementById('kakao-banner-desc');
+            const btn    = document.getElementById('kakao-banner-btn');
+            const isIOS  = /iphone|ipad|ipod/i.test(ua);
+
+            if (isIOS) {
+                desc.textContent = '우측 하단 ••• 메뉴를 열고 "Safari로 열기"를 선택하면 앱을 설치할 수 있습니다.';
+                btn.textContent  = '닫기 (Safari에서 직접 열어주세요)';
+                btn.onclick      = () => banner.style.display = 'none';
+            } else {
+                desc.textContent = '아래 버튼을 누르거나, 우측 상단 ··· 메뉴 → "다른 브라우저로 열기"를 선택해 주세요.';
+                btn.textContent  = '크롬으로 열기 🌐';
+                btn.onclick      = () => {
+                    // intent URL로 Chrome 강제 열기 (Android)
+                    location.href = 'intent://' + location.host + location.pathname + location.search
+                        + '#Intent;scheme=https;package=com.android.chrome;end';
+                };
+            }
+
+            banner.style.display = 'block';
+        }
     </script>
 </body>
 
