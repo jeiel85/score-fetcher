@@ -20,6 +20,16 @@ exports.notifyNewConti = onValueCreated(
         const data = event.data.val();
         const contiTitle = (data && data.title) ? data.title : "새 콘티";
 
+        // 내용 요약: 번호로 시작하는 곡 줄 최대 4개 추출
+        const rawText = (data && data.text) ? data.text : '';
+        const songLines = rawText.split('\n')
+            .map(l => l.trim())
+            .filter(l => /^\d+[.)]\s/.test(l))
+            .slice(0, 4);
+        const summary = songLines.length > 0
+            ? songLines.join(' · ')
+            : rawText.split('\n').map(l => l.trim()).filter(Boolean).slice(0, 3).join(' · ');
+
         // 저장된 FCM 토큰 전체 가져오기
         const tokensSnapshot = await admin.database().ref("/fcm_tokens").once("value");
         if (!tokensSnapshot.exists()) {
@@ -38,8 +48,8 @@ exports.notifyNewConti = onValueCreated(
 
         const message = {
             notification: {
-                title: "새로운 콘티가 등록되었습니다 🎶",
-                body:  `${contiTitle} - 지금 확인해보세요!`
+                title: `🎶 ${contiTitle}`,
+                body:  summary || "새 콘티가 등록되었습니다. 지금 확인해보세요!"
             },
             webpush: {
                 notification: {
