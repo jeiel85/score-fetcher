@@ -95,10 +95,10 @@
         .fullscreen-header .fs-title { flex: 1; margin-right: 10px; }
         .fullscreen-header .btn-close { font-size: 28px; background: none; border: none; color: white; cursor: pointer; flex-shrink: 0; }
         .fullscreen-body {
-            flex: 1; overflow-y: auto; display: flex;
-            justify-content: center; align-items: flex-start; padding: 10px;
+            flex: 1; overflow: hidden; display: flex;
+            justify-content: center; align-items: center;
         }
-        .fullscreen-body img { width: 100%; height: auto; border-radius: 4px; }
+        .fullscreen-body img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
         /* 전체화면 하단 네비게이션 바 */
         .fullscreen-footer {
