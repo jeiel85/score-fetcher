@@ -719,11 +719,36 @@
             document.getElementById('btn-install').style.display = 'none';
         });
 
+        function showInstallToast(msg) {
+            const t = document.createElement('div');
+            t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:14px 20px;border-radius:10px;z-index:9999;font-size:14px;max-width:90%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);line-height:1.5;';
+            t.innerHTML = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 6000);
+        }
+
         async function installApp() {
-            if (!deferredInstallPrompt) return;
-            deferredInstallPrompt.prompt();
-            const { outcome } = await deferredInstallPrompt.userChoice;
-            if (outcome === 'accepted') deferredInstallPrompt = null;
+            if (!deferredInstallPrompt) {
+                // beforeinstallprompt 미지원 기기 안내
+                const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+                if (isIOS) {
+                    showInstallToast('iOS는 자동 설치를 지원하지 않습니다.<br>Safari 하단 <b>공유 버튼 → 홈 화면에 추가</b>를 눌러주세요.');
+                } else {
+                    showInstallToast('브라우저 주소창 우측의 설치 아이콘을 눌러 설치하거나<br>메뉴 → <b>앱 설치 / 홈 화면에 추가</b>를 이용해 주세요.');
+                }
+                return;
+            }
+
+            // 열린 모달이 있으면 닫고 진행 (Chrome overlay 정책 대응)
+            document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+
+            try {
+                await deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                if (outcome === 'accepted') deferredInstallPrompt = null;
+            } catch (e) {
+                showInstallToast('설치 창을 열 수 없습니다.<br>브라우저 메뉴 → <b>앱 설치 / 홈 화면에 추가</b>를 이용해 주세요.');
+            }
         }
 
         // ─── 알림 버튼 ───────────────────────────────────────────────────────
