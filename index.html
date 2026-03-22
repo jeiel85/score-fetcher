@@ -69,8 +69,9 @@
         /* 두 줄 버튼 그룹 */
         .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
         .btn-row   { display: flex; gap: 8px; }
-        .btn-reset { flex: 1; padding: 13px 8px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
-        .btn-save  { flex: 1; padding: 13px 8px; background-color: #28a745; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .btn-reset  { flex: 1; padding: 13px 8px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .btn-save   { flex: 1; padding: 13px 8px; background-color: #28a745; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .btn-share  { flex: 1; padding: 13px 8px; background-color: #8e44ad; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
         .btn-search { width: 100%; padding: 14px 8px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
 
         .result-area { margin-top: 30px; }
@@ -209,6 +210,7 @@
                 <div class="btn-row">
                     <button class="btn-reset" onclick="resetAll()">초기화 🔄</button>
                     <button class="btn-save" onclick="saveConti()">저장 💾</button>
+                    <button class="btn-share" onclick="shareConti()">공유 🖼️</button>
                 </div>
             </div>
         </div>
@@ -835,6 +837,184 @@
             updateNotifyBtn();
             checkKakaoBrowser();
         });
+
+        // ─── 콘티 이미지 공유 ────────────────────────────────────────────────
+
+        function _roundRect(ctx, x, y, w, h, r) {
+            if (typeof r === 'number') r = { tl: r, tr: r, bl: r, br: r };
+            ctx.beginPath();
+            ctx.moveTo(x + r.tl, y);
+            ctx.lineTo(x + w - r.tr, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r.tr);
+            ctx.lineTo(x + w, y + h - r.br);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
+            ctx.lineTo(x + r.bl, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r.bl);
+            ctx.lineTo(x, y + r.tl);
+            ctx.quadraticCurveTo(x, y, x + r.tl, y);
+            ctx.closePath();
+        }
+
+        function _fitText(ctx, text, maxW) {
+            if (ctx.measureText(text).width <= maxW) return text;
+            let t = text;
+            while (t.length > 0 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+            return t + '…';
+        }
+
+        async function shareConti() {
+            const title = document.getElementById('setlist-title').value.trim();
+            const rawContent = document.getElementById('song-input').value.trim();
+            if (!rawContent || rawContent.includes("아래 예시처럼 붙여넣어 주세요")) {
+                alert("공유할 콘티가 없습니다!");
+                return;
+            }
+
+            const lines = rawContent.split('\n');
+            const W = 800, SCALE = 2, PAD = 52;
+            const INNER_W = W - PAD * 2;
+
+            // 줄 타입 분류
+            const classify = l => {
+                const t = l.trim();
+                if (t === '') return 'empty';
+                if (/^\|/.test(t) || /\|$/.test(t)) return 'header';
+                if (/^\d+/.test(t)) return 'song';
+                if (/^-/.test(t)) return 'comment';
+                return 'text';
+            };
+            const lineH = { empty: 18, header: 54, song: 48, comment: 36, text: 36 };
+
+            // 전체 높이 계산
+            const TOP = title ? 130 : 80;
+            const BOT = 56;
+            let contentH = lines.reduce((s, l) => s + lineH[classify(l)], 0);
+            const TOTAL_H = TOP + contentH + PAD + BOT;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = W * SCALE;
+            canvas.height = TOTAL_H * SCALE;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(SCALE, SCALE);
+
+            // 배경 그라디언트
+            const bg = ctx.createLinearGradient(0, 0, W, TOTAL_H);
+            bg.addColorStop(0, '#ede9fe');
+            bg.addColorStop(1, '#dbeafe');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, W, TOTAL_H);
+
+            // 카드
+            ctx.fillStyle = 'rgba(255,255,255,0.93)';
+            _roundRect(ctx, 20, 20, W - 40, TOTAL_H - 40, 20);
+            ctx.fill();
+
+            // 상단 보라 스트라이프
+            ctx.fillStyle = '#7c3aed';
+            _roundRect(ctx, 20, 20, W - 40, 10, { tl: 20, tr: 20, bl: 0, br: 0 });
+            ctx.fill();
+
+            // 제목
+            if (title) {
+                ctx.fillStyle = '#4c1d95';
+                ctx.font = `bold 34px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillText(_fitText(ctx, title, INNER_W), W / 2, 82);
+
+                ctx.strokeStyle = '#e9d5ff';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(PAD, 100); ctx.lineTo(W - PAD, 100);
+                ctx.stroke();
+            }
+
+            // 콘텐츠 렌더링
+            ctx.textAlign = 'left';
+            let y = TOP;
+
+            lines.forEach(line => {
+                const type = classify(line);
+                const t = line.trim();
+                const h = lineH[type];
+
+                if (type === 'empty') { y += h; return; }
+
+                if (type === 'header') {
+                    const text = t.replace(/^\|?\s*/, '').replace(/\s*\|?$/, '').trim();
+                    // 구분선
+                    ctx.strokeStyle = '#e9d5ff';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(PAD, y + 16); ctx.lineTo(W - PAD, y + 16);
+                    ctx.stroke();
+                    // 뱃지
+                    ctx.font = `bold 20px sans-serif`;
+                    const tw = ctx.measureText(text).width;
+                    const bx = (W - tw - 28) / 2;
+                    ctx.fillStyle = '#7c3aed';
+                    _roundRect(ctx, bx, y + 2, tw + 28, 30, 8);
+                    ctx.fill();
+                    ctx.fillStyle = 'white';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(text, W / 2, y + 22);
+                    ctx.textAlign = 'left';
+                    y += h; return;
+                }
+
+                if (type === 'song') {
+                    const m = t.match(/^(\d+)\s*(.*)/);
+                    const num = m[1], songTitle = m[2];
+                    ctx.font = `bold 26px sans-serif`;
+                    ctx.fillStyle = '#2563eb';
+                    ctx.fillText(num, PAD + 4, y + 32);
+                    const numW = ctx.measureText(num + '  ').width;
+                    ctx.font = `26px sans-serif`;
+                    ctx.fillStyle = '#111827';
+                    ctx.fillText(_fitText(ctx, songTitle, INNER_W - numW - 8), PAD + 4 + numW, y + 32);
+                    y += h; return;
+                }
+
+                if (type === 'comment') {
+                    ctx.font = `italic 21px sans-serif`;
+                    ctx.fillStyle = '#6b7280';
+                    ctx.fillText(_fitText(ctx, t, INNER_W - 16), PAD + 16, y + 26);
+                    y += h; return;
+                }
+
+                // text (기타)
+                ctx.font = `22px sans-serif`;
+                ctx.fillStyle = '#374151';
+                ctx.fillText(_fitText(ctx, t, INNER_W), PAD + 4, y + 28);
+                y += h;
+            });
+
+            // 푸터
+            ctx.fillStyle = '#a78bfa';
+            ctx.font = `17px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText('찬양 악보 매니저 🎵', W / 2, TOTAL_H - 18);
+
+            // 공유 or 다운로드
+            canvas.toBlob(async (blob) => {
+                const fileName = `콘티_${title || '공유'}.png`;
+                const file = new File([blob], fileName, { type: 'image/png' });
+
+                const canShare = navigator.share && navigator.canShare && navigator.canShare({ files: [file] });
+                if (canShare) {
+                    try {
+                        await navigator.share({ title: title || '콘티 공유', files: [file] });
+                        return;
+                    } catch (e) {
+                        if (e.name === 'AbortError') return; // 사용자가 취소
+                    }
+                }
+                // 폴백: 이미지 다운로드
+                const a = document.createElement('a');
+                a.download = fileName;
+                a.href = canvas.toDataURL('image/png');
+                a.click();
+            }, 'image/png');
+        }
 
         function checkKakaoBrowser() {
             const ua = navigator.userAgent;
