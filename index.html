@@ -143,15 +143,15 @@
         .history-delete-hint { font-size: 11px; color: #bbb; margin-top: 6px; }
 
         /* 공유 미리보기 모달 */
-        #sharePreviewModal { padding: 0; }
+        #sharePreviewModal { padding: 0; position: fixed; }
         .share-preview-content {
             background: #1a1a2e; width: 100%; height: 100%; max-height: 100%; border-radius: 0;
             display: flex; flex-direction: column; overflow: hidden;
         }
         .share-preview-header { padding: 15px; background: #8e44ad; color: white; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        .share-preview-body { flex: 1; overflow-y: auto; display: flex; align-items: flex-start; background: #1a1a2e; }
+        .share-preview-body { flex: 1; overflow-y: auto; display: flex; align-items: flex-start; background: #1a1a2e; padding-bottom: 0; }
         .share-preview-body img { width: 100%; display: block; }
-        .share-preview-footer { padding: 12px 16px; display: flex; gap: 10px; background: #111; border-top: 1px solid #333; flex-shrink: 0; }
+        .share-preview-footer { position: sticky; bottom: 0; padding: 12px 16px; display: flex; gap: 10px; background: #111; border-top: 1px solid #333; flex-shrink: 0; z-index: 1; }
         .btn-share-cancel  { padding: 14px 20px; background: #444; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
         .btn-share-confirm { flex: 1; padding: 14px; background: #8e44ad; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
 
@@ -208,9 +208,9 @@
     <main>
         <div style="background: white; padding: 20px; border-radius: 12px;">
             <div class="top-btn-group">
-                <button class="top-btn btn-show-list" onclick="openSongModal()">📖 전체 리스트</button>
+                <button class="top-btn btn-show-list" onclick="openSongModal()">📖 찬양 목록</button>
                 <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 콘티 이력</button>
-                <button id="btn-wakelock" class="top-btn btn-wakelock active" onclick="toggleWakeLock(true)">💡 화면 켜짐 유지</button>
+                <button id="btn-wakelock" class="top-btn btn-wakelock active" onclick="toggleWakeLock(true)">💡 화면 ON</button>
             </div>
 
             <input type="text" id="setlist-title" class="title-input" placeholder="콘티 제목 (예: 2026-03-15 수요예배)">
@@ -261,7 +261,7 @@
     <div class="modal-overlay" id="songModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>📖 전체 리스트</h3>
+                <h3>📖 찬양 목록</h3>
                 <button class="btn-close" onclick="closeSongModal()">&times;</button>
             </div>
             <div class="modal-search">
@@ -483,7 +483,7 @@
                 // 브라우저가 자동 해제하면 상태만 초기화 (재획득은 visibilitychange가 담당)
                 wakeLock.addEventListener('release', () => { wakeLock = null; });
                 const btn = document.getElementById('btn-wakelock');
-                btn.innerText = "💡 화면 켜짐 유지";
+                btn.innerText = "💡 화면 ON";
                 btn.classList.add('active');
             } catch (err) {
                 console.warn('WakeLock 획득 실패:', err);
@@ -501,7 +501,7 @@
                 if (wakeLock !== null) {
                     wakeLock.release().then(() => {
                         wakeLock = null;
-                        btn.innerText = "💡 화면 꺼짐";
+                        btn.innerText = "💡 화면 OFF";
                         btn.classList.remove('active');
                     });
                 } else {
@@ -813,13 +813,14 @@
             document.getElementById('btn-install').style.display = 'none';
         });
 
-        function showInstallToast(msg) {
+        function showToast(msg, duration = 2500) {
             const t = document.createElement('div');
             t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:14px 20px;border-radius:10px;z-index:9999;font-size:14px;max-width:90%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);line-height:1.5;';
             t.innerHTML = msg;
             document.body.appendChild(t);
-            setTimeout(() => t.remove(), 6000);
+            setTimeout(() => t.remove(), duration);
         }
+        function showInstallToast(msg) { showToast(msg, 6000); }
 
         async function installApp() {
             if (!deferredInstallPrompt) {
@@ -865,6 +866,39 @@
             initPushNotification();
             updateNotifyBtn();
             checkKakaoBrowser();
+            // 안드로이드 뒤로 가기 처리용 초기 상태 push
+            history.pushState({ page: 'app' }, '');
+        });
+
+        // ─── 안드로이드 뒤로 가기 처리 ──────────────────────────────────────────
+        let _backPressedOnce = false, _backTimer = null;
+        window.addEventListener('popstate', () => {
+            // 1) 전체화면 뷰어
+            const viewer = document.getElementById('fullscreenViewer');
+            if (viewer && viewer.style.display === 'flex') {
+                closeFullscreen();
+                history.pushState({ page: 'app' }, '');
+                return;
+            }
+            // 2) 열린 모달 (sharePreview → history → song 순)
+            const openModal = ['sharePreviewModal', 'historyModal', 'songModal']
+                .map(id => document.getElementById(id))
+                .find(el => el && el.style.display === 'flex');
+            if (openModal) {
+                if (openModal.id === 'sharePreviewModal') closeSharePreview();
+                else openModal.style.display = 'none';
+                history.pushState({ page: 'app' }, '');
+                return;
+            }
+            // 3) 아무것도 열리지 않은 상태
+            if (_backPressedOnce) {
+                clearTimeout(_backTimer);
+                return; // 두 번째 뒤로 가기 → Android가 앱 종료
+            }
+            _backPressedOnce = true;
+            showToast('뒤로 가기를 한 번 더 누르면 종료됩니다');
+            history.pushState({ page: 'app' }, '');
+            _backTimer = setTimeout(() => { _backPressedOnce = false; }, 2000);
         });
 
         // ─── 콘티 이미지 공유 ────────────────────────────────────────────────
