@@ -143,14 +143,15 @@
         .history-delete-hint { font-size: 11px; color: #bbb; margin-top: 6px; }
 
         /* 공유 미리보기 모달 */
+        #sharePreviewModal { padding: 0; }
         .share-preview-content {
-            background: #1a1a2e; width: 100%; max-height: 90%; border-radius: 12px;
-            display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            background: #1a1a2e; width: 100%; height: 100%; max-height: 100%; border-radius: 0;
+            display: flex; flex-direction: column; overflow: hidden;
         }
-        .share-preview-header { padding: 15px; background: #8e44ad; color: white; display: flex; justify-content: space-between; align-items: center; }
-        .share-preview-body { flex: 1; overflow-y: auto; display: flex; justify-content: center; padding: 16px; background: #1a1a2e; }
-        .share-preview-body img { width: 100%; border-radius: 8px; display: block; }
-        .share-preview-footer { padding: 12px 16px; display: flex; gap: 10px; background: #111; border-top: 1px solid #333; }
+        .share-preview-header { padding: 15px; background: #8e44ad; color: white; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .share-preview-body { flex: 1; overflow-y: auto; display: flex; align-items: flex-start; background: #1a1a2e; }
+        .share-preview-body img { width: 100%; display: block; }
+        .share-preview-footer { padding: 12px 16px; display: flex; gap: 10px; background: #111; border-top: 1px solid #333; flex-shrink: 0; }
         .btn-share-cancel  { padding: 14px 20px; background: #444; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
         .btn-share-confirm { flex: 1; padding: 14px; background: #8e44ad; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
 
