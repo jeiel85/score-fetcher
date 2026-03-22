@@ -69,8 +69,9 @@
         /* 두 줄 버튼 그룹 */
         .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
         .btn-row   { display: flex; gap: 8px; }
-        .btn-reset { flex: 1; padding: 13px 8px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
-        .btn-save  { flex: 1; padding: 13px 8px; background-color: #28a745; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .btn-reset  { flex: 1; padding: 13px 8px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .btn-save   { flex: 1; padding: 13px 8px; background-color: #28a745; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .btn-share  { flex: 1; padding: 13px 8px; background-color: #8e44ad; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
         .btn-search { width: 100%; padding: 14px 8px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
 
         .result-area { margin-top: 30px; }
@@ -209,6 +210,7 @@
                 <div class="btn-row">
                     <button class="btn-reset" onclick="resetAll()">초기화 🔄</button>
                     <button class="btn-save" onclick="saveConti()">저장 💾</button>
+                    <button class="btn-share" onclick="shareConti()">공유 🖼️</button>
                 </div>
             </div>
         </div>
@@ -261,6 +263,9 @@
             <div class="modal-header history">
                 <h3>🕒 서버에서 불러오기</h3>
                 <button class="btn-close" onclick="closeHistoryModal()">&times;</button>
+            </div>
+            <div class="modal-search">
+                <input type="text" id="historySearchInput" placeholder="제목 또는 곡 번호로 검색..." onkeyup="filterHistory()">
             </div>
             <ul class="modal-body" id="historyListContainer"></ul>
         </div>
@@ -326,91 +331,114 @@
         }
 
         let historyLimit = 20;
+        let allHistoryEntries = [];  // 전체 이력 캐시 (검색용)
 
         async function openHistoryModal() {
             if (!FIREBASE_URL) return;
 
             const container = document.getElementById('historyListContainer');
             container.innerHTML = "<li class='song-item' style='text-align:center;'>서버에서 이력을 불러오는 중입니다... ⚡</li>";
+            document.getElementById('historySearchInput').value = "";
             document.getElementById('historyModal').style.display = 'flex';
 
             try {
                 const response = await fetch(FIREBASE_URL);
                 const data = await response.json();
 
-                container.innerHTML = "";
                 if (!data) {
+                    allHistoryEntries = [];
                     container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>이력이 없습니다.</li>";
                 } else {
-                    let historyEntries = Object.entries(data);
-                    historyEntries.sort((a, b) => b[1].timestamp - a[1].timestamp);
-                    let displayData = historyEntries.slice(0, historyLimit);
-
-                    displayData.forEach(([key, item]) => {
-                        const li = document.createElement('li');
-                        li.className = 'song-item history-item';
-                        const displayTitle = item.title || "제목 없음";
-                        li.innerHTML = `
-                            <div class="history-title-badge">📌 ${displayTitle}</div>
-                            <div class="history-date">🕒 저장일시: ${item.date}</div>
-                            <div class="history-text">${item.text}</div>
-                            <div class="history-delete-hint">길게 누르면 삭제</div>
-                        `;
-
-                        // 탭(클릭)으로 불러오기
-                        let pressTimer = null;
-                        let didLongPress = false;
-
-                        const startPress = () => {
-                            didLongPress = false;
-                            li.classList.add('pressing');
-                            pressTimer = setTimeout(async () => {
-                                didLongPress = true;
-                                li.classList.remove('pressing');
-                                if (confirm(`"${displayTitle}" 이력을 삭제할까요?`)) {
-                                    await fetch(`${FIREBASE_CONFIG.databaseURL}/history/${key}.json`, { method: 'DELETE' });
-                                    openHistoryModal();
-                                }
-                            }, 700);
-                        };
-                        const cancelPress = () => {
-                            clearTimeout(pressTimer);
-                            li.classList.remove('pressing');
-                        };
-
-                        li.addEventListener('touchstart', startPress, { passive: true });
-                        li.addEventListener('touchend', cancelPress);
-                        li.addEventListener('touchmove', cancelPress, { passive: true });
-                        li.addEventListener('mousedown', startPress);
-                        li.addEventListener('mouseup', cancelPress);
-                        li.addEventListener('mouseleave', cancelPress);
-
-                        li.onclick = () => {
-                            if (didLongPress) return;
-                            document.getElementById('setlist-title').value = item.title || "";
-                            document.getElementById('song-input').value = item.text || "";
-                            document.getElementById('result-container').innerHTML = "";
-                            sheetList = [];
-                            closeHistoryModal();
-                        };
-                        container.appendChild(li);
-                    });
-
-                    if (historyEntries.length > historyLimit) {
-                        const moreBtn = document.createElement('li');
-                        moreBtn.className = 'song-item';
-                        moreBtn.style = "text-align:center; background:#f0f0f0; font-weight:bold; color:#0070f3;";
-                        moreBtn.innerText = "더 보기 (남은 기록: " + (historyEntries.length - historyLimit) + "개) 👇";
-                        moreBtn.onclick = (e) => {
-                            e.stopPropagation();
-                            historyLimit += 20;
-                            openHistoryModal();
-                        };
-                        container.appendChild(moreBtn);
-                    }
+                    allHistoryEntries = Object.entries(data);
+                    allHistoryEntries.sort((a, b) => b[1].timestamp - a[1].timestamp);
+                    renderHistoryList(allHistoryEntries);
                 }
             } catch (error) {
                 container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ 서버 통신 에러</li>";
+            }
+        }
+
+        function filterHistory() {
+            const keyword = document.getElementById('historySearchInput').value.toLowerCase();
+            if (!keyword) { renderHistoryList(allHistoryEntries); return; }
+            const filtered = allHistoryEntries.filter(([, item]) =>
+                (item.title || "").toLowerCase().includes(keyword) ||
+                (item.text  || "").toLowerCase().includes(keyword)
+            );
+            renderHistoryList(filtered);
+        }
+
+        function renderHistoryList(entries) {
+            const container = document.getElementById('historyListContainer');
+            container.innerHTML = "";
+
+            if (entries.length === 0) {
+                container.innerHTML = "<li class='song-item' style='text-align:center; color:#999;'>검색 결과가 없습니다.</li>";
+                return;
+            }
+
+            const displayData = entries.slice(0, historyLimit);
+            displayData.forEach(([key, item]) => {
+                const li = document.createElement('li');
+                li.className = 'song-item history-item';
+                const displayTitle = item.title || "제목 없음";
+                li.innerHTML = `
+                    <div class="history-title-badge">📌 ${displayTitle}</div>
+                    <div class="history-date">🕒 저장일시: ${item.date}</div>
+                    <div class="history-text">${item.text}</div>
+                    <div class="history-delete-hint">길게 누르면 삭제</div>
+                `;
+
+                let pressTimer = null;
+                let didLongPress = false;
+
+                const startPress = () => {
+                    didLongPress = false;
+                    li.classList.add('pressing');
+                    pressTimer = setTimeout(async () => {
+                        didLongPress = true;
+                        li.classList.remove('pressing');
+                        if (confirm(`"${displayTitle}" 이력을 삭제할까요?`)) {
+                            const BASE = "https://score-fetcher-db-default-rtdb.firebaseio.com";
+                            await fetch(`${BASE}/history/${key}.json`, { method: 'DELETE' });
+                            openHistoryModal();
+                        }
+                    }, 700);
+                };
+                const cancelPress = () => {
+                    clearTimeout(pressTimer);
+                    li.classList.remove('pressing');
+                };
+
+                li.addEventListener('touchstart', startPress, { passive: true });
+                li.addEventListener('touchend', cancelPress);
+                li.addEventListener('touchmove', cancelPress, { passive: true });
+                li.addEventListener('mousedown', startPress);
+                li.addEventListener('mouseup', cancelPress);
+                li.addEventListener('mouseleave', cancelPress);
+
+                li.onclick = () => {
+                    if (didLongPress) return;
+                    document.getElementById('setlist-title').value = item.title || "";
+                    document.getElementById('song-input').value = item.text || "";
+                    document.getElementById('result-container').innerHTML = "";
+                    sheetList = [];
+                    closeHistoryModal();
+                };
+                container.appendChild(li);
+            });
+
+            if (entries.length > historyLimit) {
+                const moreBtn = document.createElement('li');
+                moreBtn.className = 'song-item';
+                moreBtn.style = "text-align:center; background:#f0f0f0; font-weight:bold; color:#0070f3;";
+                moreBtn.innerText = "더 보기 (남은 기록: " + (entries.length - historyLimit) + "개) 👇";
+                moreBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    historyLimit += 20;
+                    renderHistoryList(entries);
+                };
+                container.appendChild(moreBtn);
             }
         }
 
@@ -516,7 +544,7 @@
             const textarea = document.getElementById('song-input');
             let currentText = textarea.value;
             if (currentText.includes("아래 예시처럼 붙여넣어 주세요")) currentText = "";
-            else if (currentText.trim() !== "") currentText += "\n";
+            else if (currentText.length > 0 && !currentText.endsWith("\n")) currentText += "\n";
             textarea.value = currentText + songLine;
             closeSongModal();
         }
@@ -532,46 +560,53 @@
 
         function startSearch() {
             let rawText = document.getElementById('song-input').value;
-            let cleanLines = rawText.split('\n').map(line => {
+
+            // 빈 줄·헤더 줄 모두 보존, 숫자 줄만 번호 포맷 정리
+            let allLines = rawText.split('\n').map(line => {
                 let trimmed = line.trim();
                 if (!trimmed) return "";
                 let match = trimmed.match(/^(\d+)[\.\s]*(.*)/);
                 if (match) {
                     let formattedNum = String(match[1]).padStart(3, '0');
-                    let titleText = match[2].trim();
-                    return `${formattedNum} ${titleText}`;
+                    return `${formattedNum} ${match[2].trim()}`;
                 }
                 return trimmed;
-            }).filter(line => line !== "");
+            });
+            // 맨 끝 빈 줄만 제거
+            while (allLines.length > 0 && allLines[allLines.length - 1] === "") allLines.pop();
 
-            document.getElementById('song-input').value = cleanLines.join('\n');
-            if (cleanLines.length === 0) return alert("곡 리스트를 입력해주세요!");
+            document.getElementById('song-input').value = allLines.join('\n');
+
+            const songLines = allLines.filter(l => /^\d+/.test(l));
+            if (songLines.length === 0) return alert("곡 리스트를 입력해주세요!");
 
             const resultContainer = document.getElementById('result-container');
             resultContainer.innerHTML = "";
-            sheetList = new Array(cleanLines.length).fill(null);
+            sheetList = new Array(allLines.length).fill(null);
 
-            cleanLines.forEach((line, index) => {
+            let songCounter = 0;
+            allLines.forEach((line, index) => {
                 const match = line.match(/^(\d+)/);
-                if (match) {
-                    const songNumber = match[1];
-                    const songTitle  = line.substring(songNumber.length).trim();
-                    const label = `${index + 1}. No.${songNumber} ${songTitle}`;
+                if (!match) return;  // 헤더·빈 줄 건너뜀
 
-                    const card = document.createElement('div');
-                    card.className = 'sheet-music-card';
-                    card.innerHTML = `<div class="sheet-title">${label}</div>`;
+                songCounter++;
+                const songNumber = match[1];
+                const songTitle  = line.substring(songNumber.length).trim();
+                const label = `${songCounter}. No.${songNumber} ${songTitle}`;
 
-                    const imgTag = document.createElement('img');
-                    imgTag.alt = `${songNumber} 악보 찾는 중...`;
-                    card.appendChild(imgTag);
-                    resultContainer.appendChild(card);
+                const card = document.createElement('div');
+                card.className = 'sheet-music-card';
+                card.innerHTML = `<div class="sheet-title">${label}</div>`;
 
-                    tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
-                        sheetList[index] = { src: finalSrc, label };
-                        card.onclick = () => openFullscreen(index);
-                    });
-                }
+                const imgTag = document.createElement('img');
+                imgTag.alt = `${songNumber} 악보 찾는 중...`;
+                card.appendChild(imgTag);
+                resultContainer.appendChild(card);
+
+                tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
+                    sheetList[index] = { src: finalSrc, label };
+                    card.onclick = () => openFullscreen(index);
+                });
             });
 
             const firstCard = resultContainer.querySelector('.sheet-music-card');
@@ -802,6 +837,201 @@
             updateNotifyBtn();
             checkKakaoBrowser();
         });
+
+        // ─── 콘티 이미지 공유 ────────────────────────────────────────────────
+
+        function _roundRect(ctx, x, y, w, h, r) {
+            if (typeof r === 'number') r = { tl: r, tr: r, bl: r, br: r };
+            ctx.beginPath();
+            ctx.moveTo(x + r.tl, y);
+            ctx.lineTo(x + w - r.tr, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r.tr);
+            ctx.lineTo(x + w, y + h - r.br);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
+            ctx.lineTo(x + r.bl, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r.bl);
+            ctx.lineTo(x, y + r.tl);
+            ctx.quadraticCurveTo(x, y, x + r.tl, y);
+            ctx.closePath();
+        }
+
+        function _fitText(ctx, text, maxW) {
+            if (ctx.measureText(text).width <= maxW) return text;
+            let t = text;
+            while (t.length > 0 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+            return t + '…';
+        }
+
+        async function shareConti() {
+            const title      = document.getElementById('setlist-title').value.trim();
+            const rawContent = document.getElementById('song-input').value.trim();
+            if (!rawContent || rawContent.includes("아래 예시처럼 붙여넣어 주세요")) {
+                alert("공유할 콘티가 없습니다!"); return;
+            }
+
+            // ── 팔레트: 제목 해시 → 일관된 배경색 ──────────────────────────
+            const PALETTES = [
+                { bg: '#2d4a5c', accent: '#7ec8e3' },
+                { bg: '#3d2b5a', accent: '#c4a8e8' },
+                { bg: '#1a3a2a', accent: '#7ecfaa' },
+                { bg: '#5a2d3a', accent: '#f0a8b8' },
+                { bg: '#2d3a5c', accent: '#a8bff0' },
+                { bg: '#4a3020', accent: '#f0c890' },
+                { bg: '#1c2c3e', accent: '#90c8f0' },
+                { bg: '#3a2040', accent: '#d8a8f0' },
+            ];
+            const hashIdx = (str) => {
+                let h = 0;
+                for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+                return Math.abs(h) % PALETTES.length;
+            };
+            const { bg: BG, accent: AC } = PALETTES[hashIdx(title || rawContent.slice(0, 20))];
+
+            // ── 줄 분류 ────────────────────────────────────────────────────
+            const classify = l => {
+                const t = l.trim();
+                if (t === '') return 'empty';
+                if (/^\|/.test(t) || /\|$/.test(t)) return 'header';
+                if (/^\d+/.test(t)) return 'song';
+                if (/^-/.test(t)) return 'comment';
+                return 'text';
+            };
+
+            // ── 레이아웃 상수 ──────────────────────────────────────────────
+            const W = 800, SCALE = 2, PAD_X = 60;
+            const INNER_W   = W - PAD_X * 2;
+            const TITLE_SZ  = 56, TITLE_LH = 72;
+            const BODY_SZ   = 38;
+            const LH = { empty: 28, header: 56, song: 56, comment: 46, text: 50 };
+            const PAD_TOP = 72, PAD_BOT = 72;
+
+            // ── 제목 파싱 (날짜 분리) ──────────────────────────────────────
+            const dateRe  = /^(\d{4}[-./]\d{2}[-./]\d{2})\s*/;
+            const dm      = title.match(dateRe);
+            const datePart = dm ? dm[1] : '';
+            const restPart = dm ? title.slice(dm[0].length) : title;
+
+            // 제목 줄 수 계산 (임시 ctx)
+            const tmpC = document.createElement('canvas');
+            tmpC.width = W * 2; tmpC.height = 10;
+            const tCtx = tmpC.getContext('2d');
+            tCtx.font = `bold ${TITLE_SZ}px sans-serif`;
+            const fullTW = tCtx.measureText(title).width;
+            const titleRows = fullTW <= INNER_W ? 1 : 2;   // 긴 제목은 2줄
+
+            // 콘텐츠 라인 높이 합산
+            const lines = rawContent.split('\n');
+            while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
+            const contentH = lines.reduce((s, l) => s + LH[classify(l)], 0);
+
+            const TITLE_BLOCK = titleRows * TITLE_LH + 20; // +gap 아래
+            const TOTAL_H = PAD_TOP + TITLE_BLOCK + contentH + PAD_BOT;
+
+            // ── Canvas 생성 ────────────────────────────────────────────────
+            const canvas = document.createElement('canvas');
+            canvas.width  = W * SCALE;
+            canvas.height = TOTAL_H * SCALE;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(SCALE, SCALE);
+
+            // 배경
+            ctx.fillStyle = BG;
+            ctx.fillRect(0, 0, W, TOTAL_H);
+
+            // ── 제목 렌더링 ────────────────────────────────────────────────
+            ctx.font = `bold ${TITLE_SZ}px sans-serif`;
+            ctx.textAlign = 'left';
+
+            if (titleRows === 1) {
+                // 한 줄: [날짜(액센트)] [나머지(흰색)]
+                let tx = PAD_X;
+                const baseY = PAD_TOP + TITLE_SZ;
+                if (datePart) {
+                    ctx.fillStyle = AC;
+                    ctx.fillText(datePart, tx, baseY);
+                    const dw = ctx.measureText(datePart).width;
+                    ctx.fillRect(tx, baseY + 8, dw, 4); // 언더라인
+                    tx += ctx.measureText(datePart + ' ').width;
+                }
+                if (restPart) {
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(_fitText(ctx, restPart, INNER_W - (tx - PAD_X)), tx, baseY);
+                }
+            } else {
+                // 두 줄: 날짜 / 나머지
+                let ty = PAD_TOP + TITLE_SZ;
+                if (datePart) {
+                    ctx.fillStyle = AC;
+                    ctx.fillText(datePart, PAD_X, ty);
+                    const dw = ctx.measureText(datePart).width;
+                    ctx.fillRect(PAD_X, ty + 8, dw, 4);
+                    ty += TITLE_LH;
+                }
+                if (restPart) {
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(_fitText(ctx, restPart, INNER_W), PAD_X, ty);
+                }
+            }
+
+            // ── 콘텐츠 렌더링 ─────────────────────────────────────────────
+            ctx.textAlign = 'left';
+            let y = PAD_TOP + TITLE_BLOCK;
+
+            lines.forEach(line => {
+                const type = classify(line);
+                const t    = line.trim();
+                const h    = LH[type];
+
+                if (type === 'empty') { y += h; return; }
+
+                if (type === 'header') {
+                    ctx.font      = `${BODY_SZ}px sans-serif`;
+                    ctx.fillStyle = `rgba(255,255,255,0.55)`;
+                    ctx.fillText(t, PAD_X, y + BODY_SZ);
+                    y += h; return;
+                }
+
+                if (type === 'song') {
+                    const m = t.match(/^(\d+)\s*(.*)/);
+                    const num = m[1], songTitle = m[2];
+                    ctx.font      = `bold ${BODY_SZ}px sans-serif`;
+                    ctx.fillStyle = AC;
+                    ctx.fillText(num, PAD_X, y + BODY_SZ);
+                    const numW = ctx.measureText(num + ' ').width;
+                    ctx.font      = `${BODY_SZ}px sans-serif`;
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(_fitText(ctx, songTitle, INNER_W - numW), PAD_X + numW, y + BODY_SZ);
+                    y += h; return;
+                }
+
+                if (type === 'comment') {
+                    ctx.font      = `${BODY_SZ - 4}px sans-serif`;
+                    ctx.fillStyle = `rgba(255,255,255,0.65)`;
+                    ctx.fillText(_fitText(ctx, t, INNER_W - 16), PAD_X + 16, y + BODY_SZ - 4);
+                    y += h; return;
+                }
+
+                ctx.font      = `${BODY_SZ}px sans-serif`;
+                ctx.fillStyle = 'white';
+                ctx.fillText(_fitText(ctx, t, INNER_W), PAD_X, y + BODY_SZ);
+                y += h;
+            });
+
+            // ── 공유 or 다운로드 ──────────────────────────────────────────
+            canvas.toBlob(async (blob) => {
+                const fileName = `콘티_${title || '공유'}.png`;
+                const file = new File([blob], fileName, { type: 'image/png' });
+                const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [file] });
+                if (canShareFiles) {
+                    try { await navigator.share({ title: title || '콘티 공유', files: [file] }); return; }
+                    catch (e) { if (e.name === 'AbortError') return; }
+                }
+                const a = document.createElement('a');
+                a.download = fileName;
+                a.href = canvas.toDataURL('image/png');
+                a.click();
+            }, 'image/png');
+        }
 
         function checkKakaoBrowser() {
             const ua = navigator.userAgent;
