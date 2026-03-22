@@ -813,13 +813,14 @@
             document.getElementById('btn-install').style.display = 'none';
         });
 
-        function showInstallToast(msg) {
+        function showToast(msg, duration = 2500) {
             const t = document.createElement('div');
             t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:14px 20px;border-radius:10px;z-index:9999;font-size:14px;max-width:90%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);line-height:1.5;';
             t.innerHTML = msg;
             document.body.appendChild(t);
-            setTimeout(() => t.remove(), 6000);
+            setTimeout(() => t.remove(), duration);
         }
+        function showInstallToast(msg) { showToast(msg, 6000); }
 
         async function installApp() {
             if (!deferredInstallPrompt) {
@@ -865,6 +866,39 @@
             initPushNotification();
             updateNotifyBtn();
             checkKakaoBrowser();
+            // 안드로이드 뒤로 가기 처리용 초기 상태 push
+            history.pushState({ page: 'app' }, '');
+        });
+
+        // ─── 안드로이드 뒤로 가기 처리 ──────────────────────────────────────────
+        let _backPressedOnce = false, _backTimer = null;
+        window.addEventListener('popstate', () => {
+            // 1) 전체화면 뷰어
+            const viewer = document.getElementById('fullscreenViewer');
+            if (viewer && viewer.style.display === 'flex') {
+                closeFullscreen();
+                history.pushState({ page: 'app' }, '');
+                return;
+            }
+            // 2) 열린 모달 (sharePreview → history → song 순)
+            const openModal = ['sharePreviewModal', 'historyModal', 'songModal']
+                .map(id => document.getElementById(id))
+                .find(el => el && el.style.display === 'flex');
+            if (openModal) {
+                if (openModal.id === 'sharePreviewModal') closeSharePreview();
+                else openModal.style.display = 'none';
+                history.pushState({ page: 'app' }, '');
+                return;
+            }
+            // 3) 아무것도 열리지 않은 상태
+            if (_backPressedOnce) {
+                clearTimeout(_backTimer);
+                return; // 두 번째 뒤로 가기 → Android가 앱 종료
+            }
+            _backPressedOnce = true;
+            showToast('뒤로 가기를 한 번 더 누르면 종료됩니다');
+            history.pushState({ page: 'app' }, '');
+            _backTimer = setTimeout(() => { _backPressedOnce = false; }, 2000);
         });
 
         // ─── 콘티 이미지 공유 ────────────────────────────────────────────────
