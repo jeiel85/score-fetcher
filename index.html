@@ -904,9 +904,6 @@
             if (!rawContent || rawContent.includes("아래 예시처럼 붙여넣어 주세요")) {
                 alert("공유할 콘티가 없습니다!"); return;
             }
-            // 공유 시 자동 저장 (조용히)
-            await saveToHistory();
-
             // ── 팔레트: 제목 해시 → 일관된 배경색 ──────────────────────────
             const PALETTES = [
                 { bg: '#2d4a5c', accent: '#7ec8e3' },
