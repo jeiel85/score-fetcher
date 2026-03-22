@@ -523,8 +523,6 @@
             resultContainer.innerHTML = "";
             sheetList = new Array(cleanLines.length).fill(null);
 
-            saveToHistory();
-
             cleanLines.forEach((line, index) => {
                 const match = line.match(/^(\d+)/);
                 if (match) {
