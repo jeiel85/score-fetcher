@@ -55,21 +55,19 @@
             width: 100%; height: 130px; border: 1px solid #ddd; border-radius: 8px;
             padding: 10px; font-size: 16px; box-sizing: border-box; resize: none;
         }
-        .top-btn-group { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .top-btn-group { display: flex; gap: 8px; margin-bottom: 15px; }
         .top-btn {
-            flex: 1; min-width: 30%; padding: 12px 8px; color: white;
-            border: none; border-radius: 8px; font-size: 13px; font-weight: bold;
+            flex: 1; padding: 12px 6px; color: white;
+            border: none; border-radius: 8px; font-size: 12px; font-weight: bold;
             cursor: pointer; text-align: center;
         }
         .btn-show-list { background-color: #6c757d; }
         .btn-history { background-color: #8e44ad; }
-        .btn-wakelock { background-color: #444; transition: background-color 0.3s; }
-        .btn-wakelock.active { background-color: #f5a623; color: white; }
+        .btn-reset { background-color: #e0e0e0; color: #333; }
 
         /* 두 줄 버튼 그룹 */
         .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
         .btn-row   { display: flex; gap: 8px; }
-        .btn-reset  { flex: 1; padding: 13px 8px; background-color: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
         .btn-save   { flex: 1; padding: 13px 8px; background-color: #28a745; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
         .btn-share  { flex: 1; padding: 13px 8px; background-color: #8e44ad; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
         .btn-search { width: 100%; padding: 14px 8px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
@@ -135,7 +133,7 @@
         .song-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 15px; color: #333; transition: background 0.2s; }
         .song-item:hover { background-color: #f0f8ff; }
         .song-item strong { color: #0070f3; margin-right: 8px; }
-        .history-item { flex-direction: column; align-items: flex-start; position: relative; }
+        .history-item { flex-direction: column; align-items: flex-start; position: relative; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
         .history-title-badge { font-size: 15px; font-weight: bold; color: #8e44ad; margin-bottom: 5px; display: block; }
         .history-date { font-size: 12px; color: #888; margin-bottom: 8px; }
         .history-text { font-size: 14px; white-space: pre-wrap; line-height: 1.4; padding-left: 5px; border-left: 3px solid #eee; color: #555; }
@@ -208,9 +206,9 @@
     <main>
         <div style="background: white; padding: 20px; border-radius: 12px;">
             <div class="top-btn-group">
-                <button class="top-btn btn-show-list" onclick="openSongModal()">📖 찬양 목록</button>
-                <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 콘티 이력</button>
-                <button id="btn-wakelock" class="top-btn btn-wakelock active" onclick="toggleWakeLock(true)">💡 화면 ON</button>
+                <button class="top-btn btn-show-list" onclick="openSongModal()">📖 찬양 목록/추가</button>
+                <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 콘티함</button>
+                <button class="top-btn btn-reset" onclick="resetAll()">초기화 🔄</button>
             </div>
 
             <input type="text" id="setlist-title" class="title-input" placeholder="콘티 제목 (예: 2026-03-15 수요예배)">
@@ -219,11 +217,10 @@
 
             <!-- 두 줄 버튼 배치 -->
             <div class="btn-group">
-                <button class="btn-search" onclick="startSearch()">악보 찾기 🔍</button>
+                <button class="btn-search" onclick="startSearch()">악보 만들기 🎵</button>
                 <div class="btn-row">
-                    <button class="btn-reset" onclick="resetAll()">초기화 🔄</button>
-                    <button class="btn-save" onclick="saveConti()">저장 💾</button>
-                    <button class="btn-share" onclick="shareConti()">공유 🖼️</button>
+                    <button class="btn-save" onclick="saveConti()">콘티함에 저장 💾</button>
+                    <button class="btn-share" onclick="shareConti()">콘티 공유하기 🖼️</button>
                 </div>
             </div>
         </div>
@@ -311,7 +308,6 @@
 
         let songArray = [];
         let wakeLock  = null;
-        let isWakeLockEnabled = true;
 
         // 전체화면 뷰어용 악보 목록
         let sheetList = [];          // { src, label } | null
@@ -445,6 +441,7 @@
                 li.addEventListener('mousedown', startPress);
                 li.addEventListener('mouseup', cancelPress);
                 li.addEventListener('mouseleave', cancelPress);
+                li.addEventListener('contextmenu', e => e.preventDefault());
 
                 li.onclick = () => {
                     if (didLongPress) return;
@@ -480,45 +477,18 @@
             if (wakeLock !== null) return; // 이미 획득 중
             try {
                 wakeLock = await navigator.wakeLock.request('screen');
-                // 브라우저가 자동 해제하면 상태만 초기화 (재획득은 visibilitychange가 담당)
                 wakeLock.addEventListener('release', () => { wakeLock = null; });
-                const btn = document.getElementById('btn-wakelock');
-                btn.innerText = "💡 화면 ON";
-                btn.classList.add('active');
             } catch (err) {
                 console.warn('WakeLock 획득 실패:', err);
             }
         }
 
-        function toggleWakeLock(manualToggle = false) {
-            if (!('wakeLock' in navigator)) return;
-            const btn = document.getElementById('btn-wakelock');
-            if (manualToggle) isWakeLockEnabled = !isWakeLockEnabled;
-
-            if (isWakeLockEnabled) {
-                initWakeLock();
-            } else {
-                if (wakeLock !== null) {
-                    wakeLock.release().then(() => {
-                        wakeLock = null;
-                        btn.innerText = "💡 화면 OFF";
-                        btn.classList.remove('active');
-                    });
-                } else {
-                    btn.innerText = "💡 화면 꺼짐";
-                    btn.classList.remove('active');
-                }
-            }
-        }
-
         // 첫 사용자 인터랙션 시 Wake Lock 획득 (브라우저 정책상 필요)
-        document.addEventListener('click', () => { if (isWakeLockEnabled && wakeLock === null) initWakeLock(); }, { once: true });
+        document.addEventListener('click', () => { if (wakeLock === null) initWakeLock(); }, { once: true });
 
         // 탭 복귀 시 Wake Lock 재획득 (백그라운드/화면꺼짐으로 자동 해제된 경우)
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && isWakeLockEnabled && wakeLock === null) {
-                initWakeLock();
-            }
+            if (document.visibilityState === 'visible' && wakeLock === null) initWakeLock();
         });
 
         // ─── 전체 곡 리스트 ──────────────────────────────────────────────────
