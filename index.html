@@ -151,6 +151,13 @@
         }
         footer a:hover { color: #0070f3; }
         footer svg { width: 20px; height: 20px; fill: currentColor; }
+        .footer-btn-group { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; }
+        .footer-btn {
+            padding: 10px 18px; border: none; border-radius: 8px; font-size: 14px;
+            cursor: pointer; display: none;
+        }
+        .btn-install   { background: #0070f3; color: white; }
+        .btn-notify    { background: #27ae60; color: white; }
     </style>
 </head>
 
@@ -182,6 +189,10 @@
     </main>
 
     <footer>
+        <div class="footer-btn-group">
+            <button class="footer-btn btn-install" id="btn-install" onclick="installApp()">📲 앱 설치</button>
+            <button class="footer-btn btn-notify"  id="btn-notify"  onclick="enableNotification()">🔔 알림 활성화</button>
+        </div>
         <a href="https://github.com/jeiel85/score-fetcher" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
@@ -694,7 +705,47 @@
             }
         }
 
-        window.addEventListener('load', initPushNotification);
+        // ─── 앱 설치 (PWA) ───────────────────────────────────────────────────
+        let deferredInstallPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', e => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            document.getElementById('btn-install').style.display = 'inline-block';
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            document.getElementById('btn-install').style.display = 'none';
+        });
+
+        async function installApp() {
+            if (!deferredInstallPrompt) return;
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            if (outcome === 'accepted') deferredInstallPrompt = null;
+        }
+
+        // ─── 알림 버튼 ───────────────────────────────────────────────────────
+        function updateNotifyBtn() {
+            const btn = document.getElementById('btn-notify');
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'granted') {
+                btn.style.display = 'none';
+            } else {
+                btn.style.display = 'inline-block';
+            }
+        }
+
+        async function enableNotification() {
+            await initPushNotification();
+            updateNotifyBtn();
+        }
+
+        window.addEventListener('load', () => {
+            initPushNotification();
+            updateNotifyBtn();
+        });
     </script>
 </body>
 
