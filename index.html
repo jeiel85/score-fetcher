@@ -863,18 +863,31 @@
         }
 
         async function shareConti() {
-            const title = document.getElementById('setlist-title').value.trim();
+            const title      = document.getElementById('setlist-title').value.trim();
             const rawContent = document.getElementById('song-input').value.trim();
             if (!rawContent || rawContent.includes("아래 예시처럼 붙여넣어 주세요")) {
-                alert("공유할 콘티가 없습니다!");
-                return;
+                alert("공유할 콘티가 없습니다!"); return;
             }
 
-            const lines = rawContent.split('\n');
-            const W = 800, SCALE = 2, PAD = 52;
-            const INNER_W = W - PAD * 2;
+            // ── 팔레트: 제목 해시 → 일관된 배경색 ──────────────────────────
+            const PALETTES = [
+                { bg: '#2d4a5c', accent: '#7ec8e3' },
+                { bg: '#3d2b5a', accent: '#c4a8e8' },
+                { bg: '#1a3a2a', accent: '#7ecfaa' },
+                { bg: '#5a2d3a', accent: '#f0a8b8' },
+                { bg: '#2d3a5c', accent: '#a8bff0' },
+                { bg: '#4a3020', accent: '#f0c890' },
+                { bg: '#1c2c3e', accent: '#90c8f0' },
+                { bg: '#3a2040', accent: '#d8a8f0' },
+            ];
+            const hashIdx = (str) => {
+                let h = 0;
+                for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+                return Math.abs(h) % PALETTES.length;
+            };
+            const { bg: BG, accent: AC } = PALETTES[hashIdx(title || rawContent.slice(0, 20))];
 
-            // 줄 타입 분류
+            // ── 줄 분류 ────────────────────────────────────────────────────
             const classify = l => {
                 const t = l.trim();
                 if (t === '') return 'empty';
@@ -883,132 +896,151 @@
                 if (/^-/.test(t)) return 'comment';
                 return 'text';
             };
-            const lineH = { empty: 18, header: 54, song: 48, comment: 36, text: 36 };
 
-            // 전체 높이 계산
-            const TOP = title ? 130 : 80;
-            const BOT = 56;
-            let contentH = lines.reduce((s, l) => s + lineH[classify(l)], 0);
-            const TOTAL_H = TOP + contentH + PAD + BOT;
+            // ── 레이아웃 상수 ──────────────────────────────────────────────
+            const W = 800, SCALE = 2, PAD_X = 60;
+            const INNER_W   = W - PAD_X * 2;
+            const TITLE_SZ  = 56, TITLE_LH = 72;
+            const BODY_SZ   = 38;
+            const LH = { empty: 28, header: 56, song: 56, comment: 46, text: 50 };
+            const PAD_TOP = 72, PAD_BOT = 88;
 
+            // ── 제목 파싱 (날짜 분리) ──────────────────────────────────────
+            const dateRe  = /^(\d{4}[-./]\d{2}[-./]\d{2})\s*/;
+            const dm      = title.match(dateRe);
+            const datePart = dm ? dm[1] : '';
+            const restPart = dm ? title.slice(dm[0].length) : title;
+
+            // 제목 줄 수 계산 (임시 ctx)
+            const tmpC = document.createElement('canvas');
+            tmpC.width = W * 2; tmpC.height = 10;
+            const tCtx = tmpC.getContext('2d');
+            tCtx.font = `bold ${TITLE_SZ}px sans-serif`;
+            const fullTW = tCtx.measureText(title).width;
+            const titleRows = fullTW <= INNER_W ? 1 : 2;   // 긴 제목은 2줄
+
+            // 콘텐츠 라인 높이 합산
+            const lines = rawContent.split('\n');
+            while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
+            const contentH = lines.reduce((s, l) => s + LH[classify(l)], 0);
+
+            const TITLE_BLOCK = titleRows * TITLE_LH + 20; // +gap 아래
+            const TOTAL_H = PAD_TOP + TITLE_BLOCK + contentH + PAD_BOT;
+
+            // ── Canvas 생성 ────────────────────────────────────────────────
             const canvas = document.createElement('canvas');
-            canvas.width = W * SCALE;
+            canvas.width  = W * SCALE;
             canvas.height = TOTAL_H * SCALE;
             const ctx = canvas.getContext('2d');
             ctx.scale(SCALE, SCALE);
 
-            // 배경 그라디언트
-            const bg = ctx.createLinearGradient(0, 0, W, TOTAL_H);
-            bg.addColorStop(0, '#ede9fe');
-            bg.addColorStop(1, '#dbeafe');
-            ctx.fillStyle = bg;
+            // 배경
+            ctx.fillStyle = BG;
             ctx.fillRect(0, 0, W, TOTAL_H);
 
-            // 카드
-            ctx.fillStyle = 'rgba(255,255,255,0.93)';
-            _roundRect(ctx, 20, 20, W - 40, TOTAL_H - 40, 20);
-            ctx.fill();
+            // ── 제목 렌더링 ────────────────────────────────────────────────
+            ctx.font = `bold ${TITLE_SZ}px sans-serif`;
+            ctx.textAlign = 'left';
 
-            // 상단 보라 스트라이프
-            ctx.fillStyle = '#7c3aed';
-            _roundRect(ctx, 20, 20, W - 40, 10, { tl: 20, tr: 20, bl: 0, br: 0 });
-            ctx.fill();
-
-            // 제목
-            if (title) {
-                ctx.fillStyle = '#4c1d95';
-                ctx.font = `bold 34px sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.fillText(_fitText(ctx, title, INNER_W), W / 2, 82);
-
-                ctx.strokeStyle = '#e9d5ff';
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.moveTo(PAD, 100); ctx.lineTo(W - PAD, 100);
-                ctx.stroke();
+            if (titleRows === 1) {
+                // 한 줄: [날짜(액센트)] [나머지(흰색)]
+                let tx = PAD_X;
+                const baseY = PAD_TOP + TITLE_SZ;
+                if (datePart) {
+                    ctx.fillStyle = AC;
+                    ctx.fillText(datePart, tx, baseY);
+                    const dw = ctx.measureText(datePart).width;
+                    ctx.fillRect(tx, baseY + 8, dw, 4); // 언더라인
+                    tx += ctx.measureText(datePart + ' ').width;
+                }
+                if (restPart) {
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(_fitText(ctx, restPart, INNER_W - (tx - PAD_X)), tx, baseY);
+                }
+            } else {
+                // 두 줄: 날짜 / 나머지
+                let ty = PAD_TOP + TITLE_SZ;
+                if (datePart) {
+                    ctx.fillStyle = AC;
+                    ctx.fillText(datePart, PAD_X, ty);
+                    const dw = ctx.measureText(datePart).width;
+                    ctx.fillRect(PAD_X, ty + 8, dw, 4);
+                    ty += TITLE_LH;
+                }
+                if (restPart) {
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(_fitText(ctx, restPart, INNER_W), PAD_X, ty);
+                }
             }
 
-            // 콘텐츠 렌더링
+            // ── 콘텐츠 렌더링 ─────────────────────────────────────────────
             ctx.textAlign = 'left';
-            let y = TOP;
+            let y = PAD_TOP + TITLE_BLOCK;
 
             lines.forEach(line => {
                 const type = classify(line);
-                const t = line.trim();
-                const h = lineH[type];
+                const t    = line.trim();
+                const h    = LH[type];
 
                 if (type === 'empty') { y += h; return; }
 
                 if (type === 'header') {
-                    const text = t.replace(/^\|?\s*/, '').replace(/\s*\|?$/, '').trim();
-                    // 구분선
-                    ctx.strokeStyle = '#e9d5ff';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(PAD, y + 16); ctx.lineTo(W - PAD, y + 16);
-                    ctx.stroke();
-                    // 뱃지
-                    ctx.font = `bold 20px sans-serif`;
-                    const tw = ctx.measureText(text).width;
-                    const bx = (W - tw - 28) / 2;
-                    ctx.fillStyle = '#7c3aed';
-                    _roundRect(ctx, bx, y + 2, tw + 28, 30, 8);
-                    ctx.fill();
-                    ctx.fillStyle = 'white';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(text, W / 2, y + 22);
-                    ctx.textAlign = 'left';
+                    ctx.font      = `${BODY_SZ}px sans-serif`;
+                    ctx.fillStyle = `rgba(255,255,255,0.55)`;
+                    ctx.fillText(t, PAD_X, y + BODY_SZ);
                     y += h; return;
                 }
 
                 if (type === 'song') {
                     const m = t.match(/^(\d+)\s*(.*)/);
                     const num = m[1], songTitle = m[2];
-                    ctx.font = `bold 26px sans-serif`;
-                    ctx.fillStyle = '#2563eb';
-                    ctx.fillText(num, PAD + 4, y + 32);
-                    const numW = ctx.measureText(num + '  ').width;
-                    ctx.font = `26px sans-serif`;
-                    ctx.fillStyle = '#111827';
-                    ctx.fillText(_fitText(ctx, songTitle, INNER_W - numW - 8), PAD + 4 + numW, y + 32);
+                    ctx.font      = `bold ${BODY_SZ}px sans-serif`;
+                    ctx.fillStyle = AC;
+                    ctx.fillText(num, PAD_X, y + BODY_SZ);
+                    const numW = ctx.measureText(num + ' ').width;
+                    ctx.font      = `${BODY_SZ}px sans-serif`;
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(_fitText(ctx, songTitle, INNER_W - numW), PAD_X + numW, y + BODY_SZ);
                     y += h; return;
                 }
 
                 if (type === 'comment') {
-                    ctx.font = `italic 21px sans-serif`;
-                    ctx.fillStyle = '#6b7280';
-                    ctx.fillText(_fitText(ctx, t, INNER_W - 16), PAD + 16, y + 26);
+                    ctx.font      = `${BODY_SZ - 4}px sans-serif`;
+                    ctx.fillStyle = `rgba(255,255,255,0.65)`;
+                    ctx.fillText(_fitText(ctx, t, INNER_W - 16), PAD_X + 16, y + BODY_SZ - 4);
                     y += h; return;
                 }
 
-                // text (기타)
-                ctx.font = `22px sans-serif`;
-                ctx.fillStyle = '#374151';
-                ctx.fillText(_fitText(ctx, t, INNER_W), PAD + 4, y + 28);
+                ctx.font      = `${BODY_SZ}px sans-serif`;
+                ctx.fillStyle = 'white';
+                ctx.fillText(_fitText(ctx, t, INNER_W), PAD_X, y + BODY_SZ);
                 y += h;
             });
 
-            // 푸터
-            ctx.fillStyle = '#a78bfa';
-            ctx.font = `17px sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.fillText('찬양 악보 매니저 🎵', W / 2, TOTAL_H - 18);
+            // ── 하단 pill 뱃지 ────────────────────────────────────────────
+            const nonDateWords = restPart.trim().split(/\s+/).filter(Boolean);
+            const badgeText = nonDateWords.length >= 2
+                ? nonDateWords[0] + ' | ' + nonDateWords[nonDateWords.length - 1]
+                : (nonDateWords[0] || title);
+            ctx.font = `bold 22px sans-serif`;
+            const bw = ctx.measureText(badgeText).width + 44;
+            const bh = 46, bx = PAD_X, by = TOTAL_H - 64;
+            ctx.fillStyle = 'rgba(255,255,255,0.18)';
+            _roundRect(ctx, bx, by, bw, bh, 23);
+            ctx.fill();
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'left';
+            ctx.fillText(badgeText, bx + 22, by + 31);
 
-            // 공유 or 다운로드
+            // ── 공유 or 다운로드 ──────────────────────────────────────────
             canvas.toBlob(async (blob) => {
                 const fileName = `콘티_${title || '공유'}.png`;
                 const file = new File([blob], fileName, { type: 'image/png' });
-
-                const canShare = navigator.share && navigator.canShare && navigator.canShare({ files: [file] });
-                if (canShare) {
-                    try {
-                        await navigator.share({ title: title || '콘티 공유', files: [file] });
-                        return;
-                    } catch (e) {
-                        if (e.name === 'AbortError') return; // 사용자가 취소
-                    }
+                const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [file] });
+                if (canShareFiles) {
+                    try { await navigator.share({ title: title || '콘티 공유', files: [file] }); return; }
+                    catch (e) { if (e.name === 'AbortError') return; }
                 }
-                // 폴백: 이미지 다운로드
                 const a = document.createElement('a');
                 a.download = fileName;
                 a.href = canvas.toDataURL('image/png');
