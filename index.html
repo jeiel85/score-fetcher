@@ -898,7 +898,7 @@
             const TITLE_SZ  = 56, TITLE_LH = 72;
             const BODY_SZ   = 38;
             const LH = { empty: 28, header: 56, song: 56, comment: 46, text: 50 };
-            const PAD_TOP = 72, PAD_BOT = 88;
+            const PAD_TOP = 72, PAD_BOT = 72;
 
             // ── 제목 파싱 (날짜 분리) ──────────────────────────────────────
             const dateRe  = /^(\d{4}[-./]\d{2}[-./]\d{2})\s*/;
@@ -1011,21 +1011,6 @@
                 ctx.fillText(_fitText(ctx, t, INNER_W), PAD_X, y + BODY_SZ);
                 y += h;
             });
-
-            // ── 하단 pill 뱃지 ────────────────────────────────────────────
-            const nonDateWords = restPart.trim().split(/\s+/).filter(Boolean);
-            const badgeText = nonDateWords.length >= 2
-                ? nonDateWords[0] + ' | ' + nonDateWords[nonDateWords.length - 1]
-                : (nonDateWords[0] || title);
-            ctx.font = `bold 22px sans-serif`;
-            const bw = ctx.measureText(badgeText).width + 44;
-            const bh = 46, bx = PAD_X, by = TOTAL_H - 64;
-            ctx.fillStyle = 'rgba(255,255,255,0.18)';
-            _roundRect(ctx, bx, by, bw, bh, 23);
-            ctx.fill();
-            ctx.fillStyle = 'white';
-            ctx.textAlign = 'left';
-            ctx.fillText(badgeText, bx + 22, by + 31);
 
             // ── 공유 or 다운로드 ──────────────────────────────────────────
             canvas.toBlob(async (blob) => {
