@@ -363,6 +363,8 @@
                             if (didLongPress) return;
                             document.getElementById('setlist-title').value = item.title || "";
                             document.getElementById('song-input').value = item.text || "";
+                            document.getElementById('result-container').innerHTML = "";
+                            sheetList = [];
                             closeHistoryModal();
                         };
                         container.appendChild(li);
@@ -545,6 +547,9 @@
                     });
                 }
             });
+
+            const firstCard = resultContainer.querySelector('.sheet-music-card');
+            if (firstCard) firstCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
