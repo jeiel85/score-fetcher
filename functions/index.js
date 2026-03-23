@@ -54,7 +54,7 @@ exports.notifyNewConti = onValueCreated(
             webpush: {
                 notification: {
                     icon:  "/icon.png",
-                    badge: "/badge.svg",
+                    badge: "/badge.png",
                     tag:   "new-conti",
                     renotify: true
                 },
