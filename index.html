@@ -188,6 +188,12 @@
             background: #0070f3; color: white;
             border: none; border-radius: 6px; font-size: 12px; cursor: pointer;
         }
+        /* 태그 칩 */
+        .tag-chip {
+            display: inline-block; padding: 3px 10px;
+            background: #e8f0fe; color: #0070f3;
+            border-radius: 20px; font-size: 12px; font-weight: bold;
+        }
         /* 가사 모달 */
         .lyrics-body {
             flex: 1; overflow-y: auto; padding: 20px;
@@ -296,6 +302,7 @@
                 <h3 id="lyrics-title">가사</h3>
                 <button class="btn-close" onclick="closeLyricsModal()">&times;</button>
             </div>
+            <div id="lyrics-tags" style="display:none; flex-wrap:wrap; gap:6px; padding:10px 16px; border-bottom:1px solid #eee;"></div>
             <div class="lyrics-body" id="lyrics-content"></div>
         </div>
     </div>
@@ -559,30 +566,58 @@
                 const res = await fetch('lyrics.json');
                 if (!res.ok) return;
                 const data = await res.json();
-                // { metadata, songs: [{number, lyrics, ...}] } 형식 파싱
                 if (Array.isArray(data.songs)) {
+                    // { metadata, songs: [{number, title, lyrics, tags, ...}] } 형식
                     data.songs.forEach(s => {
-                        if (s.number && s.lyrics) lyricsData[s.number] = s.lyrics;
+                        if (s.number) lyricsData[s.number] = {
+                            lyrics:   s.lyrics   || null,
+                            tags:     s.tags     || [],
+                            subtitle: s.subtitle || null,
+                        };
                     });
                 } else {
                     // 구형 단순 맵 형식 { "001": "가사..." } 호환
-                    lyricsData = data;
+                    Object.entries(data).forEach(([k, v]) => {
+                        lyricsData[k] = { lyrics: v, tags: [], subtitle: null };
+                    });
                 }
             } catch (e) {}
         }
 
         function showLyrics(numPadded, displayTitle) {
+            const d = lyricsData[numPadded];
             document.getElementById('lyrics-title').textContent = `🎵 ${displayTitle}`;
-            const lyrics = lyricsData[numPadded];
-            document.getElementById('lyrics-content').textContent = lyrics || '가사 데이터가 없습니다.';
+
+            const tagsEl = document.getElementById('lyrics-tags');
+            if (d && d.tags && d.tags.length > 0) {
+                tagsEl.innerHTML = d.tags.map(t => `<span class="tag-chip">${t}</span>`).join('');
+                tagsEl.style.display = 'flex';
+            } else {
+                tagsEl.style.display = 'none';
+            }
+
+            document.getElementById('lyrics-content').textContent =
+                (d && d.lyrics) ? d.lyrics : '가사 데이터가 없습니다.';
             document.getElementById('lyricsModal').style.display = 'flex';
         }
 
         function closeLyricsModal() { document.getElementById('lyricsModal').style.display = 'none'; }
 
         function filterSongs() {
-            const keyword = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = songArray.filter(song => song.toLowerCase().includes(keyword));
+            const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (!keyword) { renderSongList(songArray); return; }
+            const filtered = songArray.filter(song => {
+                // 번호·제목 검색 (hymn_list.txt 기반)
+                if (song.toLowerCase().includes(keyword)) return true;
+                // 태그·가사 검색 (lyrics.json 기반)
+                const numMatch = song.match(/^(\d+)/);
+                if (!numMatch) return false;
+                const d = lyricsData[numMatch[1].padStart(3, '0')];
+                if (!d) return false;
+                if (d.tags && d.tags.some(t => t.toLowerCase().includes(keyword))) return true;
+                if (d.lyrics && d.lyrics.toLowerCase().includes(keyword)) return true;
+                return false;
+            });
             renderSongList(filtered);
         }
 
