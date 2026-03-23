@@ -860,12 +860,12 @@
                     _myFcmToken = token;
                     console.log('FCM 토큰 획득 성공');
                     const idToken = await getIdToken();
-                    let deviceId = localStorage.getItem('device_id');
-                    if (!deviceId) {
-                        deviceId = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-                        localStorage.setItem('device_id', deviceId);
-                    }
-                    // 앱 열 때마다 PUT으로 덮어쓰기 — device_id 키라 중복 없음
+                    // 기기 핑거프린트 기반 ID — 같은 기기라면 브라우저 달라도 동일 키
+                    const _fp = [screen.width, screen.height, navigator.language,
+                                 navigator.hardwareConcurrency || 0,
+                                 Intl.DateTimeFormat().resolvedOptions().timeZone].join('|');
+                    const deviceId = 'fp_' + btoa(_fp).replace(/[^a-zA-Z0-9]/g, '').slice(0, 24);
+                    // 앱 열 때마다 PUT으로 덮어쓰기 — 같은 기기 = 같은 키 = 토큰 1개 유지
                     const res = await fetch(
                         `${FIREBASE_CONFIG.databaseURL}/fcm_tokens/${deviceId}.json?auth=${idToken}`,
                         { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(token) }
