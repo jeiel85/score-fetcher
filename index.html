@@ -283,7 +283,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="songModal">
+    <div class="modal-overlay" id="songModal" onclick="if(event.target===this)closeSongModal()">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>📖 찬양 목록</h3>
@@ -296,7 +296,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="lyricsModal">
+    <div class="modal-overlay" id="lyricsModal" onclick="if(event.target===this)closeLyricsModal()">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="lyrics-title">가사</h3>
@@ -307,7 +307,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="historyModal">
+    <div class="modal-overlay" id="historyModal" onclick="if(event.target===this)closeHistoryModal()">
         <div class="modal-content">
             <div class="modal-header history">
                 <h3>🕒 서버에서 불러오기</h3>
