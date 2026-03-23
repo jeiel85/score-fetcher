@@ -874,13 +874,18 @@
                     }
                 }
 
-                // 앱이 열려있을 때 포그라운드 알림 처리
+                // 앱이 열려있을 때 포그라운드 알림 처리 (시스템 알림으로 표시)
                 messaging.onMessage((payload) => {
-                    const toast = document.createElement('div');
-                    toast.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#222;color:white;padding:14px 20px;border-radius:10px;z-index:9999;font-size:14px;max-width:90%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);';
-                    toast.textContent = `🎶 ${payload.notification?.body || '새 콘티가 등록되었습니다'}`;
-                    document.body.appendChild(toast);
-                    setTimeout(() => toast.remove(), 5000);
+                    const title = payload.notification?.title || '새 콘티가 등록되었습니다 ♬';
+                    const body  = payload.notification?.body  || '새 콘티가 등록되었습니다. 지금 확인해보세요!';
+                    registration.showNotification(title, {
+                        body,
+                        icon:  '/icon.png',
+                        badge: '/badge.png',
+                        tag:   'new-conti',
+                        renotify: true,
+                        data: { url: location.origin }
+                    });
                 });
 
             } catch (error) {
