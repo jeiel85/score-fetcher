@@ -30,6 +30,7 @@
     <!-- Firebase SDK (Cloud Messaging 푸시 알림용) -->
     <script src="firebase-config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 
     <style>
@@ -307,6 +308,11 @@
 
         const FIREBASE_URL    = `${FIREBASE_CONFIG.databaseURL}/history.json`;
         const FCM_TOKENS_URL  = `${FIREBASE_CONFIG.databaseURL}/fcm_tokens.json`;
+
+        // ─── Firebase 익명 인증 ────────────────────────────────────────────────
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        const authReady = firebase.auth().signInAnonymously().then(c => c.user);
+        async function getIdToken() { return (await authReady).getIdToken(); }
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
 
         let songArray = [];
@@ -331,7 +337,8 @@
             const payload = { date: dateStr, title: titleText, text: inputText, timestamp: Date.now() };
 
             try {
-                await fetch(FIREBASE_URL, {
+                const idToken = await getIdToken();
+                await fetch(`${FIREBASE_URL}?auth=${idToken}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -370,7 +377,8 @@
             document.getElementById('historyModal').style.display = 'flex';
 
             try {
-                const response = await fetch(FIREBASE_URL);
+                const idToken = await getIdToken();
+                const response = await fetch(`${FIREBASE_URL}?auth=${idToken}`);
                 const data = await response.json();
 
                 if (!data) {
@@ -428,7 +436,8 @@
                         li.classList.remove('pressing');
                         if (confirm(`"${displayTitle}" 이력을 삭제할까요?`)) {
                             const BASE = "https://score-fetcher-db-default-rtdb.firebaseio.com";
-                            await fetch(`${BASE}/history/${key}.json`, { method: 'DELETE' });
+                            const idToken = await getIdToken();
+                            await fetch(`${BASE}/history/${key}.json?auth=${idToken}`, { method: 'DELETE' });
                             openHistoryModal();
                         }
                     }, 700);
@@ -722,7 +731,6 @@
             }
 
             try {
-                if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
                 console.log('Firebase 초기화 성공 🚀');
 
                 const registration = await navigator.serviceWorker.register('firebase-messaging-sw.js');
@@ -746,7 +754,8 @@
                     console.log('FCM 토큰 획득 성공');
                     const storedToken = localStorage.getItem('fcm_token');
                     if (storedToken !== token) {
-                        const response = await fetch(FCM_TOKENS_URL, {
+                        const idToken = await getIdToken();
+                        const response = await fetch(`${FCM_TOKENS_URL}?auth=${idToken}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(token)
