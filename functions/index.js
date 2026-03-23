@@ -15,7 +15,7 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 exports.notifyNewConti = onValueCreated(
-    { ref: "/history/{id}", region: "asia-northeast3" },   // 서울 리전 (원하면 변경)
+    { ref: "/history/{id}", region: "us-central1" },
     async (event) => {
         const data = event.data.val();
         const contiTitle = (data && data.title) ? data.title : "새 콘티";
@@ -24,7 +24,7 @@ exports.notifyNewConti = onValueCreated(
         const rawText = (data && data.text) ? data.text : '';
         const songLines = rawText.split('\n')
             .map(l => l.trim())
-            .filter(l => /^\d+[.)]\s/.test(l))
+            .filter(l => /^\d+/.test(l))
             .slice(0, 4);
         const summary = songLines.length > 0
             ? songLines.join(' · ')
@@ -54,7 +54,7 @@ exports.notifyNewConti = onValueCreated(
             webpush: {
                 notification: {
                     icon:  "/icon.png",
-                    badge: "/icon.png",
+                    badge: "/badge.svg",
                     tag:   "new-conti",
                     renotify: true
                 },

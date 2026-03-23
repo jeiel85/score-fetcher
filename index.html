@@ -180,6 +180,20 @@
         .btn-install   { background: #0070f3; color: white; }
         .btn-notify    { background: #27ae60; color: white; }
 
+        /* 가사 버튼 */
+        .song-item { display: flex; align-items: center; gap: 8px; }
+        .song-item-text { flex: 1; cursor: pointer; }
+        .btn-lyrics {
+            flex-shrink: 0; padding: 4px 10px;
+            background: #0070f3; color: white;
+            border: none; border-radius: 6px; font-size: 12px; cursor: pointer;
+        }
+        /* 가사 모달 */
+        .lyrics-body {
+            flex: 1; overflow-y: auto; padding: 20px;
+            white-space: pre-wrap; line-height: 2; font-size: 15px; color: #333;
+        }
+
         /* 카카오 인앱 브라우저 안내 배너 */
         #kakao-banner {
             display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
@@ -276,6 +290,16 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="lyricsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="lyrics-title">가사</h3>
+                <button class="btn-close" onclick="closeLyricsModal()">&times;</button>
+            </div>
+            <div class="lyrics-body" id="lyrics-content"></div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="historyModal">
         <div class="modal-content">
             <div class="modal-header history">
@@ -316,8 +340,9 @@
         async function getIdToken() { return (await authReady).getIdToken(); }
         const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
 
-        let songArray = [];
-        let wakeLock  = null;
+        let songArray  = [];
+        let lyricsData = {};
+        let wakeLock   = null;
 
         // 전체화면 뷰어용 악보 목록
         let sheetList = [];          // { src, label } | null
@@ -529,6 +554,32 @@
 
         function closeSongModal() { document.getElementById('songModal').style.display = 'none'; }
 
+        async function initLyrics() {
+            try {
+                const res = await fetch('lyrics.json');
+                if (!res.ok) return;
+                const data = await res.json();
+                // { metadata, songs: [{number, lyrics, ...}] } 형식 파싱
+                if (Array.isArray(data.songs)) {
+                    data.songs.forEach(s => {
+                        if (s.number && s.lyrics) lyricsData[s.number] = s.lyrics;
+                    });
+                } else {
+                    // 구형 단순 맵 형식 { "001": "가사..." } 호환
+                    lyricsData = data;
+                }
+            } catch (e) {}
+        }
+
+        function showLyrics(numPadded, displayTitle) {
+            document.getElementById('lyrics-title').textContent = `🎵 ${displayTitle}`;
+            const lyrics = lyricsData[numPadded];
+            document.getElementById('lyrics-content').textContent = lyrics || '가사 데이터가 없습니다.';
+            document.getElementById('lyricsModal').style.display = 'flex';
+        }
+
+        function closeLyricsModal() { document.getElementById('lyricsModal').style.display = 'none'; }
+
         function filterSongs() {
             const keyword = document.getElementById('searchInput').value.toLowerCase();
             const filtered = songArray.filter(song => song.toLowerCase().includes(keyword));
@@ -542,12 +593,23 @@
                 const li = document.createElement('li');
                 li.className = 'song-item';
                 const match = song.match(/^(\d+)/);
+                const numRaw = match ? match[1] : '';
+                const numPadded = numRaw.padStart(3, '0');
+                const title = match ? song.substring(numRaw.length).trim() : song;
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'song-item-text';
+                textSpan.innerHTML = match ? `<strong>${numRaw}</strong> ${title}` : song;
+                textSpan.onclick = () => addSongToInput(song);
+                li.appendChild(textSpan);
+
                 if (match) {
-                    const num = match[1];
-                    const title = song.substring(num.length).trim();
-                    li.innerHTML = `<strong>${num}</strong> ${title}`;
-                } else { li.textContent = song; }
-                li.onclick = () => addSongToInput(song);
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-lyrics';
+                    btn.textContent = '가사';
+                    btn.onclick = (e) => { e.stopPropagation(); showLyrics(numPadded, `${numRaw} ${title}`); };
+                    li.appendChild(btn);
+                }
                 container.appendChild(li);
             });
         }
@@ -580,7 +642,13 @@
                 let match = trimmed.match(/^(\d+)[\.\s]*(.*)/);
                 if (match) {
                     let formattedNum = String(match[1]).padStart(3, '0');
-                    return `${formattedNum} ${match[2].trim()}`;
+                    let titlePart = match[2].trim();
+                    // 찬양 목록에서 제목 자동 조회
+                    if (songArray.length > 0) {
+                        const found = songArray.find(s => s.startsWith(formattedNum + ' '));
+                        if (found) titlePart = found.substring(formattedNum.length + 1).trim();
+                    }
+                    return `${formattedNum} ${titlePart}`;
                 }
                 return trimmed;
             });
@@ -846,6 +914,8 @@
         }
 
         window.addEventListener('load', () => {
+            initSongList();   // 악보 만들기 시 제목 자동 치환을 위해 미리 로드
+            initLyrics();
             initPushNotification();
             updateNotifyBtn();
             checkKakaoBrowser();
@@ -864,11 +934,12 @@
                 return;
             }
             // 2) 열린 모달 (sharePreview → history → song 순)
-            const openModal = ['sharePreviewModal', 'historyModal', 'songModal']
+            const openModal = ['sharePreviewModal', 'lyricsModal', 'historyModal', 'songModal']
                 .map(id => document.getElementById(id))
                 .find(el => el && el.style.display === 'flex');
             if (openModal) {
                 if (openModal.id === 'sharePreviewModal') closeSharePreview();
+                else if (openModal.id === 'lyricsModal') closeLyricsModal();
                 else openModal.style.display = 'none';
                 history.pushState({ page: 'app' }, '');
                 return;

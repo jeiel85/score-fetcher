@@ -17,7 +17,7 @@ messaging.onBackgroundMessage((payload) => {
     self.registration.showNotification(title, {
         body,
         icon:  '/icon.png',
-        badge: '/icon.png',
+        badge: '/badge.svg',
         tag:   'new-conti',          // 같은 태그는 쌓이지 않고 교체됨
         renotify: true,
         data: { url: self.location.origin }
