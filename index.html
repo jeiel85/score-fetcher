@@ -135,12 +135,12 @@
         .song-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 15px; color: #333; transition: background 0.2s; }
         .song-item:hover { background-color: #f0f8ff; }
         .song-item strong { color: #0070f3; margin-right: 8px; }
-        .history-item { flex-direction: column; align-items: flex-start; position: relative; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-        .history-title-badge { font-size: 15px; font-weight: bold; color: #8e44ad; margin-bottom: 5px; display: block; }
+        .history-item { display: flex; flex-direction: column; align-items: flex-start; text-align: left; position: relative; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+        .history-title-badge { font-size: 15px; font-weight: bold; color: #8e44ad; margin-bottom: 4px; display: block; }
         .history-date { font-size: 12px; color: #888; margin-bottom: 8px; }
-        .history-text { font-size: 14px; white-space: pre-wrap; line-height: 1.4; padding-left: 5px; border-left: 3px solid #eee; color: #555; }
+        .history-text { font-size: 14px; white-space: pre-wrap; line-height: 1.5; color: #444; width: 100%; }
         .history-item.pressing { background-color: #fde8f0 !important; }
-        .history-delete-hint { font-size: 11px; color: #bbb; margin-top: 6px; }
+        .history-delete-hint { font-size: 11px; color: #ccc; margin-top: 8px; align-self: flex-end; }
 
         /* 공유 미리보기 모달 */
         #sharePreviewModal { padding: 0; position: fixed; }
@@ -724,8 +724,8 @@
                 });
             });
 
-            const firstCard = resultContainer.querySelector('.sheet-music-card');
-            if (firstCard) firstCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const btnGroup = document.querySelector('.btn-group');
+            if (btnGroup) btnGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
