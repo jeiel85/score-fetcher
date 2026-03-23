@@ -951,6 +951,23 @@
             updateNotifyBtn();
         }
 
+        // ─── 최신 콘티 자동 로드 (알림 클릭 시) ─────────────────────────────────
+        async function autoLoadLatestConti() {
+            try {
+                const idToken = await getIdToken();
+                const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/history.json?auth=${idToken}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!data) return;
+                const entries = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+                const latest = entries[0];
+                if (!latest) return;
+                document.getElementById('setlist-title').value = latest.title || "";
+                document.getElementById('song-input').value = latest.text || "";
+                startSearch();
+            } catch (e) { console.warn('autoLoad 실패:', e); }
+        }
+
         window.addEventListener('load', () => {
             initSongList();   // 악보 만들기 시 제목 자동 치환을 위해 미리 로드
             initLyrics();
@@ -959,6 +976,17 @@
             checkKakaoBrowser();
             // 안드로이드 뒤로 가기 처리용 초기 상태 push
             history.pushState({ page: 'app' }, '');
+
+            // 알림 클릭으로 진입한 경우 최신 콘티 자동 로드
+            if (new URLSearchParams(location.search).get('autoload') === '1') {
+                history.replaceState({ page: 'app' }, '', '/');
+                autoLoadLatestConti();
+            }
+
+            // 앱이 이미 열려있을 때 알림 클릭 시 서비스 워커 메시지 수신
+            navigator.serviceWorker?.addEventListener('message', (e) => {
+                if (e.data?.type === 'AUTOLOAD_LATEST') autoLoadLatestConti();
+            });
         });
 
         // ─── 안드로이드 뒤로 가기 처리 ──────────────────────────────────────────

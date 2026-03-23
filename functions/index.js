@@ -18,7 +18,6 @@ exports.notifyNewConti = onValueCreated(
     { ref: "/history/{id}", region: "us-central1" },
     async (event) => {
         const data = event.data.val();
-        const contiTitle = (data && data.title) ? data.title : "새 콘티";
 
         // 내용 요약: 번호로 시작하는 곡 줄 최대 4개 추출
         const rawText = (data && data.text) ? data.text : '';
@@ -48,7 +47,7 @@ exports.notifyNewConti = onValueCreated(
 
         const message = {
             notification: {
-                title: `🎶 ${contiTitle}`,
+                title: "새 콘티가 등록되었습니다 ♬",
                 body:  summary || "새 콘티가 등록되었습니다. 지금 확인해보세요!"
             },
             webpush: {
@@ -58,7 +57,7 @@ exports.notifyNewConti = onValueCreated(
                     tag:   "new-conti",
                     renotify: true
                 },
-                fcmOptions: { link: "/" }
+                fcmOptions: { link: "/?autoload=1" }
             },
             tokens
         };
