@@ -638,7 +638,8 @@
                 textSpan.onclick = () => addSongToInput(song);
                 li.appendChild(textSpan);
 
-                if (match) {
+                const lyricEntry = lyricsData[numPadded];
+                if (match && lyricEntry && lyricEntry.lyrics) {
                     const btn = document.createElement('button');
                     btn.className = 'btn-lyrics';
                     btn.textContent = '가사';
