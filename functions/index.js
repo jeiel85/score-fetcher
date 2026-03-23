@@ -41,9 +41,15 @@ exports.notifyNewConti = onValueCreated(
             return null;
         }
 
-        // Firebase Realtime DB는 POST할 때마다 고유 키로 저장 → 값 배열로 추출
+        // Firebase Realtime DB는 POST할 때마다 고유 키로 저장 → 중복 제거 후 추출
         const tokenEntries = tokensSnapshot.val();
-        const tokens = Object.values(tokenEntries).filter(t => t && t !== senderToken);
+        const tokenKeyMap = {};  // token → 첫 번째 DB 키 (만료 토큰 정리용)
+        Object.entries(tokenEntries).forEach(([key, token]) => {
+            if (token && token !== senderToken && !tokenKeyMap[token]) {
+                tokenKeyMap[token] = key;
+            }
+        });
+        const tokens = Object.keys(tokenKeyMap);
 
         if (tokens.length === 0) {
             console.log("유효한 토큰이 없습니다.");
@@ -73,12 +79,12 @@ exports.notifyNewConti = onValueCreated(
 
             // 만료·무효 토큰 정리
             const removePromises = [];
-            const tokenKeys = Object.keys(tokenEntries);
             response.responses.forEach((resp, i) => {
                 if (!resp.success) {
+                    const dbKey = tokenKeyMap[tokens[i]];
                     console.warn(`토큰 제거: ${tokens[i]} — ${resp.error?.message}`);
-                    removePromises.push(
-                        admin.database().ref(`/fcm_tokens/${tokenKeys[i]}`).remove()
+                    if (dbKey) removePromises.push(
+                        admin.database().ref(`/fcm_tokens/${dbKey}`).remove()
                     );
                 }
             });
