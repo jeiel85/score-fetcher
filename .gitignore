@@ -1,3 +1,4 @@
 node_modules/
 failed_songs.json
 lyrics_example.json
+SESSION_SUMMARY*.md
