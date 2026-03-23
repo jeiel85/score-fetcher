@@ -41,11 +41,12 @@
 - **길게 누르기 삭제** — 이력 항목 700ms 길게 누르면 삭제 확인 (네이티브 팝업 차단)
 
 ### 🔔 FCM 푸시 알림
-- **새 콘티 자동 알림** — 콘티 저장 시 등록된 모든 팀원 기기에 푸시 알림 발송
-- **알림 내용** — 제목: `🎶 콘티제목`, 본문: 번호 있는 곡 줄 최대 4개 요약
-- **Firebase Cloud Functions** — 서버리스 함수로 알림 처리 (서울 리전, `asia-northeast3`)
-- **만료 토큰 자동 정리** — 발송 실패한 토큰을 DB에서 자동 제거
-- **포그라운드 알림** — 앱이 열린 상태에서도 화면 상단에 토스트 메시지 표시
+- **새 콘티 자동 알림** — 콘티 저장 시 등록된 팀원 기기에 푸시 알림 발송 (발신자 본인 제외)
+- **알림 내용** — 제목: `새 콘티가 등록되었습니다 ♬`, 본문: `[콘티제목] 곡1 · 곡2 · ...` (최대 4곡)
+- **포그라운드 알림** — 앱이 열린 상태에서도 시스템 알림(상단바)으로 표시
+- **알림 클릭 시 자동 로드** — 최신 콘티를 불러오고 악보 만들기 자동 실행
+- **Firebase Cloud Functions** — 서버리스 함수로 알림 처리 (`us-central1`)
+- **중복·만료 토큰 자동 정리** — 중복 등록된 토큰 제거, 발송 실패 토큰 DB에서 자동 삭제
 
 ### 📖 전체 곡 목록 검색
 - **691곡 내장** — `hymn_list.txt` 기반의 전체 곡 검색 모달
@@ -150,7 +151,12 @@ images/ 폴더에 곡 번호와 일치하는 파일 업로드
 지원 포맷: .jpg .png .gif .jfif (대소문자 모두 지원)
 ```
 
-### 4. Firebase Cloud Functions 배포 (푸시 알림)
+### 4. Firebase 익명 인증 활성화
+
+Firebase Console → Authentication → Sign-in method → **익명** 활성화
+(DB 보안 규칙: `auth != null` — 인증된 사용자만 읽기/쓰기 허용)
+
+### 5. Firebase Cloud Functions 배포 (푸시 알림)
 
 ```bash
 npm install -g firebase-tools
@@ -160,7 +166,7 @@ cd functions && npm install
 firebase deploy --only functions
 ```
 
-### 5. Vercel 배포
+### 6. Vercel 배포
 
 ```bash
 # Vercel CLI 사용
@@ -175,8 +181,9 @@ npx vercel --prod
 
 | 버전 | 내용 |
 |------|------|
-| v4.0 | 버튼 이름·위치 개편, Wake Lock 항상 ON, 공유 시 자동 저장, 푸시 알림 곡 목록 요약, 이력 팝업 차단 |
-| v3.0 | 전체화면 악보 뷰어 추가 (스와이프·버튼 네비게이션), FCM 푸시 알림, Cloud Functions 연동, 콘티 공유 이미지 |
+| v5.0 | FCM 알림 개선 — 발신자 제외, 콘티 제목 포함, 포그라운드 시스템 알림, 중복 토큰 방지, 알림 클릭 자동 로드 |
+| v4.0 | 버튼 이름·위치 개편, Wake Lock 항상 ON, 가사 통합 검색, Firebase 익명 인증, 공유 미리보기 개선 |
+| v3.0 | 전체화면 악보 뷰어 (스와이프·버튼 네비게이션), FCM 푸시 알림, Cloud Functions 연동, 콘티 공유 이미지 |
 | v2.1 | 지난 콘티 클릭 시 내용 불러오기, Open Graph 링크 미리보기, GitHub 푸터 |
 | v2.0 | Firebase 연동, Wake Lock, 전체 곡 목록 모달 |
 | v1.x | Google Sheets 기반 초기 버전 |
