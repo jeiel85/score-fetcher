@@ -857,23 +857,18 @@
 
                 if (token) {
                     console.log('FCM 토큰 획득 성공');
-                    const storedToken = localStorage.getItem('fcm_token');
-                    if (storedToken !== token) {
-                        const idToken = await getIdToken();
-                        let deviceId = localStorage.getItem('device_id');
-                        if (!deviceId) {
-                            deviceId = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-                            localStorage.setItem('device_id', deviceId);
-                        }
-                        const response = await fetch(
-                            `${FIREBASE_CONFIG.databaseURL}/fcm_tokens/${deviceId}.json?auth=${idToken}`,
-                            { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(token) }
-                        );
-                        if (response.ok) {
-                            localStorage.setItem('fcm_token', token);
-                            console.log('FCM 토큰 서버 저장 완료');
-                        }
+                    const idToken = await getIdToken();
+                    let deviceId = localStorage.getItem('device_id');
+                    if (!deviceId) {
+                        deviceId = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+                        localStorage.setItem('device_id', deviceId);
                     }
+                    // 앱 열 때마다 PUT으로 덮어쓰기 — device_id 키라 중복 없음
+                    await fetch(
+                        `${FIREBASE_CONFIG.databaseURL}/fcm_tokens/${deviceId}.json?auth=${idToken}`,
+                        { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(token) }
+                    );
+                    console.log('FCM 토큰 갱신 완료');
                 }
 
                 // 앱이 열려있을 때 포그라운드 알림 처리
