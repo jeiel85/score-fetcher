@@ -1187,11 +1187,15 @@
         let _shareUiTimer = null;
 
         function _showShareUI() {
+            const footer = document.querySelector('.share-preview-footer');
+            const isHidden = footer.classList.contains('ui-hidden');
             clearTimeout(_shareUiTimer);
-            document.querySelector('.share-preview-footer').classList.remove('ui-hidden');
-            _shareUiTimer = setTimeout(() => {
-                document.querySelector('.share-preview-footer').classList.add('ui-hidden');
-            }, 3000);
+            if (isHidden) {
+                footer.classList.remove('ui-hidden');
+                _shareUiTimer = setTimeout(() => footer.classList.add('ui-hidden'), 3000);
+            } else {
+                footer.classList.add('ui-hidden');
+            }
         }
 
         function closeSharePreview() {
