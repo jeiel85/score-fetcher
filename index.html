@@ -860,11 +860,15 @@
                     const storedToken = localStorage.getItem('fcm_token');
                     if (storedToken !== token) {
                         const idToken = await getIdToken();
-                        const response = await fetch(`${FCM_TOKENS_URL}?auth=${idToken}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(token)
-                        });
+                        let deviceId = localStorage.getItem('device_id');
+                        if (!deviceId) {
+                            deviceId = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+                            localStorage.setItem('device_id', deviceId);
+                        }
+                        const response = await fetch(
+                            `${FIREBASE_CONFIG.databaseURL}/fcm_tokens/${deviceId}.json?auth=${idToken}`,
+                            { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(token) }
+                        );
                         if (response.ok) {
                             localStorage.setItem('fcm_token', token);
                             console.log('FCM 토큰 서버 저장 완료');
