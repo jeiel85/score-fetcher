@@ -21,8 +21,8 @@ messaging.onBackgroundMessage((payload) => {
         body,
         icon:  '/icon.png',
         badge: '/badge.png',
-        tag:   'new-conti',          // 같은 태그는 쌓이지 않고 교체됨
-        renotify: true,
+        tag:   `new-conti-${Date.now()}`,
+        renotify: false,
         data: { url: self.location.origin }
     });
 });

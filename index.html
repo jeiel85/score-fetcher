@@ -340,6 +340,7 @@
 
         const FIREBASE_URL    = `${FIREBASE_CONFIG.databaseURL}/history.json`;
         const FCM_TOKENS_URL  = `${FIREBASE_CONFIG.databaseURL}/fcm_tokens.json`;
+        let _myFcmToken = null;  // 본인 FCM 토큰 (알림 발송 시 제외용)
 
         // ─── Firebase 익명 인증 ────────────────────────────────────────────────
         if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
@@ -367,7 +368,7 @@
             const now = new Date();
             const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-            const payload = { date: dateStr, title: titleText, text: inputText, timestamp: Date.now() };
+            const payload = { date: dateStr, title: titleText, text: inputText, timestamp: Date.now(), senderToken: _myFcmToken || null };
 
             try {
                 const idToken = await getIdToken();
@@ -856,6 +857,7 @@
                 const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
 
                 if (token) {
+                    _myFcmToken = token;
                     console.log('FCM 토큰 획득 성공');
                     const idToken = await getIdToken();
                     let deviceId = localStorage.getItem('device_id');
@@ -882,8 +884,8 @@
                         body,
                         icon:  '/icon.png',
                         badge: '/badge.png',
-                        tag:   'new-conti',
-                        renotify: true,
+                        tag:   `new-conti-${Date.now()}`,
+                        renotify: false,
                         data: { url: location.origin }
                     });
                 });

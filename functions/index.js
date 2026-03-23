@@ -21,13 +21,18 @@ exports.notifyNewConti = onValueCreated(
 
         // 내용 요약: 번호로 시작하는 곡 줄 최대 4개 추출
         const rawText = (data && data.text) ? data.text : '';
+        const contiTitle = (data && data.title) ? data.title : '';
+        const senderToken = (data && data.senderToken) ? data.senderToken : null;
         const songLines = rawText.split('\n')
             .map(l => l.trim())
             .filter(l => /^\d+/.test(l))
             .slice(0, 4);
-        const summary = songLines.length > 0
+        const songSummary = songLines.length > 0
             ? songLines.join(' · ')
             : rawText.split('\n').map(l => l.trim()).filter(Boolean).slice(0, 3).join(' · ');
+        const summary = contiTitle
+            ? `[${contiTitle}] ${songSummary}`
+            : songSummary;
 
         // 저장된 FCM 토큰 전체 가져오기
         const tokensSnapshot = await admin.database().ref("/fcm_tokens").once("value");
@@ -38,7 +43,7 @@ exports.notifyNewConti = onValueCreated(
 
         // Firebase Realtime DB는 POST할 때마다 고유 키로 저장 → 값 배열로 추출
         const tokenEntries = tokensSnapshot.val();
-        const tokens = Object.values(tokenEntries).filter(Boolean);
+        const tokens = Object.values(tokenEntries).filter(t => t && t !== senderToken);
 
         if (tokens.length === 0) {
             console.log("유효한 토큰이 없습니다.");
@@ -54,8 +59,8 @@ exports.notifyNewConti = onValueCreated(
                 notification: {
                     icon:  "/icon.png",
                     badge: "/badge.png",
-                    tag:   "new-conti",
-                    renotify: true
+                    tag:   `new-conti-${Date.now()}`,
+                    renotify: false
                 },
                 fcmOptions: { link: "/?autoload=1" }
             },
