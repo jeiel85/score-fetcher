@@ -141,10 +141,10 @@
         .top-btn-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .top-btn-row   { display: flex; gap: 8px; }
         .top-btn {
-            flex: 1; padding: 14px 8px;
+            flex: 1; padding: 17px 8px;
             border: none; border-radius: var(--r-lg);
-            font-family: 'Inter', -apple-system, sans-serif;
-            font-size: 14px; font-weight: 600;
+            font-family: 'Manrope', -apple-system, sans-serif;
+            font-size: 16px; font-weight: 800;
             cursor: pointer; text-align: center;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             transition: opacity 0.15s, transform 0.1s;
@@ -171,24 +171,24 @@
         .btn-search:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(24,29,58,0.2); }
 
         .btn-save {
-            flex: 1; padding: 14px 8px;
+            flex: 1; padding: 17px 8px;
             background: linear-gradient(135deg, #059669 0%, #34D399 100%);
             color: #ffffff;
             border: none; border-radius: var(--r-lg);
-            font-family: 'Inter', -apple-system, sans-serif;
-            font-size: 14px; font-weight: 600; cursor: pointer;
+            font-family: 'Manrope', -apple-system, sans-serif;
+            font-size: 16px; font-weight: 800; cursor: pointer;
             box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
             transition: box-shadow 0.15s, transform 0.1s;
         }
         .btn-save:active { box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2); transform: scale(0.97); }
 
         .btn-share {
-            flex: 1; padding: 14px 8px;
+            flex: 1; padding: 17px 8px;
             background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%);
             color: #78350F;
             border: none; border-radius: var(--r-lg);
-            font-family: 'Inter', -apple-system, sans-serif;
-            font-size: 14px; font-weight: 600; cursor: pointer;
+            font-family: 'Manrope', -apple-system, sans-serif;
+            font-size: 16px; font-weight: 800; cursor: pointer;
             box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
             transition: box-shadow 0.15s, transform 0.1s;
         }
@@ -409,6 +409,109 @@
             position: absolute; top: 10px; right: 12px;
             background: none; border: none; font-size: 20px; cursor: pointer; color: #555;
         }
+
+        /* ─── App Layout (세로/가로 공통) ─── */
+        .app-layout { display: flex; flex-direction: column; }
+        /* 세로 모드: 버튼(right) 위, 입력(left) 아래 */
+        .panel-left  { order: 2; }
+        .panel-right { order: 1; }
+
+        .controls-card {
+            background: var(--surface-low);
+            border-radius: var(--r-xl); padding: 20px;
+            outline: 1px solid rgba(199, 197, 206, 0.2);
+            box-shadow: 0 4px 20px var(--shadow);
+            margin-bottom: 16px;
+        }
+
+        /* 가로 모드 전용 영역 — 기본 숨김 */
+        .ls-conti-area { display: none; }
+        .ls-sheet-area { display: none; }
+
+        /* ─── Landscape Sheet Header/Body/Footer ─── */
+        .ls-sheet-header {
+            background: rgba(24, 29, 58, 0.92); color: #ffffff;
+            padding: 12px 16px;
+            font-family: 'Manrope', -apple-system, sans-serif;
+            font-size: 13px; font-weight: 700;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
+        }
+        .ls-back-btn {
+            background: rgba(255,255,255,0.15); color: white;
+            border: none; border-radius: var(--r-sm);
+            padding: 5px 12px; font-size: 12px; font-weight: 600;
+            cursor: pointer; font-family: 'Inter', -apple-system, sans-serif;
+            transition: background 0.15s;
+        }
+        .ls-back-btn:active { background: rgba(255,255,255,0.3); }
+        .ls-sheet-body {
+            flex: 1; overflow: hidden; display: flex;
+            align-items: center; justify-content: center; min-height: 0;
+        }
+        .ls-sheet-body img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        .ls-sheet-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(24, 29, 58, 0.88);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 12px; flex-shrink: 0; gap: 8px;
+        }
+
+        /* ─── Landscape / Tablet Mode (min-width: 768px) ─── */
+        @media (min-width: 768px) {
+            html { background-color: var(--primary); }
+            body { max-width: 100%; border-radius: 0; box-shadow: none; }
+            main {
+                flex: 1; overflow: hidden;
+                padding: 12px; padding-bottom: 0;
+                display: flex; flex-direction: column;
+            }
+            footer { display: none; }
+
+            .app-layout {
+                flex: 1; flex-direction: row;
+                gap: 12px; overflow: hidden;
+            }
+            .panel-left {
+                flex: 1; order: 1; overflow-y: auto;
+                display: flex; flex-direction: column;
+                min-width: 0; gap: 12px;
+            }
+            .panel-right {
+                width: 300px; flex-shrink: 0; order: 2;
+                display: flex; flex-direction: column;
+                gap: 12px; min-height: 0;
+            }
+
+            .controls-card { margin-bottom: 0; flex-shrink: 0; }
+            #result-container { display: none; }
+
+            /* 입력 카드 가로 모드 — 세로 마진 제거 */
+            .panel-left .input-card { margin-bottom: 0; }
+            .panel-left .input-card textarea { height: 160px; }
+
+            /* ── ls-active: 악보 만들기 후 분할 뷰어 ── */
+            .app-layout.ls-active .input-card   { display: none; }
+            .app-layout.ls-active .controls-card { display: none; }
+
+            .app-layout.ls-active .ls-conti-area {
+                display: flex; flex: 1; min-height: 0;
+                border-radius: var(--r-xl);
+                background: #1a1a2e;
+                align-items: center; justify-content: center;
+                overflow: hidden;
+            }
+            .app-layout.ls-active .ls-conti-area img {
+                max-width: 100%; max-height: 100%;
+                object-fit: contain; border-radius: var(--r-lg);
+            }
+            .app-layout.ls-active .ls-sheet-area {
+                display: flex; flex: 1; flex-direction: column;
+                background: rgba(0,0,0,0.97);
+                border-radius: var(--r-xl);
+                overflow: hidden; min-height: 0;
+            }
+        }
     </style>
 </head>
 
@@ -424,30 +527,55 @@
     </div>
 
     <main>
-        <div class="input-card">
-            <div class="top-btn-group">
-                <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 콘티함</button>
-                <div class="top-btn-row">
-                    <button class="top-btn btn-show-list" onclick="openSongModal()">📖 찬양 목록/추가</button>
-                    <button class="top-btn btn-reset" onclick="resetAll()">🔄 초기화</button>
+        <div class="app-layout" id="app-layout">
+            <!-- 왼쪽: 입력 영역 (세로 모드에서는 아래) -->
+            <div class="panel-left">
+                <div class="input-card" id="input-section">
+                    <label class="field-label">콘티 제목</label>
+                    <input type="text" id="setlist-title" class="title-input" placeholder="예: 2026-03-15 수요예배">
+                    <label class="field-label">찬양 목록 입력</label>
+                    <textarea id="song-input" placeholder="276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분"></textarea>
+                </div>
+                <!-- 가로 모드: 악보 만들기 후 콘티 공유 이미지 -->
+                <div class="ls-conti-area" id="ls-conti-area">
+                    <img id="ls-conti-img" src="" alt="콘티 이미지">
                 </div>
             </div>
-
-            <label class="field-label">콘티 제목</label>
-            <input type="text" id="setlist-title" class="title-input" placeholder="예: 2026-03-15 수요예배">
-
-            <label class="field-label">찬양 목록 입력</label>
-            <textarea id="song-input" placeholder="276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분"></textarea>
-
-            <!-- 두 줄 버튼 배치 -->
-            <div class="btn-group">
-                <button class="btn-search" onclick="startSearch()">악보 만들기 🎵</button>
-                <div class="btn-row">
-                    <button class="btn-save" onclick="saveConti()">콘티함에 저장 💾</button>
-                    <button class="btn-share" onclick="shareConti()">콘티 공유하기 🖼️</button>
+            <!-- 오른쪽: 버튼 영역 (세로 모드에서는 위) -->
+            <div class="panel-right">
+                <div class="controls-card" id="controls-section">
+                    <div class="top-btn-group">
+                        <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 콘티함</button>
+                        <div class="top-btn-row">
+                            <button class="top-btn btn-show-list" onclick="openSongModal()">📖 찬양 목록/추가</button>
+                            <button class="top-btn btn-reset" onclick="resetAll()">🔄 초기화</button>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-search" onclick="startSearch()">악보 만들기 🎵</button>
+                        <div class="btn-row">
+                            <button class="btn-save" onclick="saveConti()">콘티함에 저장 💾</button>
+                            <button class="btn-share" onclick="shareConti()">콘티 공유하기 🖼️</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- 가로 모드: 악보 만들기 후 악보 뷰어 -->
+                <div class="ls-sheet-area" id="ls-sheet-area">
+                    <div class="ls-sheet-header">
+                        <span id="ls-sheet-title"></span>
+                        <button class="ls-back-btn" onclick="closeLandscapeView()">✕ 돌아가기</button>
+                    </div>
+                    <div class="ls-sheet-body">
+                        <img id="ls-sheet-img" src="" alt="">
+                    </div>
+                    <div class="ls-sheet-footer">
+                        <button class="fullscreen-nav ls-nav-prev" onclick="navigateLandscapeSheet(-1)">&#8249;</button>
+                        <button class="fullscreen-nav ls-nav-next" onclick="navigateLandscapeSheet(1)">&#8250;</button>
+                    </div>
                 </div>
             </div>
         </div>
+        <!-- 세로 모드 악보 결과 -->
         <div id="result-container" class="result-area"></div>
     </main>
 
@@ -873,9 +1001,14 @@
             document.getElementById('song-input').value = "";
             document.getElementById('result-container').innerHTML = "";
             sheetList = [];
+            document.getElementById('app-layout').classList.remove('ls-active');
         }
 
-        function startSearch() {
+        let _lsFirstLoaded = false;
+
+        function isTabletLandscape() { return window.innerWidth >= 768; }
+
+        async function startSearch() {
             let rawText = document.getElementById('song-input').value;
 
             // 빈 줄·헤더 줄 모두 보존, 숫자 줄만 번호 포맷 정리
@@ -903,37 +1036,68 @@
             const songLines = allLines.filter(l => /^\d+/.test(l));
             if (songLines.length === 0) return alert("곡 리스트를 입력해주세요!");
 
-            const resultContainer = document.getElementById('result-container');
-            resultContainer.innerHTML = "";
             sheetList = new Array(allLines.length).fill(null);
 
-            let songCounter = 0;
-            allLines.forEach((line, index) => {
-                const match = line.match(/^(\d+)/);
-                if (!match) return;  // 헤더·빈 줄 건너뜀
-
-                songCounter++;
-                const songNumber = match[1];
-                const songTitle  = line.substring(songNumber.length).trim();
-                const label = `${songCounter}. No.${songNumber} ${songTitle}`;
-
-                const card = document.createElement('div');
-                card.className = 'sheet-music-card';
-                card.innerHTML = `<div class="sheet-title">${label}</div>`;
-
-                const imgTag = document.createElement('img');
-                imgTag.alt = `${songNumber} 악보 찾는 중...`;
-                card.appendChild(imgTag);
-                resultContainer.appendChild(card);
-
-                tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
-                    sheetList[index] = { src: finalSrc, label };
-                    card.onclick = () => openFullscreen(index);
+            if (isTabletLandscape()) {
+                // ── 가로/태블릿 모드: 분할 뷰어 ──
+                _lsFirstLoaded = false;
+                let songCounter = 0;
+                allLines.forEach((line, index) => {
+                    const match = line.match(/^(\d+)/);
+                    if (!match) return;
+                    songCounter++;
+                    const songNumber = match[1];
+                    const songTitle  = line.substring(songNumber.length).trim();
+                    const label = `${songCounter}. No.${songNumber} ${songTitle}`;
+                    const imgTag = document.createElement('img');
+                    tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
+                        sheetList[index] = { src: finalSrc, label };
+                        if (!_lsFirstLoaded) {
+                            _lsFirstLoaded = true;
+                            showLsSheet(index);
+                        } else {
+                            updateLsNavBtns();
+                        }
+                    });
                 });
-            });
+                // 콘티 이미지 비동기 생성
+                const canvas = await generateContiCanvas();
+                if (canvas) document.getElementById('ls-conti-img').src = canvas.toDataURL('image/png');
+                // 분할 화면 활성화
+                document.getElementById('app-layout').classList.add('ls-active');
+            } else {
+                // ── 세로 모드: 기존 result-container ──
+                const resultContainer = document.getElementById('result-container');
+                resultContainer.innerHTML = "";
 
-            const btnGroup = document.querySelector('.btn-group');
-            if (btnGroup) btnGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                let songCounter = 0;
+                allLines.forEach((line, index) => {
+                    const match = line.match(/^(\d+)/);
+                    if (!match) return;  // 헤더·빈 줄 건너뜀
+
+                    songCounter++;
+                    const songNumber = match[1];
+                    const songTitle  = line.substring(songNumber.length).trim();
+                    const label = `${songCounter}. No.${songNumber} ${songTitle}`;
+
+                    const card = document.createElement('div');
+                    card.className = 'sheet-music-card';
+                    card.innerHTML = `<div class="sheet-title">${label}</div>`;
+
+                    const imgTag = document.createElement('img');
+                    imgTag.alt = `${songNumber} 악보 찾는 중...`;
+                    card.appendChild(imgTag);
+                    resultContainer.appendChild(card);
+
+                    tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
+                        sheetList[index] = { src: finalSrc, label };
+                        card.onclick = () => openFullscreen(index);
+                    });
+                });
+
+                const btnGroup = document.querySelector('.btn-group');
+                if (btnGroup) btnGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
         function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
@@ -1006,6 +1170,39 @@
             document.getElementById('fullscreenViewer').style.display = 'none';
         }
 
+        // ─── Landscape 뷰어 함수들 ───────────────────────────────────────────
+
+        function showLsSheet(index) {
+            const sheet = sheetList[index];
+            if (!sheet) return;
+            currentSheetIndex = index;
+            document.getElementById('ls-sheet-img').src = sheet.src;
+            document.getElementById('ls-sheet-title').textContent =
+                `${sheet.label}  (${visibleSheetRank(index)}/${visibleSheetCount()})`;
+            updateLsNavBtns();
+        }
+
+        function navigateLandscapeSheet(dir) {
+            let newIndex = currentSheetIndex + dir;
+            while (newIndex >= 0 && newIndex < sheetList.length && !sheetList[newIndex]) newIndex += dir;
+            if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;
+            showLsSheet(newIndex);
+        }
+
+        function updateLsNavBtns() {
+            let hasPrev = false, hasNext = false;
+            for (let i = currentSheetIndex - 1; i >= 0; i--)                if (sheetList[i]) { hasPrev = true; break; }
+            for (let i = currentSheetIndex + 1; i < sheetList.length; i++) if (sheetList[i]) { hasNext = true; break; }
+            const prev = document.querySelector('.ls-nav-prev');
+            const next = document.querySelector('.ls-nav-next');
+            if (prev) prev.classList.toggle('hidden', !hasPrev);
+            if (next) next.classList.toggle('hidden', !hasNext);
+        }
+
+        function closeLandscapeView() {
+            document.getElementById('app-layout').classList.remove('ls-active');
+        }
+
         // 터치 스와이프(좌우: 페이지 이동, 하단: 닫기) 지원
         (() => {
             let touchStartX = 0, touchStartY = 0;
@@ -1027,6 +1224,22 @@
                 } else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
                     // 좌우 스와이프: 페이지 이동
                     navigateSheet(dx < 0 ? 1 : -1);
+                }
+            }, { passive: true });
+        })();
+
+        // landscape 악보 뷰어 좌우 스와이프
+        (() => {
+            let tsX = 0, tsY = 0;
+            const lsArea = document.getElementById('ls-sheet-area');
+            lsArea.addEventListener('touchstart', e => {
+                tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
+            }, { passive: true });
+            lsArea.addEventListener('touchend', e => {
+                const dx = e.changedTouches[0].clientX - tsX;
+                const dy = e.changedTouches[0].clientY - tsY;
+                if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                    navigateLandscapeSheet(dx < 0 ? 1 : -1);
                 }
             }, { passive: true });
         })();
@@ -1328,12 +1541,10 @@
             return t + '…';
         }
 
-        async function shareConti() {
+        async function generateContiCanvas() {
             const title      = document.getElementById('setlist-title').value.trim();
             const rawContent = document.getElementById('song-input').value.trim();
-            if (!rawContent || rawContent.includes("아래 예시처럼 붙여넣어 주세요")) {
-                alert("공유할 콘티가 없습니다!"); return;
-            }
+            if (!rawContent || rawContent.includes("아래 예시처럼 붙여넣어 주세요")) return null;
             // ── 팔레트: 제목 해시 → 일관된 배경색 ──────────────────────────
             const PALETTES = [
                 { bg: '#2d4a5c', accent: '#7ec8e3' },
@@ -1482,7 +1693,17 @@
                 y += h;
             });
 
-            // ── 미리보기 모달 표시 ────────────────────────────────────────
+            return canvas;
+        }
+
+        async function shareConti() {
+            const rawContent = document.getElementById('song-input').value.trim();
+            if (!rawContent || rawContent.includes("아래 예시처럼 붙여넣어 주세요")) {
+                alert("공유할 콘티가 없습니다!"); return;
+            }
+            const canvas = await generateContiCanvas();
+            if (!canvas) { alert("공유할 콘티가 없습니다!"); return; }
+            const title = document.getElementById('setlist-title').value.trim();
             canvas.toBlob((blob) => {
                 const fileName = `콘티_${title || '공유'}.png`;
                 _shareFile   = new File([blob], fileName, { type: 'image/png' });
