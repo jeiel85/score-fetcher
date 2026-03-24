@@ -137,20 +137,21 @@
         textarea:focus { border-bottom-color: var(--primary); }
         textarea::placeholder { color: var(--outline-variant); font-size: 14px; }
 
-        /* ─── Pill Tabs ─── */
-        .top-btn-group { display: flex; gap: 8px; margin-bottom: 20px; }
+        /* ─── Top Buttons ─── */
+        .top-btn-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .top-btn-row   { display: flex; gap: 8px; }
         .top-btn {
-            flex: 1; padding: 11px 4px;
-            border: none; border-radius: var(--r-full);
+            flex: 1; padding: 14px 8px;
+            border: none; border-radius: var(--r-lg);
             font-family: 'Inter', -apple-system, sans-serif;
-            font-size: 12px; font-weight: 600;
+            font-size: 14px; font-weight: 600;
             cursor: pointer; text-align: center;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             transition: opacity 0.15s, transform 0.1s;
         }
-        .top-btn:active { transform: scale(0.95); opacity: 0.85; }
+        .top-btn:active { transform: scale(0.97); opacity: 0.85; }
         .btn-show-list { background: var(--primary); color: #ffffff; }
-        .btn-history   { background: var(--primary-container); color: var(--accent); }
+        .btn-history   { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%); color: #ffffff; box-shadow: 0 4px 14px rgba(24, 29, 58, 0.25); }
         .btn-reset     { background: var(--surface-highest); color: var(--on-surface-variant); }
 
         /* ─── Action Buttons ─── */
@@ -423,9 +424,11 @@
     <main>
         <div class="input-card">
             <div class="top-btn-group">
-                <button class="top-btn btn-show-list" onclick="openSongModal()">찬양 목록/추가 📖</button>
-                <button class="top-btn btn-history" onclick="openHistoryModal()">콘티함 🕒</button>
-                <button class="top-btn btn-reset" onclick="resetAll()">초기화 🔄</button>
+                <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 콘티함</button>
+                <div class="top-btn-row">
+                    <button class="top-btn btn-show-list" onclick="openSongModal()">📖 찬양 목록/추가</button>
+                    <button class="top-btn btn-reset" onclick="resetAll()">🔄 초기화</button>
+                </div>
             </div>
 
             <label class="field-label">콘티 제목</label>
