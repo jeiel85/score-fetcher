@@ -172,25 +172,27 @@
 
         .btn-save {
             flex: 1; padding: 14px 8px;
-            background: var(--secondary-container);
-            color: var(--on-secondary-container);
+            background: linear-gradient(135deg, #059669 0%, #34D399 100%);
+            color: #ffffff;
             border: none; border-radius: var(--r-lg);
             font-family: 'Inter', -apple-system, sans-serif;
             font-size: 14px; font-weight: 600; cursor: pointer;
-            transition: background 0.15s, transform 0.1s;
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
+            transition: box-shadow 0.15s, transform 0.1s;
         }
-        .btn-save:active { background: #b0b9f0; transform: scale(0.97); }
+        .btn-save:active { box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2); transform: scale(0.97); }
 
         .btn-share {
             flex: 1; padding: 14px 8px;
-            background: var(--surface-highest); color: var(--primary);
+            background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%);
+            color: #78350F;
             border: none; border-radius: var(--r-lg);
             font-family: 'Inter', -apple-system, sans-serif;
             font-size: 14px; font-weight: 600; cursor: pointer;
-            outline: 1px solid rgba(199, 197, 206, 0.4);
-            transition: background 0.15s, transform 0.1s;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+            transition: box-shadow 0.15s, transform 0.1s;
         }
-        .btn-share:active { background: var(--surface-container); transform: scale(0.97); }
+        .btn-share:active { box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2); transform: scale(0.97); }
 
         /* ─── Result Area ─── */
         .result-area { margin-top: 20px; }
