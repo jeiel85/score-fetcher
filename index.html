@@ -158,8 +158,16 @@
         }
         .share-preview-footer.ui-hidden { opacity: 0; transform: translateY(100%); pointer-events: none; }
         .share-preview-label { flex: 1; text-align: center; color: #ccc; font-size: 13px; }
-        .btn-share-cancel  { padding: 14px 20px; background: #444; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
         .btn-share-confirm { flex: 1; padding: 14px; background: #8e44ad; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .btn-share-close {
+            position: absolute; top: 12px; right: 12px; z-index: 20;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(0,0,0,0.55); border: none; color: white;
+            font-size: 18px; line-height: 1; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .btn-share-close:active { background: rgba(0,0,0,0.8); }
 
         footer {
             text-align: center; padding: 10px; background: white;
@@ -322,11 +330,11 @@
 
     <div class="modal-overlay" id="sharePreviewModal">
         <div class="share-preview-content">
+            <button class="btn-share-close" onclick="closeSharePreview()">✕</button>
             <div class="share-preview-body" onclick="_showShareUI()">
                 <img id="sharePreviewImg" src="" alt="콘티 미리보기">
             </div>
             <div class="share-preview-footer">
-                <button class="btn-share-cancel" onclick="closeSharePreview()">닫기</button>
                 <span class="share-preview-label">🖼️ 공유 미리보기</span>
                 <button class="btn-share-confirm" onclick="doShareConti()">공유하기 🚀</button>
             </div>
@@ -874,6 +882,20 @@
                         console.log('FCM 토큰 갱신 완료');
                         showToast('🔔 알림 설정이 완료되었습니다!');
                     }
+                    // 동일 토큰 값을 가진 다른 키(구형 dev_ 등) 정리
+                    try {
+                        const allRes = await fetch(`${FIREBASE_CONFIG.databaseURL}/fcm_tokens.json?auth=${idToken}`);
+                        if (allRes.ok) {
+                            const allTokens = await allRes.json();
+                            if (allTokens) {
+                                const stale = Object.entries(allTokens).filter(([k, v]) => v === token && k !== deviceId);
+                                await Promise.all(stale.map(([k]) =>
+                                    fetch(`${FIREBASE_CONFIG.databaseURL}/fcm_tokens/${k}.json?auth=${idToken}`, { method: 'DELETE' })
+                                ));
+                                if (stale.length > 0) console.log(`중복 토큰 ${stale.length}개 정리:`, stale.map(([k]) => k));
+                            }
+                        }
+                    } catch(e) { console.warn('토큰 중복 정리 실패:', e); }
                 }
 
                 // 앱이 열려있을 때 포그라운드 알림 처리 (시스템 알림으로 표시)
