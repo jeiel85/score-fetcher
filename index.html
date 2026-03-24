@@ -157,8 +157,7 @@
             transition: opacity 0.35s ease, transform 0.35s ease;
         }
         .share-preview-footer.ui-hidden { opacity: 0; transform: translateY(100%); pointer-events: none; }
-        .share-preview-label { flex: 1; text-align: center; color: #ccc; font-size: 13px; }
-        .btn-share-confirm { flex: 1; padding: 14px; background: #8e44ad; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
+.btn-share-confirm { flex: 1; padding: 14px; background: #8e44ad; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
         .btn-share-close {
             position: absolute; top: 12px; right: 12px; z-index: 20;
             width: 36px; height: 36px; border-radius: 50%;
@@ -243,8 +242,8 @@
     <main>
         <div style="background: white; padding: 20px; border-radius: 12px;">
             <div class="top-btn-group">
-                <button class="top-btn btn-show-list" onclick="openSongModal()">📖 찬양 목록/추가</button>
-                <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 콘티함</button>
+                <button class="top-btn btn-show-list" onclick="openSongModal()">찬양 목록/추가 📖</button>
+                <button class="top-btn btn-history" onclick="openHistoryModal()">콘티함 🕒</button>
                 <button class="top-btn btn-reset" onclick="resetAll()">초기화 🔄</button>
             </div>
 
@@ -266,8 +265,8 @@
 
     <footer>
         <div class="footer-btn-group">
-            <button class="footer-btn btn-install" id="btn-install" onclick="installApp()">📲 앱 설치</button>
-            <button class="footer-btn btn-notify"  id="btn-notify"  onclick="enableNotification()">🔔 알림 활성화</button>
+            <button class="footer-btn btn-install" id="btn-install" onclick="installApp()">앱 설치 📲</button>
+            <button class="footer-btn btn-notify"  id="btn-notify"  onclick="enableNotification()">알림 활성화 🔔</button>
         </div>
         <a href="https://github.com/jeiel85/score-fetcher" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -336,7 +335,6 @@
                 <img id="sharePreviewImg" src="" alt="콘티 미리보기">
             </div>
             <div class="share-preview-footer">
-                <span class="share-preview-label">🖼️ 공유 미리보기</span>
                 <button class="btn-share-confirm" onclick="doShareConti()">공유하기 🚀</button>
             </div>
         </div>
