@@ -473,14 +473,14 @@
                 gap: 12px; overflow: hidden;
             }
             .panel-left {
-                flex: 1; order: 1; overflow-y: auto;
+                flex: 4; order: 1; overflow-y: auto;
                 display: flex; flex-direction: column;
                 min-width: 0; gap: 12px;
             }
             .panel-right {
-                width: 300px; flex-shrink: 0; order: 2;
+                flex: 3; order: 2;
                 display: flex; flex-direction: column;
-                gap: 12px; min-height: 0;
+                gap: 12px; min-height: 0; min-width: 0;
             }
 
             .controls-card { margin-bottom: 0; flex-shrink: 0; }
@@ -493,6 +493,8 @@
             /* ── ls-active: 악보 만들기 후 분할 뷰어 ── */
             .app-layout.ls-active .input-card   { display: none; }
             .app-layout.ls-active .controls-card { display: none; }
+            .app-layout.ls-active .panel-left { flex: 2; }
+            .app-layout.ls-active .panel-right { flex: 4; }
 
             .app-layout.ls-active .ls-conti-area {
                 display: flex; flex: 1; min-height: 0;
