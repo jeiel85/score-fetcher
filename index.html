@@ -1075,7 +1075,7 @@
                         if (allRes.ok) {
                             const allTokens = await allRes.json();
                             if (allTokens) {
-                                const stale = Object.entries(allTokens).filter(([k, v]) => v === token && k !== deviceId);
+                                const stale = Object.entries(allTokens).filter(([k, v]) => (v === token && k !== deviceId) || k.startsWith('dev_'));
                                 await Promise.all(stale.map(([k]) =>
                                     fetch(`${FIREBASE_CONFIG.databaseURL}/fcm_tokens/${k}.json?auth=${idToken}`, { method: 'DELETE' })
                                 ));
