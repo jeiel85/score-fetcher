@@ -579,6 +579,7 @@
 
         // 저장 버튼 클릭 시 (제목 필수 체크)
         async function saveConti() {
+            if (!navigator.onLine) { showToast('📴 오프라인 상태에서는 저장되지 않습니다'); return; }
             const title = document.getElementById('setlist-title').value.trim();
             if (!title) {
                 alert("콘티 제목을 입력해주세요!\n예) 2026-03-20 금요예배");
@@ -617,8 +618,18 @@
                     allHistoryEntries = Object.entries(data);
                     allHistoryEntries.sort((a, b) => b[1].timestamp - a[1].timestamp);
                     renderHistoryList(allHistoryEntries);
+                    localStorage.setItem('cachedHistory', JSON.stringify(allHistoryEntries));
                 }
             } catch (error) {
+                const cached = localStorage.getItem('cachedHistory');
+                if (cached) {
+                    try {
+                        allHistoryEntries = JSON.parse(cached);
+                        renderHistoryList(allHistoryEntries);
+                        showToast('📴 오프라인: 마지막으로 저장된 콘티함입니다');
+                        return;
+                    } catch(e) {}
+                }
                 container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ 서버 통신 에러</li>";
             }
         }
@@ -1206,12 +1217,46 @@
             } catch (e) { console.warn('autoLoad 실패:', e); }
         }
 
+        // ─── 오프라인 대비 악보 이미지 사전 캐싱 ────────────────────────────────
+        async function precacheAllScores() {
+            if (!('caches' in window) || !navigator.onLine) return;
+            try {
+                const cache = await caches.open('scores-v1');
+                const isFirst = !localStorage.getItem('scoresCachedAt');
+                if (isFirst) showToast('📥 악보 저장 중... 오프라인 사용 준비');
+
+                const resp = await fetch('hymn_list.txt');
+                const text = await resp.text();
+                const numbers = [...text.matchAll(/^(\d+)/gm)].map(m => m[1]);
+
+                for (let i = 0; i < numbers.length; i += 10) {
+                    if (!navigator.onLine) break;
+                    await Promise.all(numbers.slice(i, i + 10).map(async (num) => {
+                        for (const ext of EXTENSIONS) {
+                            const url = `images/${num}${ext}`;
+                            if (await cache.match(url)) return;
+                            try {
+                                const res = await fetch(url);
+                                if (res.ok) { await cache.put(url, res); return; }
+                            } catch(e) {}
+                        }
+                    }));
+                }
+
+                if (isFirst) {
+                    localStorage.setItem('scoresCachedAt', Date.now());
+                    showToast('✅ 악보 저장 완료! 오프라인에서도 사용 가능합니다');
+                }
+            } catch(e) { /* silent fail */ }
+        }
+
         window.addEventListener('load', () => {
             initSongList();   // 악보 만들기 시 제목 자동 치환을 위해 미리 로드
             initLyrics();
             initPushNotification();
             updateNotifyBtn();
             checkKakaoBrowser();
+            setTimeout(precacheAllScores, 3000);  // 앱 로드 3초 후 백그라운드 캐싱 시작
             // 안드로이드 뒤로 가기 처리용 초기 상태 push
             history.pushState({ page: 'app' }, '');
 

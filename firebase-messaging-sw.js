@@ -5,8 +5,25 @@ importScripts('firebase-config.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
+const SCORES_CACHE = 'scores-v1';
+
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+
+// 악보 이미지: 캐시 우선 → 없으면 네트워크 후 캐시 저장
+self.addEventListener('fetch', (event) => {
+    if (new URL(event.request.url).pathname.startsWith('/images/')) {
+        event.respondWith(
+            caches.match(event.request).then(cached => {
+                if (cached) return cached;
+                return fetch(event.request).then(res => {
+                    if (res.ok) caches.open(SCORES_CACHE).then(c => c.put(event.request, res.clone()));
+                    return res;
+                }).catch(() => Response.error());
+            })
+        );
+    }
+});
 
 firebase.initializeApp(self.FIREBASE_CONFIG);
 
