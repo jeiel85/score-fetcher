@@ -165,8 +165,9 @@
             background: rgba(0,0,0,0.55); border: none; color: white;
             font-size: 18px; line-height: 1; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            transition: background 0.2s;
+            transition: opacity 0.35s ease, background 0.2s;
         }
+        .btn-share-close.ui-hidden { opacity: 0; pointer-events: none; }
         .btn-share-close:active { background: rgba(0,0,0,0.8); }
 
         footer {
@@ -1256,6 +1257,9 @@
                 const dataUrl = canvas.toDataURL('image/png');
                 document.getElementById('sharePreviewImg').src = dataUrl;
                 document.getElementById('sharePreviewModal').style.display = 'flex';
+                // 열릴 때 hidden 상태에서 시작해 _showShareUI로 표시
+                document.querySelector('.share-preview-footer').classList.add('ui-hidden');
+                document.querySelector('.btn-share-close').classList.add('ui-hidden');
                 _showShareUI();
             }, 'image/png');
         }
@@ -1265,13 +1269,19 @@
 
         function _showShareUI() {
             const footer = document.querySelector('.share-preview-footer');
+            const closeBtn = document.querySelector('.btn-share-close');
             const isHidden = footer.classList.contains('ui-hidden');
             clearTimeout(_shareUiTimer);
             if (isHidden) {
                 footer.classList.remove('ui-hidden');
-                _shareUiTimer = setTimeout(() => footer.classList.add('ui-hidden'), 3000);
+                closeBtn.classList.remove('ui-hidden');
+                _shareUiTimer = setTimeout(() => {
+                    footer.classList.add('ui-hidden');
+                    closeBtn.classList.add('ui-hidden');
+                }, 3000);
             } else {
                 footer.classList.add('ui-hidden');
+                closeBtn.classList.add('ui-hidden');
             }
         }
 
