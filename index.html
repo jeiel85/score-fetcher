@@ -920,10 +920,19 @@
         // ─── 앱 설치 (PWA) ───────────────────────────────────────────────────
         let deferredInstallPrompt = null;
 
+        // 이미 설치된 standalone 모드로 실행 중이면 버튼 숨김, 아니면 항상 표시
+        (function initInstallBtn() {
+            const btn = document.getElementById('btn-install');
+            if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+                btn.style.display = 'none';
+            } else {
+                btn.style.display = 'inline-block';
+            }
+        })();
+
         window.addEventListener('beforeinstallprompt', e => {
             e.preventDefault();
             deferredInstallPrompt = e;
-            document.getElementById('btn-install').style.display = 'inline-block';
         });
 
         window.addEventListener('appinstalled', () => {
@@ -942,10 +951,19 @@
 
         async function installApp() {
             if (!deferredInstallPrompt) {
-                // beforeinstallprompt 미지원 기기 안내
-                const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-                if (isIOS) {
+                const ua = navigator.userAgent;
+                const isIOS       = /iphone|ipad|ipod/i.test(ua);
+                const isSamsungBr = /SamsungBrowser/i.test(ua);
+                const isFirefox   = /Firefox/i.test(ua) && !/Seamonkey/i.test(ua);
+                const isKakao     = /KAKAOTALK/i.test(ua);
+                if (isKakao) {
+                    showInstallToast('카카오톡 인앱 브라우저에서는 앱 설치가 불가합니다.<br>우측 상단 메뉴 → <b>기본 브라우저로 열기</b>를 눌러주세요.');
+                } else if (isSamsungBr) {
+                    showInstallToast('삼성 인터넷은 앱 설치를 지원하지 않습니다.<br><b>Chrome</b>으로 이 페이지를 열어 설치해 주세요.');
+                } else if (isIOS) {
                     showInstallToast('iOS는 자동 설치를 지원하지 않습니다.<br>Safari 하단 <b>공유 버튼 → 홈 화면에 추가</b>를 눌러주세요.');
+                } else if (isFirefox) {
+                    showInstallToast('Firefox는 PWA 설치를 지원하지 않습니다.<br><b>Chrome</b> 또는 <b>Edge</b>로 접속해 설치해 주세요.');
                 } else {
                     showInstallToast('브라우저 주소창 우측의 설치 아이콘을 눌러 설치하거나<br>메뉴 → <b>앱 설치 / 홈 화면에 추가</b>를 이용해 주세요.');
                 }
