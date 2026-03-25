@@ -303,17 +303,49 @@
             <div id="orphan-results" style="display:none; margin-top: 12px; font-size: 13px; line-height: 1.6;"></div>
         </div>
 
+        <!-- 🛠️ 1.5단계: Github 연동 설정 (이미지 업로드용) -->
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin-bottom: 24px; border: 1px dashed rgba(255,255,255,0.15);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                <label style="font-size: 13px; color: #a5b4fc; font-weight: 700;">🔑 Github 연동 설정 (이미지 자동 푸시용)</label>
+                <div id="token-status" style="font-size: 11px; color: #94a3b8;">토큰이 등록되지 않았습니다.</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <input type="password" id="gh-token" placeholder="Github Personal Access Token 입력" style="flex:1; padding:8px 12px; font-size:12px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff;">
+                <button class="btn btn-secondary" onclick="saveGhToken()" style="padding: 6px 12px; font-size: 11px; border-color: #6366f1; color: #a5b4fc;">토큰 저장</button>
+            </div>
+        </div>
+
         <h2 style="color: #a5b4fc;">➕ 1단계: 신규 찬양 번호 및 제목 등록</h2>
         <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 16px;">Vercel의 <code>hymn_list.txt</code>나 Git을 건드릴 필요 없이, 여기서 등록하면 즉시 앱에 연동됩니다.<br>
         <strong style="color:#fca5a5;">(주의: 악보 이미지는 반드시 <code>images/곡번호.png</code> 형태로 Git에 올려두셔야 앱에서 보입니다!)</strong></p>
         
         <div style="display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap;">
-            <input type="number" id="reg-num" placeholder="곡 번호 (ex: 123)" style="flex:1; max-width: 140px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-size:14px;">
+            <input type="number" id="reg-num" placeholder="곡 번호 (ex: 123)" style="flex:1; max-width: 140px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-size:14px;" onchange="updateImgPreviewLabel()">
             <input type="text" id="reg-title" placeholder="찬양 제목 (띄어쓰기 포함)" style="flex:2; min-width: 200px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-size:14px;">
             <button class="btn btn-primary" onclick="submitNewSong()" style="min-width: 100px;">실시간 DB 등록하기</button>
         </div>
 
-        <h2 style="color: #a5b4fc;">📝 2단계: 가사 데이터 등록 (선택사항)</h2>
+        <!-- 🖼️ 2단계: 악보 이미지 직접 업로드 (신규) -->
+        <h2 style="color: #a5b4fc;">🖼️ 2단계: 악보 이미지 직접 업로드</h2>
+        <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 12px;">선택한 이미지가 Github <code>images/</code> 폴더로 즉시 푸시됩니다. (Vercel 배포 후 앱에 반영)</p>
+        
+        <div style="background: rgba(0,0,0,0.2); border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+            <input type="file" id="reg-img" accept="image/*" style="display:none;" onchange="handleImgPreview(this.files[0])">
+            <div id="img-drop-zone" onclick="document.getElementById('reg-img').click()" style="cursor:pointer;">
+                <div style="font-size: 30px; margin-bottom: 8px;">📷</div>
+                <div id="img-preview-label" style="font-size: 14px; color: #94a3b8; font-weight: 600;">클릭하여 악보 이미지를 선택하세요</div>
+                <div style="font-size: 11px; color: #64748b; margin-top: 4px;">PNG, JPG 파일 권장 (파일명은 번호로 자동 변환됨)</div>
+            </div>
+            <div id="img-preview-container" style="display:none; margin-top: 15px; position:relative;">
+                <img id="img-preview-tag" src="" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
+                <button onclick="clearImgSelection()" style="position:absolute; top: -10px; right: -10px; background: #f43f5e; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-weight: bold;">×</button>
+            </div>
+        </div>
+        <button class="btn btn-primary" id="btn-push-img" onclick="pushImageToGithub()" style="width: 100%; background: linear-gradient(135deg, #10b981, #059669); margin-bottom: 24px;" disabled>
+            🚀 Github 저장소로 바로 쏘기 (Push)
+        </button>
+
+        <h2 style="color: #a5b4fc;">📝 3단계: 가사 데이터 등록 (선택사항)</h2>
         <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 12px;">위에서 지정한 곡 번호의 가사를 등록합니다. (가사가 여러 줄이면 그대로 엔터 치시면 됩니다)</p>
         <textarea id="reg-lyrics" placeholder="가사를 입력하세요... (생략 가능)" style="width:100%; height:180px; margin-bottom:12px; font-family:'Inter'; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:12px;"></textarea>
         <button class="btn btn-secondary" onclick="submitNewLyrics()" style="width:100%; border-color:#8b5cf6; color:#a5b4fc;">가사 데이터 클라우드에 쏘기 🚀</button>
@@ -512,6 +544,136 @@ async function submitNewSong() {
         alert('오류: ' + err.message);
     }
 }
+
+// ─── Github 이미지 푸시 로직 (New) ───────────────────────────────────────────
+const GH_OWNER = 'jeiel85';
+const GH_REPO  = 'score-fetcher';
+
+function saveGhToken() {
+    const t = document.getElementById('gh-token').value.trim();
+    if(!t) return alert('토큰을 입력해주세요.');
+    localStorage.setItem('gh_personal_token', t);
+    updateTokenStatus();
+    alert('✅ Github 토큰이 브라우저에 안전하게 저장되었습니다.');
+}
+
+function updateTokenStatus() {
+    const t = localStorage.getItem('gh_personal_token');
+    const status = document.getElementById('token-status');
+    if(t) {
+        status.textContent = '✅ 토큰 등록됨';
+        status.style.color = '#34d399';
+        document.getElementById('gh-token').value = '********';
+    } else {
+        status.textContent = '❌ 토큰 미등록';
+        status.style.color = '#f87171';
+    }
+}
+
+function handleImgPreview(file) {
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('img-preview-tag').src = e.target.result;
+        document.getElementById('img-preview-container').style.display = 'block';
+        document.getElementById('img-drop-zone').style.display = 'none';
+        document.getElementById('btn-push-img').disabled = false;
+        updateImgPreviewLabel(file.name);
+    };
+    reader.readAsDataURL(file);
+}
+
+function updateImgPreviewLabel(filename) {
+    const num = document.getElementById('reg-num').value.trim();
+    const label = document.getElementById('img-preview-label');
+    if(num) {
+        label.textContent = `🎯 업로드될 파일명: ${num}.png (또는 jpg)`;
+    }
+}
+
+function clearImgSelection() {
+    document.getElementById('reg-img').value = '';
+    document.getElementById('img-preview-container').style.display = 'none';
+    document.getElementById('img-drop-zone').style.display = 'block';
+    document.getElementById('btn-push-img').disabled = true;
+}
+
+async function pushImageToGithub() {
+    const num = document.getElementById('reg-num').value.trim();
+    const file = document.getElementById('reg-img').files[0];
+    const token = localStorage.getItem('gh_personal_token');
+
+    if(!num) return alert('곡 번호를 먼저 입력해주세요.');
+    if(!file) return alert('이미지 파일을 선택해주세요.');
+    if(!token) return alert('Github 토큰을 먼저 설정해주세요.');
+
+    if(!confirm(`${num}번 악보 이미지를 Github 저장소로 직접 전송하시겠습니까?\n전송 후 Vercel 배포 완료(약 1~2분) 뒤에 앱에 반영됩니다.`)) return;
+
+    try {
+        const btn = document.getElementById('btn-push-img');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '⏳ Github으로 전송 중...';
+
+        // 1. 파일을 Base64로 변환
+        const base64Content = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(file);
+        });
+
+        // 2. 확장자 결정 (기존 확장자 유지하되 png 선호)
+        const ext = file.name.split('.').pop().toLowerCase();
+        const safeExt = ['jpg','jpeg','png','gif'].includes(ext) ? ext : 'png';
+        const path = `images/${num}.${safeExt}`;
+
+        // 3. 기존 파일 있는지 확인 (Overwrite 시 SHA 필요)
+        let sha = null;
+        try {
+            const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+                headers: { 'Authorization': `token ${token}` }
+            });
+            if(res.ok) {
+                const existing = await res.json();
+                sha = existing.sha;
+            }
+        } catch(e) {}
+
+        // 4. PUT 요청 (파일 생성/업데이트)
+        const putRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `feat: ${num}번 악보 이미지 업로드 (Admin Dashboard)`,
+                content: base64Content,
+                sha: sha // 없으면 신규 생성, 있으면 업데이트
+            })
+        });
+
+        if(!putRes.ok) {
+            const errData = await putRes.json();
+            throw new Error(errData.message || 'Github 전송 실패');
+        }
+
+        alert(`✅ ${num}번 악보 이미지가 성공적으로 전송되었습니다!\n\n현재 Vercel 배포가 시작되었습니다. 잠시 후 앱에서 확인하실 수 있습니다.`);
+        btn.textContent = originalText;
+        btn.disabled = false;
+        
+        // 업로드 성공 후 진단기 최신화 시도
+        checkOrphanImages();
+        
+    } catch(err) {
+        alert('Github 전송 오류: ' + err.message);
+        document.getElementById('btn-push-img').disabled = false;
+        document.getElementById('btn-push-img').textContent = '🚀 Github 저장소로 바로 쏘기 (Push)';
+    }
+}
+
+// 초기화 시 토큰 상태 업데이트
+document.addEventListener('DOMContentLoaded', updateTokenStatus);
 
 async function submitNewLyrics() {
     const num = document.getElementById('reg-num').value.trim();
