@@ -8,9 +8,10 @@ async function initSongList() {
     try {
         const response = await fetch('hymn_list.txt');
         const text = await response.text();
-        const cleanText = text.replace(/\s*/g, '');
-        songArray = cleanText.split('\n').filter(line => line.trim() !== '');
+        // \r(Windows 줄바꿈 잔재)만 제거 — \s*/g 는 \n도 지워서 목록이 한 줄로 합쳐지는 버그 발생
+        songArray = text.replace(/\r/g, '').split('\n').filter(line => line.trim() !== '');
         renderSongList(songArray);
+
     } catch (error) {
         container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ 파일 에러</li>";
     }
