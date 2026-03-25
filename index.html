@@ -82,19 +82,30 @@
             background: rgba(24, 29, 58, 0.96);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            padding: 16px 20px; text-align: center;
+            padding: 10px 16px; text-align: center;
             font-family: 'Manrope', -apple-system, sans-serif;
-            font-weight: 800; font-size: 17px; color: #ffffff;
+            font-weight: 800; font-size: 16px; color: #ffffff;
             letter-spacing: -0.3px;
             position: sticky; top: 0; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
         }
+        .header-title { flex: 1; }
+        .header-settings-btn {
+            position: absolute; right: 14px;
+            background: rgba(255,255,255,0.12); border: none;
+            color: #ffffff; font-size: 20px;
+            width: 38px; height: 38px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s;
+        }
+        .header-settings-btn:active { background: rgba(255,255,255,0.25); }
 
-        main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 40px; }
+        main { flex: 1; overflow-y: auto; padding: 12px; padding-bottom: 20px; }
 
         /* ─── Input Card ─── */
         .input-card {
             background: var(--surface-low);
-            border-radius: var(--r-xl); padding: 20px;
+            border-radius: var(--r-xl); padding: 14px 16px;
             outline: 1px solid rgba(199, 197, 206, 0.2);
             box-shadow: 0 4px 20px var(--shadow);
         }
@@ -102,49 +113,49 @@
         /* ─── Field Label ─── */
         .field-label {
             display: block; font-family: 'Inter', sans-serif;
-            font-size: 13px; font-weight: 700;
+            font-size: 11px; font-weight: 700;
             color: var(--on-surface-variant);
             letter-spacing: 0.06em; text-transform: uppercase;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         /* ─── Title Input ─── */
         .title-input {
-            width: 100%; padding: 10px 0;
+            width: 100%; padding: 7px 0;
             border: none; border-bottom: 2px solid var(--outline-variant);
             border-radius: 0; outline: none;
             font-family: 'Manrope', -apple-system, sans-serif;
-            font-size: 17px; font-weight: 700;
+            font-size: 15px; font-weight: 700;
             color: var(--primary); background: transparent;
-            box-sizing: border-box; margin-bottom: 20px;
+            box-sizing: border-box; margin-bottom: 12px;
             transition: border-color 0.2s;
         }
         .title-input:focus { border-bottom-color: var(--primary); }
-        .title-input::placeholder { color: var(--outline-variant); font-weight: 500; font-size: 14px; }
+        .title-input::placeholder { color: var(--outline-variant); font-weight: 500; font-size: 13px; }
 
         /* ─── Textarea ─── */
         textarea {
-            width: 100%; height: 130px;
+            width: 100%; height: 100px;
             border: none; border-bottom: 2px solid var(--outline-variant);
             border-radius: 0; outline: none;
-            padding: 10px 0;
+            padding: 7px 0;
             font-family: 'Inter', -apple-system, sans-serif;
-            font-size: 16px; color: var(--on-surface);
+            font-size: 14px; color: var(--on-surface);
             background: transparent; box-sizing: border-box;
             resize: none; line-height: 1.6;
             transition: border-color 0.2s;
         }
         textarea:focus { border-bottom-color: var(--primary); }
-        textarea::placeholder { color: var(--outline-variant); font-size: 14px; }
+        textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
 
         /* ─── Top Buttons ─── */
-        .top-btn-group { display: flex; flex-direction: column; gap: 8px; }
-        .top-btn-row   { display: flex; gap: 8px; }
+        .top-btn-group { display: flex; flex-direction: column; gap: 7px; }
+        .top-btn-row   { display: flex; gap: 7px; }
         .top-btn {
-            flex: 1; padding: 17px 8px;
+            flex: 1; padding: 12px 8px;
             border: none; border-radius: var(--r-lg);
             font-family: 'Manrope', -apple-system, sans-serif;
-            font-size: 16px; font-weight: 800;
+            font-size: 14px; font-weight: 800;
             cursor: pointer; text-align: center;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             transition: opacity 0.15s, transform 0.1s;
@@ -155,15 +166,15 @@
         .btn-reset     { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); color: #ffffff; box-shadow: 0 4px 14px rgba(255, 107, 107, 0.3); }
 
         /* ─── Action Buttons ─── */
-        .btn-group { display: flex; flex-direction: column; gap: 10px; }
-        .btn-row   { display: flex; gap: 10px; }
+        .btn-group { display: flex; flex-direction: column; gap: 8px; }
+        .btn-row   { display: flex; gap: 8px; }
 
         .btn-search {
-            width: 100%; padding: 17px 8px;
+            width: 100%; padding: 13px 8px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
             color: #ffffff; border: none; border-radius: var(--r-lg);
             font-family: 'Manrope', -apple-system, sans-serif;
-            font-size: 16px; font-weight: 800; letter-spacing: -0.2px;
+            font-size: 15px; font-weight: 800; letter-spacing: -0.2px;
             cursor: pointer;
             box-shadow: 0 6px 20px rgba(24, 29, 58, 0.3);
             transition: box-shadow 0.2s, transform 0.1s;
@@ -171,24 +182,24 @@
         .btn-search:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(24,29,58,0.2); }
 
         .btn-save {
-            flex: 1; padding: 17px 8px;
+            flex: 1; padding: 13px 8px;
             background: linear-gradient(135deg, #059669 0%, #34D399 100%);
             color: #ffffff;
             border: none; border-radius: var(--r-lg);
             font-family: 'Manrope', -apple-system, sans-serif;
-            font-size: 16px; font-weight: 800; cursor: pointer;
+            font-size: 14px; font-weight: 800; cursor: pointer;
             box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
             transition: box-shadow 0.15s, transform 0.1s;
         }
         .btn-save:active { box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2); transform: scale(0.97); }
 
         .btn-share {
-            flex: 1; padding: 17px 8px;
+            flex: 1; padding: 13px 8px;
             background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%);
             color: #78350F;
             border: none; border-radius: var(--r-lg);
             font-family: 'Manrope', -apple-system, sans-serif;
-            font-size: 16px; font-weight: 800; cursor: pointer;
+            font-size: 14px; font-weight: 800; cursor: pointer;
             box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
             transition: box-shadow 0.15s, transform 0.1s;
         }
@@ -411,7 +422,7 @@
         }
 
         /* ─── App Layout (세로/가로 공통) ─── */
-        .app-layout { display: flex; flex-direction: column; gap: 12px; }
+        .app-layout { display: flex; flex-direction: column; gap: 10px; }
         /* 세로 모드: 상단버튼(right) 위, 입력(left) 중간, 하단버튼(bottom) 아래 */
         .panel-right  { order: 1; }
         .panel-left   { order: 2; }
@@ -419,7 +430,7 @@
 
         .controls-card {
             background: var(--surface-low);
-            border-radius: var(--r-xl); padding: 20px;
+            border-radius: var(--r-xl); padding: 14px 16px;
             outline: 1px solid rgba(199, 197, 206, 0.2);
             box-shadow: 0 4px 20px var(--shadow);
         }
@@ -438,13 +449,15 @@
             border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
         }
         .ls-back-btn {
-            background: rgba(255,255,255,0.15); color: white;
-            border: none; border-radius: var(--r-sm);
-            padding: 5px 12px; font-size: 12px; font-weight: 600;
+            background: rgba(255,255,255,0.18); color: white;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            border-radius: var(--r-md);
+            padding: 10px 22px; font-size: 15px; font-weight: 700;
             cursor: pointer; font-family: 'Inter', -apple-system, sans-serif;
             transition: background 0.15s;
+            white-space: nowrap;
         }
-        .ls-back-btn:active { background: rgba(255,255,255,0.3); }
+        .ls-back-btn:active { background: rgba(255,255,255,0.35); }
         .ls-sheet-body {
             flex: 1; overflow: hidden; display: flex;
             align-items: center; justify-content: center; min-height: 0;
@@ -457,7 +470,7 @@
             padding: 8px 12px; flex-shrink: 0; gap: 8px;
         }
         .ls-sheet-footer .fullscreen-nav { font-size: 18px; padding: 7px 0; }
-        #ls-sheet-title { font-size: 26px; }
+        #ls-sheet-title { font-size: 22px; }
 
         /* ─── Landscape / Tablet Mode (min-width: 768px) ─── */
         @media (min-width: 768px) {
@@ -465,7 +478,7 @@
             body { max-width: 100%; border-radius: 0; box-shadow: none; }
             main {
                 flex: 1; overflow: hidden;
-                padding: 12px; padding-bottom: 0;
+                padding: 10px; padding-bottom: 0;
                 display: flex; flex-direction: column;
             }
             footer { display: none; }
@@ -475,38 +488,44 @@
                 flex: 1;
                 display: grid;
                 grid-template-columns: 4fr 3fr;
-                grid-template-rows: auto 1fr;
-                gap: 12px;
+                grid-template-rows: 1fr auto;
+                gap: 10px;
                 overflow: hidden;
             }
             .panel-left {
                 grid-column: 1; grid-row: 1 / 3;
                 overflow-y: auto;
                 display: flex; flex-direction: column;
-                min-width: 0; gap: 12px;
+                min-width: 0; gap: 10px;
+                /* 높이 단차 방지: panel-right+panel-bottom과 높이 맞추기 */
+                align-self: stretch;
             }
             .panel-right {
                 grid-column: 2; grid-row: 1;
                 display: flex; flex-direction: column;
-                gap: 12px; min-width: 0;
+                gap: 10px; min-width: 0;
             }
             .panel-bottom {
                 grid-column: 2; grid-row: 2;
                 display: flex; flex-direction: column;
-                gap: 12px; min-width: 0; min-height: 0;
+                gap: 10px; min-width: 0; min-height: 0;
             }
 
             .controls-card { flex-shrink: 0; }
             #result-container { display: none; }
 
-            /* 입력 카드 가로 모드 */
-            .panel-left .input-card { margin-bottom: 0; }
-            .panel-left .input-card textarea { height: 160px; }
+            /* 입력 카드 가로 모드: 높이를 우측 패널과 맞춤 */
+            .panel-left .input-card { margin-bottom: 0; flex: 1; }
+            .panel-left .input-card textarea { height: calc(100vh - 320px); min-height: 80px; }
 
             /* ── ls-active: 악보 만들기 후 분할 뷰어 ── */
             .app-layout.ls-active {
                 grid-template-columns: 2fr 4fr;
                 grid-template-rows: 1fr;
+            }
+            .app-layout.ls-active .panel-left {
+                display: flex; flex-direction: column;
+                min-height: 0;
             }
             .app-layout.ls-active .panel-right {
                 grid-row: 1 / 3;
@@ -534,11 +553,67 @@
                 overflow: hidden; min-height: 0;
             }
         }
+
+        /* ─── Settings Modal ─── */
+        #settingsModal { padding: 0; }
+        .settings-content {
+            background: var(--surface);
+            width: 100%; max-width: 400px;
+            border-radius: var(--r-xl);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(24,29,58,0.3);
+        }
+        .settings-header {
+            padding: 16px 20px;
+            background: var(--primary); color: #ffffff;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .settings-header h3 {
+            margin: 0; font-family: 'Manrope', -apple-system, sans-serif;
+            font-size: 17px; font-weight: 700;
+        }
+        .settings-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+        .settings-row {
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 12px;
+        }
+        .settings-row-label {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 15px; font-weight: 600;
+            color: var(--on-surface);
+        }
+        .settings-row-desc {
+            font-size: 12px; color: var(--on-surface-variant);
+            margin-top: 2px;
+        }
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative; width: 52px; height: 28px; flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-track {
+            position: absolute; inset: 0;
+            background: var(--surface-highest); border-radius: 28px;
+            cursor: pointer; transition: background 0.25s;
+        }
+        .toggle-track::before {
+            content: ''; position: absolute;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: white; top: 3px; left: 3px;
+            transition: transform 0.25s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-switch input:checked + .toggle-track { background: var(--primary); }
+        .toggle-switch input:checked + .toggle-track::before { transform: translateX(24px); }
     </style>
 </head>
 
 <body>
-    <header>이번 주 찬양 콘티 🎶</header>
+    <header>
+        <span class="header-title">이번 주 찬양 콘티 🎶</span>
+        <button class="header-settings-btn" id="btn-settings" onclick="openSettings()" title="설정">⚙️</button>
+    </header>
 
     <!-- 카카오톡 인앱 브라우저 안내 배너 -->
     <div id="kakao-banner">
@@ -679,6 +754,31 @@
             <div class="share-preview-footer">
                 <button class="btn-share-close" onclick="closeSharePreview()">닫기 ✕</button>
                 <button class="btn-share-confirm" onclick="doShareConti()">공유하기 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 설정 모달 -->
+    <div class="modal-overlay" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h3>⚙️ 설정</h3>
+                <button class="btn-close" onclick="closeSettings()">×</button>
+            </div>
+            <div class="settings-body">
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-row-label">🔔 푸시 알림</div>
+                        <div class="settings-row-desc">새 콘티 등록 시 알림을 받습니다</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-push" onchange="onTogglePush(this.checked)">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div class="settings-row" id="push-status-row" style="display:none">
+                    <div style="font-size:12px; color:var(--on-surface-variant)" id="push-status-text"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -1067,31 +1167,40 @@
 
             if (isTabletLandscape()) {
                 // ── 가로/태블릿 모드: 분할 뷰어 ──
-                _lsFirstLoaded = false;
+                let firstSheetIndex = -1;  // 첫 번째 악보 인덱스 추적
+                let allLoaded = [];        // 로드 완료 추적
                 let songCounter = 0;
                 allLines.forEach((line, index) => {
                     const match = line.match(/^(\d+)/);
                     if (!match) return;
                     songCounter++;
                     const songNumber = match[1];
+                    const numPadded = songNumber.padStart(3, '0');  // 3자리 0패딩
                     const songTitle  = line.substring(songNumber.length).trim();
-                    const label = `${songCounter}. No.${songNumber} ${songTitle}`;
+                    const label = `${numPadded} ${songTitle}`;  // 번호 제목 형식
+                    if (firstSheetIndex < 0) firstSheetIndex = index;  // 첫 악보 인덱스 기록
                     const imgTag = document.createElement('img');
                     tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
                         sheetList[index] = { src: finalSrc, label };
-                        if (!_lsFirstLoaded) {
-                            _lsFirstLoaded = true;
-                            showLsSheet(index);
-                        } else {
-                            updateLsNavBtns();
-                        }
+                        updateLsNavBtns();
                     });
                 });
+                // 분할 화면 활성화 (먼저 활성화)
+                document.getElementById('app-layout').classList.add('ls-active');
+                // 첫 번째 악보를 로드 대기 후 표시
+                if (firstSheetIndex >= 0) {
+                    const _waitFirst = () => {
+                        if (sheetList[firstSheetIndex]) {
+                            showLsSheet(firstSheetIndex);
+                        } else {
+                            setTimeout(_waitFirst, 100);
+                        }
+                    };
+                    _waitFirst();
+                }
                 // 콘티 이미지 비동기 생성
                 const canvas = await generateContiCanvas();
                 if (canvas) document.getElementById('ls-conti-img').src = canvas.toDataURL('image/png');
-                // 분할 화면 활성화
-                document.getElementById('app-layout').classList.add('ls-active');
             } else {
                 // ── 세로 모드: 기존 result-container ──
                 const resultContainer = document.getElementById('result-container');
@@ -1104,8 +1213,9 @@
 
                     songCounter++;
                     const songNumber = match[1];
+                    const numPadded = songNumber.padStart(3, '0');  // 3자리 0패딩
                     const songTitle  = line.substring(songNumber.length).trim();
-                    const label = `${songCounter}. No.${songNumber} ${songTitle}`;
+                    const label = `${numPadded} ${songTitle}`;  // 번호 제목 형식
 
                     const card = document.createElement('div');
                     card.className = 'sheet-music-card';
@@ -1272,90 +1382,171 @@
         })();
 
         // ─── PWA 푸시 알림 (FCM) ─────────────────────────────────────────────
+        // 푸시 알림 활성화 여부 (localStorage 기반, 기본 OFF)
+        let _pushEnabled = localStorage.getItem('pushEnabled') === 'true';
+        let _swRegistration = null;  // Service Worker 등록 객체
+        let _messagingInited = false;
 
-        async function initPushNotification() {
-            if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
-            
-            // 설정 확인
-            if (FIREBASE_CONFIG.apiKey === "YOUR_API_KEY" || VAPID_KEY === "YOUR_VAPID_KEY") {
-                console.warn('FCM 설정이 완료되지 않았습니다. firebase-config.js 파일을 수정해주세요.');
-                return;
+        async function initServiceWorker() {
+            if (!('serviceWorker' in navigator)) return null;
+            if (_swRegistration) return _swRegistration;
+            _swRegistration = await navigator.serviceWorker.register('firebase-messaging-sw.js');
+            await navigator.serviceWorker.ready;
+            return _swRegistration;
+        }
+
+        async function enablePush() {
+            if (!('Notification' in window)) {
+                showToast('❌ 이 브라우저는 알림을 지원하지 않습니다');
+                return false;
             }
-
+            if (FIREBASE_CONFIG.apiKey === "YOUR_API_KEY" || VAPID_KEY === "YOUR_VAPID_KEY") {
+                console.warn('FCM 설정이 완료되지 않았습니다.');
+                return false;
+            }
             try {
-                console.log('Firebase 초기화 성공 🚀');
-
-                const registration = await navigator.serviceWorker.register('firebase-messaging-sw.js');
-                console.log('Service Worker 등록 완료:', registration.scope);
-
-                await navigator.serviceWorker.ready;
+                const registration = await initServiceWorker();
+                if (!registration) return false;
 
                 if (Notification.permission === 'default') {
-                    await Notification.requestPermission();
+                    const perm = await Notification.requestPermission();
+                    if (perm !== 'granted') {
+                        showToast('🔕 알림 권한이 거부되었습니다');
+                        return false;
+                    }
                 }
-                
                 if (Notification.permission !== 'granted') {
-                    console.warn('알림 권한이 거부되었습니다.');
-                    return;
+                    showToast('🔕 알림 권한이 없습니다. 브라우저 설정에서 허용해주세요');
+                    return false;
                 }
 
                 const messaging = firebase.messaging();
                 const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
+                if (!token) return false;
 
-                if (token) {
-                    _myFcmToken = token;
-                    console.log('FCM 토큰 획득 성공');
-                    const idToken = await getIdToken();
-                    // 기기 핑거프린트 기반 ID — 물리 픽셀+하드웨어 값으로 브라우저 무관하게 동일 키
-                    const _fp = [
-                        Math.round(screen.width  * (devicePixelRatio || 1)),
-                        Math.round(screen.height * (devicePixelRatio || 1)),
-                        navigator.hardwareConcurrency || 0,
-                        navigator.deviceMemory || 0,
-                        Intl.DateTimeFormat().resolvedOptions().timeZone
-                    ].join('|');
-                    const deviceId = 'fp_' + btoa(_fp).replace(/[^a-zA-Z0-9]/g, '').slice(0, 24);
-                    // 앱 열 때마다 PUT으로 덮어쓰기 — 같은 기기 = 같은 키 = 토큰 1개 유지
-                    const res = await fetch(
-                        `${FIREBASE_CONFIG.databaseURL}/fcm_tokens/${deviceId}.json?auth=${idToken}`,
-                        { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(token) }
-                    );
-                    if (res.ok) {
-                        console.log('FCM 토큰 갱신 완료');
-                        showToast('🔔 알림 설정이 완료되었습니다!');
-                    }
-                    // 동일 토큰 값을 가진 다른 키(구형 dev_ 등) 정리
-                    try {
-                        const allRes = await fetch(`${FIREBASE_CONFIG.databaseURL}/fcm_tokens.json?auth=${idToken}`);
-                        if (allRes.ok) {
-                            const allTokens = await allRes.json();
-                            if (allTokens) {
-                                const stale = Object.entries(allTokens).filter(([k, v]) => (v === token && k !== deviceId) || k.startsWith('dev_'));
-                                await Promise.all(stale.map(([k]) =>
-                                    fetch(`${FIREBASE_CONFIG.databaseURL}/fcm_tokens/${k}.json?auth=${idToken}`, { method: 'DELETE' })
-                                ));
-                                if (stale.length > 0) console.log(`중복 토큰 ${stale.length}개 정리:`, stale.map(([k]) => k));
-                            }
-                        }
-                    } catch(e) { console.warn('토큰 중복 정리 실패:', e); }
+                _myFcmToken = token;
+                const idToken = await getIdToken();
+                const _fp = [
+                    Math.round(screen.width  * (devicePixelRatio || 1)),
+                    Math.round(screen.height * (devicePixelRatio || 1)),
+                    navigator.hardwareConcurrency || 0,
+                    navigator.deviceMemory || 0,
+                    Intl.DateTimeFormat().resolvedOptions().timeZone
+                ].join('|');
+                const deviceId = 'fp_' + btoa(_fp).replace(/[^a-zA-Z0-9]/g, '').slice(0, 24);
+                const res = await fetch(
+                    `${FIREBASE_CONFIG.databaseURL}/fcm_tokens/${deviceId}.json?auth=${idToken}`,
+                    { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(token) }
+                );
+                if (res.ok) {
+                    console.log('FCM 토큰 갱신 완료');
                 }
+                // 구형 중복 토큰 정리
+                try {
+                    const allRes = await fetch(`${FIREBASE_CONFIG.databaseURL}/fcm_tokens.json?auth=${idToken}`);
+                    if (allRes.ok) {
+                        const allTokens = await allRes.json();
+                        if (allTokens) {
+                            const stale = Object.entries(allTokens).filter(([k, v]) => (v === token && k !== deviceId) || k.startsWith('dev_'));
+                            await Promise.all(stale.map(([k]) =>
+                                fetch(`${FIREBASE_CONFIG.databaseURL}/fcm_tokens/${k}.json?auth=${idToken}`, { method: 'DELETE' })
+                            ));
+                        }
+                    }
+                } catch(e) { console.warn('토큰 중복 정리 실패:', e); }
 
-                // 앱이 열려있을 때 포그라운드 알림 처리 (시스템 알림으로 표시)
-                messaging.onMessage((payload) => {
-                    const title = payload.notification?.title || '새 콘티가 등록되었습니다 ♬';
-                    const body  = payload.notification?.body  || '새 콘티가 등록되었습니다. 지금 확인해보세요!';
-                    registration.showNotification(title, {
-                        body,
-                        icon:  '/icon.png',
-                        badge: '/badge.png',
-                        tag:   `new-conti-${Date.now()}`,
-                        renotify: false,
-                        data: { url: location.origin }
+                // 포그라운드 알림 처리 (한 번만)
+                if (!_messagingInited) {
+                    _messagingInited = true;
+                    messaging.onMessage((payload) => {
+                        const title = payload.notification?.title || '새 콘티가 등록되었습니다 ♬';
+                        const body  = payload.notification?.body  || '새 콘티가 등록되었습니다. 지금 확인해보세요!';
+                        registration.showNotification(title, {
+                            body, icon: '/icon.png', badge: '/badge.png',
+                            tag: `new-conti-${Date.now()}`, renotify: false,
+                            data: { url: location.origin }
+                        });
                     });
-                });
-
+                }
+                localStorage.setItem('pushEnabled', 'true');
+                _pushEnabled = true;
+                return true;
             } catch (error) {
                 console.error('Push 설정 실패:', error);
+                return false;
+            }
+        }
+
+        async function disablePush() {
+            localStorage.setItem('pushEnabled', 'false');
+            _pushEnabled = false;
+            _myFcmToken = null;
+            // FCM 토큰 서버에서 삭제
+            try {
+                const idToken = await getIdToken();
+                const _fp = [
+                    Math.round(screen.width  * (devicePixelRatio || 1)),
+                    Math.round(screen.height * (devicePixelRatio || 1)),
+                    navigator.hardwareConcurrency || 0,
+                    navigator.deviceMemory || 0,
+                    Intl.DateTimeFormat().resolvedOptions().timeZone
+                ].join('|');
+                const deviceId = 'fp_' + btoa(_fp).replace(/[^a-zA-Z0-9]/g, '').slice(0, 24);
+                await fetch(`${FIREBASE_CONFIG.databaseURL}/fcm_tokens/${deviceId}.json?auth=${idToken}`, { method: 'DELETE' });
+                console.log('FCM 토큰 삭제 완료');
+            } catch(e) { console.warn('토큰 삭제 실패:', e); }
+        }
+
+        // ─── 설정 모달 ────────────────────────────────────────────────────────
+        function openSettings() {
+            const toggle = document.getElementById('toggle-push');
+            toggle.checked = _pushEnabled && Notification.permission === 'granted';
+            updatePushStatusText();
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+        async function onTogglePush(checked) {
+            const toggle = document.getElementById('toggle-push');
+            toggle.disabled = true;
+            if (checked) {
+                const ok = await enablePush();
+                if (ok) {
+                    showToast('🔔 알림이 활성화되었습니다!');
+                } else {
+                    toggle.checked = false;
+                    _pushEnabled = false;
+                }
+            } else {
+                await disablePush();
+                showToast('🔕 알림이 비활성화되었습니다');
+            }
+            toggle.disabled = false;
+            updatePushStatusText();
+        }
+        function updatePushStatusText() {
+            const row = document.getElementById('push-status-row');
+            const txt = document.getElementById('push-status-text');
+            const perm = ('Notification' in window) ? Notification.permission : 'unsupported';
+            if (perm === 'denied') {
+                txt.textContent = '⚠️ 브라우저에서 알림이 차단되어 있습니다. 브라우저 설정에서 허용해주세요.';
+                row.style.display = 'flex';
+            } else if (perm === 'unsupported') {
+                txt.textContent = '❌ 이 브라우저는 알림을 지원하지 않습니다.';
+                row.style.display = 'flex';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+
+        // 앱 시작 시: 서비스 워커만 등록 (알림은 사용자가 설정에서 켜야 함)
+        async function initPushNotification() {
+            if (!('serviceWorker' in navigator)) return;
+            await initServiceWorker();  // SW만 등록
+            // 이전에 알림을 켰었고 권한이 유지된 경우 자동 재연결
+            if (_pushEnabled && Notification.permission === 'granted') {
+                enablePush();  // 토큰 갱신 (비동기, 사용자 UI 차단 X)
             }
         }
 
@@ -1424,21 +1615,13 @@
             }
         }
 
-        // ─── 알림 버튼 ───────────────────────────────────────────────────────
+        // ─── 알림 버튼 (푸터용, 호환성 유지) ───────────────────────────────
         function updateNotifyBtn() {
             const btn = document.getElementById('btn-notify');
-            if (!('Notification' in window)) return;
-            if (Notification.permission === 'granted') {
-                btn.style.display = 'none';
-            } else {
-                btn.style.display = 'inline-block';
-            }
+            if (!btn || !('Notification' in window)) return;
+            btn.style.display = 'none';  // 설정 모달로 이전, 푸터 버튼 숨김
         }
-
-        async function enableNotification() {
-            await initPushNotification();
-            updateNotifyBtn();
-        }
+        async function enableNotification() { openSettings(); }
 
         // ─── 최신 콘티 자동 로드 (알림 클릭 시) ─────────────────────────────────
         async function autoLoadLatestConti() {
