@@ -1,6 +1,6 @@
 {
-  "name": "찬양 악보 매니저",
-  "short_name": "악보매니저",
+  "name": "콘티 메이커",
+  "short_name": "콘티메이커",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f5f5f5",

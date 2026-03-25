@@ -23,6 +23,12 @@ exports.notifyNewConti = onValueCreated(
         const rawText = (data && data.text) ? data.text : '';
         const contiTitle = (data && data.title) ? data.title : '';
         const senderToken = (data && data.senderToken) ? data.senderToken : null;
+        
+        // 대량 데이터 임포트 / 스크립트 업로드 시 푸시 차단 플래그
+        if (data && data.isImport === true) {
+            console.log("대량 임포트 데이터이므로 푸시 알림을 생략합니다.");
+            return null;
+        }
         const songLines = rawText.split('\n')
             .map(l => l.trim())
             .filter(l => /^\d+/.test(l))
