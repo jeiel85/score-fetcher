@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>콘티 이력 가져오기 (임포트 툴)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <!-- 프로젝트 Firebase 설정 (같은 폴더의 firebase-config.js 사용) -->
+    <script src="firebase-config.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 32px 16px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+
+        h1 {
+            font-family: 'Manrope', sans-serif;
+            font-size: 24px; font-weight: 800;
+            color: #fff; margin-bottom: 6px;
+        }
+        .subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 32px; }
+
+        /* Steps */
+        .steps { display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
+        .step-badge {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 14px; border-radius: 999px;
+            font-size: 13px; font-weight: 600;
+            background: rgba(255,255,255,0.07);
+            color: #94a3b8;
+        }
+        .step-badge.active { background: rgba(99,102,241,0.25); color: #a5b4fc; }
+        .step-badge .num {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px;
+        }
+        .step-badge.active .num { background: #6366f1; color: #fff; }
+
+        /* Card */
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 24px; margin-bottom: 20px;
+        }
+        .card h2 {
+            font-family: 'Manrope', sans-serif;
+            font-size: 16px; font-weight: 700; margin-bottom: 16px;
+            color: #c7d2fe;
+        }
+
+        /* Method selector */
+        .method-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+        .method-btn {
+            flex: 1; min-width: 160px; padding: 14px 16px;
+            border: 2px solid rgba(255,255,255,0.12);
+            border-radius: 12px; background: rgba(255,255,255,0.04);
+            color: #e2e8f0; cursor: pointer; text-align: left;
+            transition: all 0.15s;
+        }
+        .method-btn:hover { border-color: rgba(99,102,241,0.5); background: rgba(99,102,241,0.1); }
+        .method-btn.selected { border-color: #6366f1; background: rgba(99,102,241,0.15); }
+        .method-btn .icon { font-size: 24px; margin-bottom: 8px; display: block; }
+        .method-btn .label { font-weight: 700; font-size: 14px; display: block; }
+        .method-btn .desc { font-size: 12px; color: #94a3b8; display: block; margin-top: 4px; }
+
+        /* Input areas */
+        .input-area { display: none; margin-top: 16px; }
+        .input-area.visible { display: block; }
+
+        .file-drop {
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 12px; padding: 40px 20px;
+            text-align: center; cursor: pointer;
+            transition: all 0.15s;
+        }
+        .file-drop:hover, .file-drop.drag-over {
+            border-color: #6366f1; background: rgba(99,102,241,0.08);
+        }
+        .file-drop .drop-icon { font-size: 40px; margin-bottom: 12px; }
+        .file-drop p { color: #94a3b8; font-size: 14px; }
+        .file-drop input { display: none; }
+
+        .format-hint {
+            background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25);
+            border-radius: 10px; padding: 12px 16px; margin-bottom: 12px;
+            font-size: 13px; color: #a5b4fc; line-height: 1.7;
+        }
+        .format-hint code {
+            background: rgba(255,255,255,0.1); padding: 1px 6px;
+            border-radius: 4px; font-family: monospace; font-size: 12px;
+        }
+
+        textarea {
+            width: 100%; height: 220px;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px; padding: 14px; color: #e2e8f0;
+            font-family: 'Inter', -apple-system, sans-serif; font-size: 13px;
+            line-height: 1.7; resize: vertical;
+        }
+        textarea:focus { outline: none; border-color: #6366f1; }
+
+        /* Preview */
+        .preview-list { display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; }
+        .preview-item {
+            background: rgba(255,255,255,0.05); border-radius: 10px;
+            padding: 12px 16px;
+        }
+        .preview-item .pi-title {
+            font-weight: 700; font-size: 14px; color: #a5b4fc; margin-bottom: 4px;
+        }
+        .preview-item .pi-songs { font-size: 12px; color: #64748b; line-height: 1.6; }
+        .preview-item .pi-meta { font-size: 11px; color: #475569; margin-top: 6px; }
+        .preview-empty { text-align: center; color: #475569; padding: 24px; }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px; border: none; border-radius: 10px;
+            font-family: 'Manrope', sans-serif; font-weight: 800;
+            font-size: 14px; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+        }
+        .btn-primary:hover { box-shadow: 0 4px 20px rgba(99,102,241,0.5); }
+        .btn-primary:disabled { opacity: 0.5; pointer-events: none; }
+        .btn-secondary {
+            background: rgba(255,255,255,0.08); color: #94a3b8;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .btn-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+        /* Progress */
+        .progress-bar-wrap {
+            background: rgba(255,255,255,0.08); border-radius: 999px;
+            height: 8px; margin-top: 16px; overflow: hidden; display: none;
+        }
+        .progress-bar-fill {
+            height: 100%; border-radius: 999px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            transition: width 0.3s;
+        }
+
+        /* Log */
+        #log {
+            background: rgba(0,0,0,0.4); border-radius: 10px;
+            padding: 14px; font-size: 12px; line-height: 1.8;
+            max-height: 200px; overflow-y: auto;
+            font-family: monospace; color: #94a3b8;
+            display: none; margin-top: 16px;
+        }
+        .log-ok  { color: #34d399; }
+        .log-err { color: #f87171; }
+        .log-inf { color: #a5b4fc; }
+
+        .badge {
+            display: inline-block; padding: 2px 8px; border-radius: 999px;
+            font-size: 11px; font-weight: 700; margin-left: 8px;
+        }
+        .badge-count { background: rgba(99,102,241,0.3); color: #a5b4fc; }
+        
+        /* 탭 및 테이블 UI (1단계, 3단계 용) */
+        .tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 12px; overflow-x: auto; }
+        .tab-btn { white-space: nowrap; background: transparent; border: none; color: #94a3b8; font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .tab-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .tab-btn.active { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        th, td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { color: #a5b4fc; font-weight: 700; }
+        .action-btn { background: rgba(244,63,94,0.1); color: #fca5a5; border: 1px solid rgba(244,63,94,0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+        .action-btn:hover { background: rgba(244,63,94,0.2); }
+        .pagination { display: flex; gap: 4px; margin-top: 16px; justify-content: center; }
+        .page-btn { padding: 6px 12px; background: rgba(255,255,255,0.05); border: none; border-radius: 4px; color: #94a3b8; cursor: pointer; }
+        .page-btn.active { background: #6366f1; color: #fff; }
+        #history-search { width: 100%; max-width: 240px; padding: 8px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-family: 'Inter'; font-size: 13px; }
+    </style>
+</head>
+<body>
+<!-- 로그인 화면 -->
+<div id="login-screen" style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center;">
+    <div class="drop-icon" style="font-size: 60px; margin-bottom: 20px;">🔒</div>
+    <h1 style="color: #c7d2fe;">콘티 메이커 관리자 인증</h1>
+    <p style="color: #94a3b8; font-size: 14px; margin-bottom: 30px;">jeiel85@gmail.com 계정으로만 로그인할 수 있습니다.</p>
+    <button class="btn btn-primary" onclick="loginWithGoogle()" style="padding: 14px 30px; font-size: 16px;">
+        <span style="margin-right:8px;">G</span> Google 계정으로 계속하기
+    </button>
+</div>
+
+<!-- 실제 관리자 대시보드 (로그인 후 보임) -->
+<div id="admin-container" class="container" style="display:none;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <h1>👑 콘티 메이커 최고 관리자</h1>
+            <p class="subtitle">모든 데이터와 이력을 관리하는 통합 대시보드</p>
+        </div>
+        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 11px;" onclick="logout()">로그아웃</button>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('history')" id="btn-tab-history">📜 역대 콘티 관리</button>
+        <button class="tab-btn" onclick="switchTab('register')" id="btn-tab-register">🎵 새 찬양 등록</button>
+        <button class="tab-btn" onclick="switchTab('import')" id="btn-tab-import">📥 대량 임포트 툴</button>
+        <button class="tab-btn" onclick="switchTab('migration')" id="btn-tab-migration">📦 곡/가사 DB 통폐합</button>
+    </div>
+
+    <!-- TAB 1: 역대 콘티 관리 -->
+    <div id="tab-history" class="tab-content active">
+        <!-- 🌟 원래 있던 임시 청소 도구 🌟 -->
+        <div class="card" style="border-color: #f43f5e; background: rgba(244,63,94,0.05);">
+            <h2 style="color: #fda4af;">🧹 서버 올라간 데이터 검사기</h2>
+            <p style="font-size: 13px; color: #fecdd3; margin-bottom: 12px;">잘못 올라간 비정상 데이터를 찾아내어 수정하거나 일괄 삭제합니다.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn btn-primary" style="background: rgba(99,102,241,0.15); color: #c7d2fe; border: 1px solid rgba(99,102,241,0.5); text-align: left;" onclick="fixUntitledContis()">
+                    ✨ 1. '제목 없음' 데이터들의 숨겨진 이름 찾아주기 (클릭)
+                </button>
+                <button class="btn btn-secondary" style="border-color: rgba(244,63,94,0.4); color: #fda4af; text-align: left;" onclick="scanNonConti()">
+                    🔎 2. 제목없음 분실/특송/광고 등 의심 콘티 싹 리스트업
+                </button>
+                <button class="btn btn-secondary" style="border-color: rgba(244,63,94,0.4); color: #fda4af; text-align: left;" onclick="cleanupTestData()">
+                    🗑️ 3. 3월 22일 이전 초기 테스트 파일 모두 지우기
+                </button>
+            </div>
+
+        <!-- 검출 결과 영역 -->
+        <div id="suspect-area" style="display: none; margin-top: 16px; border-top: 1px solid rgba(244,63,94,0.2); padding-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <label style="color: #fecdd3; font-size: 14px; font-weight: 700;">
+                    <input type="checkbox" id="check-all-suspects" checked onchange="toggleAllSuspects(this.checked)"> 전체 선택
+                </label>
+                <button class="btn btn-primary" style="background: #e11d48; padding: 8px 16px; font-size: 12px;" onclick="deleteSelectedSuspects()">
+                    선택 항목 영구 삭제
+                </button>
+            </div>
+            <div class="preview-list" id="suspect-list" style="max-height: 400px; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 8px;">
+                <!-- 리스트 출력 됨 -->
+            </div>
+        </div>
+    </div> <!-- /청소 도구 (역대 콘티 상단) -->
+
+    <!-- 전체 리스트 테이블 영역 -->
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+            <h2>📜 전체 서버 콘티 이력</h2>
+            <input type="text" id="history-search" placeholder="제목이나 날짜로 검색..." onkeyup="searchHistory()">
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">선택</th>
+                        <th style="width: 100px;">날짜</th>
+                        <th>이름(제목)</th>
+                        <th>검출 곡</th>
+                        <th style="width: 60px;">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="history-tbody">
+                    <tr><td colspan="5" style="text-align:center;">데이터를 불러오는 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination" id="history-pagination"></div>
+        <div style="margin-top:16px;">
+            <button class="btn btn-secondary" style="border-color:#f43f5e; color:#fda4af; padding:8px 16px; font-size:12px;" onclick="deleteSelectedHistory()">선택 항목 일괄 삭제</button>
+        </div>
+    </div>
+</div> <!-- /TAB 1 -->
+
+<!-- TAB 4: 새 찬양 등록 (중간에 삽입) -->
+<div id="tab-register" class="tab-content">
+    <div class="card" style="border-color: #8b5cf6; background: rgba(99,102,241,0.05);">
+        <h2 style="color: #a5b4fc;">➕ 1단계: 신규 찬양 번호 및 제목 등록</h2>
+        <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 16px;">Vercel의 <code>hymn_list.txt</code>나 Git을 건드릴 필요 없이, 여기서 등록하면 즉시 앱에 연동됩니다.<br>
+        <strong style="color:#fca5a5;">(주의: 악보 이미지는 반드시 <code>images/곡번호.png</code> 형태로 Git에 올려두셔야 앱에서 보입니다!)</strong></p>
+        
+        <div style="display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap;">
+            <input type="number" id="reg-num" placeholder="곡 번호 (ex: 123)" style="flex:1; max-width: 140px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-size:14px;">
+            <input type="text" id="reg-title" placeholder="찬양 제목 (띄어쓰기 포함)" style="flex:2; min-width: 200px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-size:14px;">
+            <button class="btn btn-primary" onclick="submitNewSong()" style="min-width: 100px;">실시간 DB 등록하기</button>
+        </div>
+
+        <h2 style="color: #a5b4fc;">📝 2단계: 가사 데이터 등록 (선택사항)</h2>
+        <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 12px;">위에서 지정한 곡 번호의 가사를 등록합니다. (가사가 여러 줄이면 그대로 엔터 치시면 됩니다)</p>
+        <textarea id="reg-lyrics" placeholder="가사를 입력하세요... (생략 가능)" style="width:100%; height:180px; margin-bottom:12px; font-family:'Inter';"></textarea>
+        <button class="btn btn-secondary" onclick="submitNewLyrics()" style="width:100%; border-color:#8b5cf6; color:#a5b4fc;">가사 데이터 클라우드에 쏘기 🚀</button>
+    </div>
+</div>
+
+<!-- TAB 2: 데이터 임포트 -->
+<div id="tab-import" class="tab-content">
+    <div class="steps" style="margin-bottom: 24px;">
+        <div class="step-badge active"><span class="num">1</span> 형식 선택</div>
+        <div class="step-badge active"><span class="num">2</span> 데이터 입력</div>
+        <div class="step-badge active"><span class="num">3</span> 미리보기</div>
+        <div class="step-badge active"><span class="num">4</span> 업로드</div>
+    </div>
+
+    <!-- Step 1: 방법 선택 -->
+    <div class="card">
+        <h2>① 데이터 형식을 선택하세요</h2>
+        <div class="method-btns">
+            <button class="method-btn selected" id="btn-method-keep" onclick="selectMethod('keep')">
+                <span class="icon">📦</span>
+                <span class="label">Google Takeout JSON</span>
+                <span class="desc">takeout.google.com에서 받은<br>.json 파일들을 업로드</span>
+            </button>
+            <button class="method-btn" id="btn-method-text" onclick="selectMethod('text')">
+                <span class="icon">📋</span>
+                <span class="label">텍스트 붙여넣기</span>
+                <span class="desc">킵에서 복사한 내용을<br>직접 붙여넣기</span>
+            </button>
+        </div>
+
+        <!-- Keep JSON 업로드 -->
+        <div class="input-area visible" id="area-keep">
+            <div class="format-hint">
+                💡 <strong>Google Takeout 내보내기 방법:</strong><br>
+                1. <a href="https://takeout.google.com" target="_blank" style="color:#818cf8">takeout.google.com</a> 접속 → <code>Keep</code>만 선택 → 내보내기<br>
+                2. 다운로드된 ZIP 압축 해제 → <code>Takeout/Keep/</code> 폴더 안의 <code>.json</code> 파일들 선택
+            </div>
+            <div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()">
+                <input type="file" id="file-input" multiple accept=".json" onchange="handleFiles(this.files)">
+                <div class="drop-icon">📂</div>
+                <p><strong>JSON 파일을 여기에 끌어다 놓거나 클릭하세요</strong></p>
+                <p style="margin-top:6px; font-size:12px;">여러 파일 동시 선택 가능</p>
+            </div>
+        </div>
+
+        <!-- 텍스트 붙여넣기 -->
+        <div class="input-area" id="area-text">
+            <div class="format-hint">
+                💡 <strong>붙여넣기 형식:</strong>
+                각 콘티는 <code>===</code> (구분선)으로 구분합니다<br>
+                첫 줄 = 제목(날짜 포함), 나머지 줄 = 찬양 목록<br><br>
+                <code>2026-03-20 금요예배<br>
+                106 지저귀신 주님<br>
+                276 햇살보다 밝은<br>
+                ===<br>
+                2026-03-13 금요예배<br>
+                003 주님여이손을꼭잡고가소서<br>
+                ...</code>
+            </div>
+            <textarea id="text-input" placeholder="여기에 킵 내용을 붙여넣으세요...&#10;각 콘티는 === 로 구분해주세요"></textarea>
+        </div>
+    </div>
+
+    <!-- Step 2: 미리보기 -->
+    <div class="card">
+        <h2>② 미리보기 <span class="badge badge-count" id="count-badge">0건</span></h2>
+        <div class="btn-row" style="margin-bottom:14px;">
+            <button class="btn btn-primary" onclick="parseData()">🔍 파싱 & 미리보기</button>
+            <button class="btn btn-secondary" onclick="clearData()">초기화</button>
+        </div>
+        <div class="preview-list" id="preview-list">
+            <div class="preview-empty">데이터를 입력하고 "파싱 & 미리보기"를 눌러주세요</div>
+        </div>
+    </div>
+
+    <!-- Step 3: 업로드 -->
+    <div class="card">
+        <h2>③ Firebase에 업로드</h2>
+        <div class="btn-row">
+            <button class="btn btn-primary" id="btn-upload" onclick="uploadAll()" disabled>
+                🚀 업로드 시작
+            </button>
+            <span style="font-size:13px; color:#64748b;" id="upload-status">미리보기 후 업로드 가능합니다</span>
+        </div>
+        <div class="progress-bar-wrap" id="progress-wrap">
+            <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+        </div>
+        <div id="log"></div>
+    </div>
+</div> <!-- /TAB 2 -->
+
+<!-- TAB 3: 마이그레이션 -->
+<div id="tab-migration" class="tab-content">
+    <div class="card" style="border-color: #10b981; background: rgba(16,185,129,0.05);">
+        <h2 style="color: #6ee7b7;">🚀 1단계: 곡 목록 (hymn_list.txt) 마이그레이션</h2>
+        <p style="font-size: 13px; color: #a7f3d0; margin-bottom: 16px;">Vercel의 txt 파일을 읽어서 Firebase Realtime DB <code>/songs</code> 경로로 파싱 후 업로드합니다.</p>
+        <button class="btn btn-primary" style="background: #10b981; width: 100%;" onclick="migrateSongs()" id="btn-mig-songs">
+            💾 hymn_list.txt Firebase로 전송하기
+        </button>
+        <div id="log-mig-songs" style="margin-top:12px; font-size:12px; color:#a7f3d0;"></div>
+    </div>
+    
+    <div class="card" style="border-color: #3b82f6; background: rgba(59,130,246,0.05);">
+        <h2 style="color: #93c5fd;">🚀 2단계: 가사 데이터 (lyrics.json) 마이그레이션</h2>
+        <p style="font-size: 13px; color: #bfdbfe; margin-bottom: 16px;">500KB가 넘는 가사 파일을 Firebase <code>/lyrics</code> 경로에 <code>song_번호</code> 형태의 최적화된 객체로 분할 저장합니다.</p>
+        <button class="btn btn-primary" style="background: #3b82f6; width: 100%;" onclick="migrateLyrics()" id="btn-mig-lyrics">
+            💾 lyrics.json Firebase로 전송하기
+        </button>
+        <div id="log-mig-lyrics" style="margin-top:12px; font-size:12px; color:#bfdbfe;"></div>
+    </div>
+</div> <!-- /TAB 3 -->
+</div>
+
+<script>
+// ─── 인증 및 보안 상태 ────────────────────────────────────────────────────────
+let currentUserToken = null;
+
+if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        if (user.email === 'jeiel85@gmail.com') {
+            // 통과!
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('admin-container').style.display = 'block';
+            user.getIdToken().then(t => currentUserToken = t);
+            loadHistoryPage();
+        } else {
+            alert(`접근 권한이 없는 계정입니다: ${user.email}\njeiel85@gmail.com 으로 로그인해주세요.`);
+            firebase.auth().signOut();
+        }
+    } else {
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('admin-container').style.display = 'none';
+        currentUserToken = null;
+    }
+});
+
+function loginWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider).catch(e => {
+        alert('로그인 오류: ' + e.message);
+    });
+}
+function logout() { firebase.auth().signOut(); }
+
+async function getIdToken() { 
+    if (firebase.auth().currentUser) {
+        return await firebase.auth().currentUser.getIdToken();
+    }
+    return currentUserToken;
+}
+
+// ─── 상태 및 새 찬양 등록 로직 ───────────────────────────────────────────────────
+let currentMethod = 'keep';
+let parsedEntries = [];
+let _selectedFiles = null;
+
+async function submitNewSong() {
+    const num = document.getElementById('reg-num').value.trim();
+    const title = document.getElementById('reg-title').value.trim();
+    if(!num || !title) return alert('곡 번호와 제목을 모두 입력하세요.');
+    if(!confirm(`[${num} ${title}] 곡을 관리자 권한으로 실시간 배포합니다. 계속하시겠습니까?`)) return;
+    
+    try {
+        document.body.style.cursor = 'wait';
+        const idToken = await getIdToken();
+        const searchKey = title.replace(/\s+/g, '');
+        const payload = { num: parseInt(num,10), title, searchKey };
+        
+        await fetch(`${FIREBASE_CONFIG.databaseURL}/songs/song_${num}.json?auth=${idToken}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        document.body.style.cursor = 'default';
+        alert('✅ 곡 목록이 데이터베이스에 실시간 반영되었습니다!');
+    } catch(err) {
+        document.body.style.cursor = 'default';
+        alert('오류: ' + err.message);
+    }
+}
+
+async function submitNewLyrics() {
+    const num = document.getElementById('reg-num').value.trim();
+    const lyrics = document.getElementById('reg-lyrics').value.trim();
+    if(!num) return alert('먼저 곡 번호를 위에서 지정해주세요.');
+    if(!lyrics) return alert('가사 내용을 입력해주세요.');
+    
+    try {
+        document.body.style.cursor = 'wait';
+        const idToken = await getIdToken();
+        
+        await fetch(`${FIREBASE_CONFIG.databaseURL}/lyrics/song_${num}.json?auth=${idToken}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(lyrics)
+        });
+        
+        document.body.style.cursor = 'default';
+        alert('✅ 가사가 클라우드에 성공적으로 등록되었습니다!');
+        
+        // 초기화
+        document.getElementById('reg-num').value = '';
+        document.getElementById('reg-title').value = '';
+        document.getElementById('reg-lyrics').value = '';
+    } catch(err) {
+        document.body.style.cursor = 'default';
+        alert('오류: ' + err.message);
+    }
+}
+
+// ─── 방법 선택 ────────────────────────────────────────────────────────────────
+function selectMethod(method) {
+    currentMethod = method;
+    document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.input-area').forEach(a => a.classList.remove('visible'));
+    document.getElementById(`btn-method-${method}`).classList.add('selected');
+    document.getElementById(`area-${method}`).classList.add('visible');
+}
+
+// ─── Google Keep JSON 파일 처리 ───────────────────────────────────────────────
+function handleFiles(files) {
+    _selectedFiles = files;
+    const drop = document.getElementById('file-drop');
+    drop.innerHTML = `<div class="drop-icon">✅</div><p><strong>${files.length}개 파일 선택됨</strong></p><p style="margin-top:6px;font-size:12px;">파싱 & 미리보기 버튼을 눌러주세요</p>`;
+    drop.innerHTML += `<input type="file" id="file-input" multiple accept=".json" onchange="handleFiles(this.files)" style="display:none">`;
+}
+
+// 곡 목록 추출을 위한 강화된 검증 헬퍼
+function countSongLines(text) {
+    const lines = text.split('\n');
+    let songCount = 0;
+    for (const l of lines) {
+        const trimmed = l.trim();
+        // "01/04", "10/11", "2026-03" 처럼 날짜 형식으로 시작하는 줄은 곡으로 취급 안 함
+        if (/^\d{1,4}[-/]\d{1,2}/.test(trimmed)) continue;
+        
+        // 숫자로 시작하고 그 뒤에 한글이나 영문이 최소 1글자 이상 포함된 줄만 카운트
+        // (ex: "106 지저귀신", "003주님여")
+        if (/^\d+.*[가-힣a-zA-Z]/.test(trimmed)) {
+            songCount++;
+        }
+    }
+    return songCount;
+}
+
+async function parseData() {
+    const btnParse = document.querySelector('button[onclick="parseData()"]');
+    const originalBtnText = btnParse.innerHTML;
+    btnParse.innerHTML = '⏳ 파싱 중... (잠시만 기다려주세요)';
+    btnParse.disabled = true;
+
+    parsedEntries = [];
+    let skipped = 0;
+
+    try {
+        if (currentMethod === 'keep') {
+            const fileList = _selectedFiles || document.getElementById('file-input').files;
+            if (!fileList || fileList.length === 0) { alert('JSON 파일을 먼저 선택해주세요'); return; }
+            
+            // FileList 포맷을 Array로 변환하여 Promise.all로 병렬 고속 파싱
+            const files = Array.from(fileList);
+            await Promise.all(files.map(async (file) => {
+                try {
+                    const text = await file.text();
+                    const json = JSON.parse(text);
+                    const title = (json.title || '').trim();
+                    const body  = (json.textContent || json.listContent?.map(i => i.text).join('\n') || '').trim();
+                    
+                    if (!body) { skipped++; return; }
+
+                    // 🌟 1. 강화된 콘티 검증: 곡으로 인정되는 라인이 1개 이상 있는지 체크
+                    if (countSongLines(body) === 0) { skipped++; return; }
+
+                    const tsUsec = json.userEditedTimestampUsec || json.createdTimestampUsec || (Date.now() * 1000);
+                    const ts = Math.floor(tsUsec / 1000);
+                    parsedEntries.push({ title: title || '제목 없음', text: body, timestamp: ts });
+                } catch(e) { console.warn('파싱 실패:', file.name, e); }
+            }));
+            
+            // 시간순 정렬
+            parsedEntries.sort((a,b) => b.timestamp - a.timestamp);
+
+        } else {
+            const raw = document.getElementById('text-input').value.trim();
+            if (!raw) { alert('텍스트를 먼저 붙여넣어주세요'); return; }
+            const blocks = raw.split(/\n\s*===+\s*\n/);
+            blocks.forEach(block => {
+                const lines = block.trim().split('\n').filter(l => l.trim());
+                if (lines.length < 2) return;
+                const title = lines[0].trim();
+                const text  = lines.slice(1).join('\n').trim();
+                if (!text) { skipped++; return; }
+
+                // 🌟 2. 텍스트 붙여넣기에도 강화된 콘티 검증 적용
+                if (countSongLines(text) === 0) { skipped++; return; }
+
+                const ts = parseDateFromTitle(title) || Date.now();
+                parsedEntries.push({ title, text, timestamp: ts });
+            });
+        }
+
+        renderPreview();
+        if (skipped > 0) {
+            setTimeout(() => alert(`콘티 형식이 아닌 일반 메모 ${skipped}건은 자동으로 제외되었습니다.\n남은 콘티: ${parsedEntries.length}건`), 100);
+        }
+    } finally {
+        btnParse.innerHTML = originalBtnText;
+        btnParse.disabled = false;
+    }
+}
+
+function parseDateFromTitle(title) {
+    const m = title.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
+    if (!m) return null;
+    return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3])).getTime();
+}
+
+// ─── 미리보기 렌더링 ──────────────────────────────────────────────────────────
+function renderPreview() {
+    const list = document.getElementById('preview-list');
+    const badge = document.getElementById('count-badge');
+    badge.textContent = `${parsedEntries.length}건`;
+
+    if (parsedEntries.length === 0) {
+        list.innerHTML = '<div class="preview-empty">파싱된 항목이 없습니다. 형식을 확인해주세요</div>';
+        document.getElementById('btn-upload').disabled = true;
+        document.getElementById('upload-status').textContent = '파싱된 데이터가 없습니다';
+        return;
+    }
+
+    list.innerHTML = parsedEntries.map((entry, i) => {
+        const songLines = entry.text.split('\n').filter(l => /^\d+/.test(l.trim()));
+        const songPreview = songLines.slice(0, 4).join(' / ') + (songLines.length > 4 ? ` 외 ${songLines.length - 4}곡` : '');
+        const date = new Date(entry.timestamp).toLocaleDateString('ko-KR');
+        return `
+            <div class="preview-item">
+                <div class="pi-title">📌 ${escHtml(entry.title)}</div>
+                <div class="pi-songs">🎵 ${escHtml(songPreview || '(곡 없음)')}</div>
+                <div class="pi-meta">날짜: ${date} · 총 ${songLines.length}곡</div>
+            </div>`;
+    }).join('');
+
+    document.getElementById('btn-upload').disabled = false;
+    document.getElementById('upload-status').textContent = `${parsedEntries.length}건 업로드 준비 완료`;
+}
+
+function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── 초기화 ────────────────────────────────────────────────────────────────────
+function clearData() {
+    parsedEntries = [];
+    document.getElementById('text-input').value = '';
+    document.getElementById('preview-list').innerHTML = '<div class="preview-empty">데이터를 입력하고 "파싱 & 미리보기"를 눌러주세요</div>';
+    document.getElementById('count-badge').textContent = '0건';
+    document.getElementById('btn-upload').disabled = true;
+    document.getElementById('upload-status').textContent = '미리보기 후 업로드 가능합니다';
+    document.getElementById('log').style.display = 'none';
+    document.getElementById('progress-wrap').style.display = 'none';
+}
+
+// ─── Firebase 업로드 ──────────────────────────────────────────────────────────
+async function uploadAll() {
+    if (parsedEntries.length === 0) return;
+    const logEl = document.getElementById('log');
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressBar = document.getElementById('progress-bar');
+    const statusEl = document.getElementById('upload-status');
+    const btnUpload = document.getElementById('btn-upload');
+
+    logEl.style.display = 'block';
+    progressWrap.style.display = 'block';
+    btnUpload.disabled = true;
+    logEl.innerHTML = '';
+
+    addLog('inf', `🚀 업로드 시작 (${parsedEntries.length}건)`);
+
+    let ok = 0, fail = 0;
+    const idToken = await getIdToken();
+
+    for (let i = 0; i < parsedEntries.length; i++) {
+        const entry = parsedEntries[i];
+        const d = new Date(entry.timestamp);
+        const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+
+        const payload = {
+            date: dateStr,
+            title: entry.title,
+            text: entry.text,
+            timestamp: entry.timestamp,
+            senderToken: null,
+            isImport: true // 🔔 서버(Cloud Functions)에서 이 값을 보고 푸시 알림 발송 차단
+        };
+
+        try {
+            const res = await fetch(
+                `${FIREBASE_CONFIG.databaseURL}/history.json?auth=${idToken}`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
+            );
+            if (res.ok) {
+                ok++;
+                addLog('ok', `✅ [${i+1}/${parsedEntries.length}] ${entry.title}`);
+            } else {
+                fail++;
+                addLog('err', `❌ [${i+1}] 실패: ${entry.title} (HTTP ${res.status})`);
+            }
+        } catch(e) {
+            fail++;
+            addLog('err', `❌ [${i+1}] 오류: ${entry.title} — ${e.message}`);
+        }
+
+        progressBar.style.width = `${Math.round((i+1) / parsedEntries.length * 100)}%`;
+        statusEl.textContent = `업로드 중... ${i+1}/${parsedEntries.length}`;
+        await new Promise(r => setTimeout(r, 150));  // 너무 빠른 요청 방지
+    }
+
+    addLog(fail === 0 ? 'ok' : 'err',
+        `\n🏁 완료: 성공 ${ok}건 / 실패 ${fail}건`);
+    statusEl.textContent = `완료: 성공 ${ok}건 / 실패 ${fail}건`;
+    btnUpload.disabled = false;
+}
+
+function addLog(type, msg) {
+    const el = document.getElementById('log');
+    const span = document.createElement('div');
+    span.className = `log-${type}`;
+    span.textContent = msg;
+    el.appendChild(span);
+    el.scrollTop = el.scrollHeight;
+}
+
+// ─── 드래그 앤 드롭 ──────────────────────────────────────────────────────────
+const dropZone = document.getElementById('file-drop');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    handleFiles(e.dataTransfer.files);
+});
+
+// ─── 테스트 데이터 청소 ────────────────────────────────────────────────────────
+async function cleanupTestData() {
+    if (!confirm('경고: "제목 없는 콘티" 및 2026-03-22 이전 데이터가 모두 삭제됩니다. 계속하시겠습니까?')) return;
+    
+    try {
+        const idToken = await getIdToken();
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/history.json?auth=${idToken}`);
+        const data = await res.json();
+        
+        if (!data) { alert('삭제할 데이터가 없습니다.'); return; }
+        
+        // 기준일: 2026년 3월 22일 00:00:00 (KST 기준)
+        const thresholdTime = new Date('2026-03-22T00:00:00+09:00').getTime();
+        const entries = Object.entries(data);
+        
+        let deleteCount = 0;
+        let deletePromises = [];
+        
+        for (const [key, item] of entries) {
+            const isNoTitle = !item.title || item.title.trim() === '제목 없는 콘티';
+            const isOldData = item.timestamp < thresholdTime;
+            
+            if (isNoTitle || isOldData) {
+                // 삭제 API 전송 (동시 다발적 삭제)
+                deletePromises.push(
+                    fetch(`${FIREBASE_CONFIG.databaseURL}/history/${key}.json?auth=${idToken}`, { method: 'DELETE' })
+                );
+                deleteCount++;
+            }
+        }
+        
+        if (deleteCount === 0) {
+            alert('삭제할 조건에 맞는 데이터가 없습니다!');
+            return;
+        }
+        
+        document.body.style.cursor = 'wait';
+        await Promise.all(deletePromises);
+        document.body.style.cursor = 'default';
+        
+        alert(`청소 완료! 총 ${deleteCount}건의 데이터가 삭제되었습니다.`);
+    } catch(err) {
+        console.error(err);
+        alert('삭제 중 오류 발생: ' + err.message);
+        document.body.style.cursor = 'default';
+    }
+}
+
+// ─── '제목 없음' 데이터 날짜 기반 이름 복구 ──────────────────────────────
+async function fixUntitledContis() {
+    try {
+        if (!allHistoryData || allHistoryData.length === 0) {
+            alert('먼저 표 데이터를 불러오고 있습니다. 잠시만 기다려주세요!'); return;
+        }
+
+        const targets = [];
+        allHistoryData.forEach(item => {
+            const t = (item.title || '').replace(/\s+/g, '');
+            if (!t || t.includes('제목없음') || t.includes('제목없는')) {
+                targets.push(item);
+            }
+        });
+
+        if (targets.length === 0) {
+            alert('✅ 훌륭합니다! 제목없는 콘티가 단 1건도 없습니다.');
+            return;
+        }
+
+        if (!confirm(`'제목없음' 혹은 빈 제목인 콘티 ${targets.length}건을 발견했습니다!\n등록된 날짜를 바탕으로 (예: 2026-03-20 콘티) 형식으로 이름을 자동 변경할까요?`)) return;
+
+        document.body.style.cursor = 'wait';
+        const idToken = await getIdToken();
+        
+        const promises = targets.map(item => {
+            const d = new Date(item.timestamp);
+            const newTitle = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} 콘티`;
+            
+            return fetch(`${FIREBASE_CONFIG.databaseURL}/history/${item.key}.json?auth=${idToken}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: newTitle })
+            });
+        });
+
+        await Promise.all(promises);
+        document.body.style.cursor = 'default';
+        alert(`🎉 완벽합니다! 총 ${targets.length}건의 데이터에 새 생명(이름)을 부여했습니다!`);
+        loadHistoryPage(); // 테이블 새로고침
+        
+    } catch(err) {
+        document.body.style.cursor = 'default';
+        alert('이름 자동 변환 중 오류: ' + err.message);
+    }
+}
+
+// ─── 비정상 콘티 검출 및 선택 삭제 ────────────────────────────────────
+let suspectDataCache = {};
+
+async function scanNonConti() {
+    try {
+        const idToken = await getIdToken();
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/history.json?auth=${idToken}`);
+        const data = await res.json();
+        
+        if (!data) { alert('업로드된 데이터가 없습니다.'); return; }
+        
+        suspectDataCache = {};
+        const entries = Object.entries(data);
+        
+        for (const [key, item] of entries) {
+            const t = (item.title || '').trim();
+            const txt = (item.text || '').trim();
+            const c = countSongLines(txt);
+            
+            // 검출 조건:
+            // 1) 제목이 비어있거나 '제목없음', '제 목 없음' 등 띄어쓰기 섞인 모든 경우
+            const tNoSpace = t.replace(/\s+/g, '');
+            const isNoTitle = !tNoSpace || tNoSpace.includes('제목없음') || tNoSpace.includes('제목없는');
+            
+            // 2) 내가 만든 countSongLines 기준 곡이 0개인 경우
+            const isNoSong = c === 0;
+            // 3) 제목에 특정 키워드가 들어간 경우
+            const isKeyword = ['특송', '광고', '게임', '계획', '안내'].some(kw => t.includes(kw));
+            
+            if (isNoTitle || isNoSong || isKeyword) {
+                suspectDataCache[key] = item;
+            }
+        }
+        
+        const keys = Object.keys(suspectDataCache);
+        if (keys.length === 0) {
+            alert('의심되는 비정상 데이터가 없습니다!');
+            document.getElementById('suspect-area').style.display = 'none';
+            return;
+        }
+
+        // 결과 영역 표시
+        document.getElementById('suspect-area').style.display = 'block';
+        const listDiv = document.getElementById('suspect-list');
+        document.getElementById('check-all-suspects').checked = true;
+        
+        listDiv.innerHTML = keys.map(k => {
+            const item = suspectDataCache[k];
+            const d = new Date(item.timestamp).toLocaleDateString();
+            
+            // 본문 내용 개행 보존 방식 3줄 요약
+            const rawLines = (item.text || '').split('\n').map(l => l.trim()).filter(Boolean);
+            const previewLines = rawLines.slice(0, 3).map(l => escHtml(l));
+            const txtPreview = previewLines.length > 0 
+                ? previewLines.join('<br>') + (rawLines.length > 3 ? '<br><span style="color:#64748b; font-size:11px;">... 내용 더 있음</span>' : '')
+                : '<span style="color:#ef4444; font-size:11px;">(작성된 내용이 없습니다)</span>';
+
+            return `
+            <label class="preview-item" style="display:flex; align-items:flex-start; gap:12px; margin-bottom:8px; border-color: rgba(244,63,94,0.3); cursor:pointer;">
+                <input type="checkbox" class="suspect-check" value="${k}" checked style="margin-top:4px; transform:scale(1.2); cursor:pointer;">
+                <div style="flex:1;">
+                    <div class="pi-title" style="color: #fca5a5; font-size: 14px; font-weight: 700;">📌 ${escHtml(item.title || '(제목없음)')} <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px;">${d}</span></div>
+                    <div class="pi-songs" style="color: #cbd5e1; font-size: 13px; margin-top: 6px; line-height: 1.6;">${txtPreview}</div>
+                </div>
+            </label>`;
+        }).join('');
+        
+    } catch (err) {
+        alert('조회 중 오류: ' + err.message);
+    }
+}
+
+function toggleAllSuspects(checked) {
+    document.querySelectorAll('.suspect-check').forEach(cb => cb.checked = checked);
+}
+
+async function deleteSelectedSuspects() {
+    const checks = document.querySelectorAll('.suspect-check:checked');
+    const keysToDelete = Array.from(checks).map(cb => cb.value);
+    
+    if (keysToDelete.length === 0) {
+        alert('삭제할 항목을 선택하세요.');
+        return;
+    }
+    
+    if (!confirm(`선택한 ${keysToDelete.length}개의 데이터를 영구 삭제하시겠습니까?`)) return;
+    
+    try {
+        const idToken = await getIdToken();
+        document.body.style.cursor = 'wait';
+        
+        const promises = keysToDelete.map(k => 
+            fetch(`${FIREBASE_CONFIG.databaseURL}/history/${k}.json?auth=${idToken}`, { method: 'DELETE' })
+        );
+        await Promise.all(promises);
+        
+        document.body.style.cursor = 'default';
+        alert(`✅ ${keysToDelete.length}개 삭제 완료!`);
+        document.getElementById('suspect-area').style.display = 'none';
+        scanNonConti(); // 목록 새로고침
+    } catch(err) {
+        document.body.style.cursor = 'default';
+        alert('삭제 중 오류: ' + err.message);
+    }
+}
+
+// ─── [TAB 제어 및 히스토리 페이징 로직] ──────────────────────────────────
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    document.getElementById('btn-tab-' + tabId).classList.add('active');
+    if(tabId === 'history' && allHistoryData.length === 0) loadHistoryPage();
+}
+
+let allHistoryData = [];
+let filteredHistory = [];
+let currentPage = 1;
+const ITEMS_PER_PAGE = 15;
+
+async function loadHistoryPage() {
+    const tbody = document.getElementById('history-tbody');
+    try {
+        const idToken = await getIdToken();
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/history.json?auth=${idToken}`);
+        const data = await res.json();
+        
+        allHistoryData = [];
+        if (data) {
+            allHistoryData = Object.entries(data).map(([key, val]) => ({ key, ...val }));
+            allHistoryData.sort((a,b) => b.timestamp - a.timestamp); // 최신순
+        }
+        filteredHistory = [...allHistoryData];
+        renderHistoryTable();
+    } catch(err) {
+        tbody.innerHTML = `<tr><td colspan="5" style="color:#f87171;">오류: ${err.message}</td></tr>`;
+    }
+}
+
+function searchHistory() {
+    const q = document.getElementById('history-search').value.toLowerCase();
+    filteredHistory = allHistoryData.filter(item => 
+        (item.title || '').toLowerCase().includes(q) || 
+        (item.date || '').toLowerCase().includes(q)
+    );
+    currentPage = 1;
+    renderHistoryTable();
+}
+
+function renderHistoryTable() {
+    const tbody = document.getElementById('history-tbody');
+    const pagination = document.getElementById('history-pagination');
+    
+    if (filteredHistory.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">조회된 데이터가 없습니다.</td></tr>`;
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    const totalPages = Math.ceil(filteredHistory.length / ITEMS_PER_PAGE);
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const pageData = filteredHistory.slice(start, start + ITEMS_PER_PAGE);
+    
+    tbody.innerHTML = pageData.map(item => {
+        const d = new Date(item.timestamp).toLocaleDateString().replace(/\.$/,'');
+        
+        // 🌟 곡 목록을 줄바꿈(<br>) 그대로 유지
+        const lines = (item.text || '').split('\n').map(l => l.trim());
+        const songLines = lines.filter(l => /^\d+.*[가-힣a-zA-Z]/.test(l));
+        const sc = songLines.length;
+        // 요약 개행 처리
+        const songSummary = sc > 0 
+            ? songLines.join('<br>')
+            : '<span style="color:#ef4444; font-size:12px;">(곡 없음 - 검사 권장)</span>';
+
+        return `<tr>
+            <td style="vertical-align:top; padding-top:16px;"><input type="checkbox" class="hist-check" value="${item.key}"></td>
+            <td style="color:#94a3b8; white-space:nowrap; vertical-align:top; padding-top:16px;">${d}</td>
+            <td style="color:#a5b4fc; font-weight:600; vertical-align:top; padding-top:16px;">
+                ${escHtml(item.title || '제목없음')}
+                <div style="font-size:13px; color:#cbd5e1; margin-top:8px; font-weight:400; line-height:1.6;">${songSummary}</div>
+            </td>
+            <td style="white-space:nowrap; vertical-align:top; padding-top:16px;"><span class="badge ${sc>0 ? 'badge-count' : ''}" style="${sc===0 ? 'background:rgba(244,63,94,0.2); color:#fca5a5;' : ''}">${sc}곡</span></td>
+            <td style="white-space:nowrap; text-align:right; vertical-align:top; padding-top:16px;"><button class="action-btn" style="white-space:nowrap;" onclick="deleteSingleHistory('${item.key}')">삭제</button></td>
+        </tr>`;
+    }).join('');
+    
+    let pages = '';
+    for(let i=1; i<=totalPages; i++) {
+        if(i === 1 || i === totalPages || Math.abs(currentPage - i) <= 2) {
+            pages += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="currentPage=${i}; renderHistoryTable()">${i}</button>`;
+        } else if (Math.abs(currentPage - i) === 3) {
+            pages += `<span style="color:#64748b; padding:0 4px; align-self:center;">...</span>`;
+        }
+    }
+    // 🐞 버그 원인: /.../는 임의의 문자 3개를 의미해서 HTML 전체를 삭제하고 있었습니다. 점 3개 문자로 수정!
+    pagination.innerHTML = pages.replace(/(\.\.\.\s*)+/g, '...');
+}
+
+async function deleteSingleHistory(key) {
+    if(!confirm('정말 영구 삭제하시겠습니까?')) return;
+    try {
+        const idToken = await getIdToken();
+        await fetch(`${FIREBASE_CONFIG.databaseURL}/history/${key}.json?auth=${idToken}`, { method: 'DELETE' });
+        loadHistoryPage();
+    } catch(err) { alert(err.message); }
+}
+
+async function deleteSelectedHistory() {
+    const checks = document.querySelectorAll('.hist-check:checked');
+    const keys = Array.from(checks).map(cb => cb.value);
+    
+    if(keys.length === 0) return alert('선택된 항목이 없습니다.');
+    if(!confirm(`선택한 ${keys.length}건의 콘티를 삭제합니다. 이 작업은 되돌릴 수 없습니다. 진행할까요?`)) return;
+    
+    try {
+        document.body.style.cursor = 'wait';
+        const idToken = await getIdToken();
+        await Promise.all(keys.map(k => fetch(`${FIREBASE_CONFIG.databaseURL}/history/${k}.json?auth=${idToken}`, { method: 'DELETE' })));
+        alert(`${keys.length}건 완전 삭제 완료!`);
+        loadHistoryPage();
+    } catch(err) { alert(err.message); } finally { document.body.style.cursor = 'default'; }
+}
+
+// ─── [TAB 3] DB 마이그레이션 도구 로직 ──────────────────────────────────────
+async function migrateSongs() {
+    const btn = document.getElementById('btn-mig-songs');
+    const log = document.getElementById('log-mig-songs');
+    if(!confirm('🚨 주의: 이 작업은 Firebase /songs 의 전체 데이터를 덮어씌웁니다.\n현재의 로컬 hymn_list.txt로 동기화 하시겠습니까?')) return;
+    
+    try {
+        btn.disabled = true; log.innerText = '로컬 hymn_list.txt 파싱 중... ⏳';
+        const raw = await (await fetch('hymn_list.txt')).text();
+        const list = raw.replace(/\r/g, '').split('\n').filter(l => l.trim() !== '');
+        
+        const payload = {};
+        list.forEach(line => {
+            const match = line.match(/^(\d+)\s*(.*)/);
+            if(match) {
+                const num = match[1]; 
+                const title = match[2].trim();
+                payload[`song_${num}`] = { num: parseInt(num, 10), title, searchKey: title.replace(/\s+/g,'') };
+            }
+        });
+        
+        log.innerText = `총 ${Object.keys(payload).length}곡 추출 완료. Firebase PUT 업로드 중... 🚀`;
+        const idToken = await getIdToken();
+        
+        // 🚨 PUT을 사용하여 컬렉션 통째로 덮어쓰기 (가장 깔끔함)
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/songs.json?auth=${idToken}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if(!res.ok) throw new Error('API 응답 HTTP ' + res.status);
+        log.innerText = '✅ 곡 목록 전송이 성공적으로 완료되었습니다!';
+    } catch(err) {
+        log.innerText = '❌ 오류: ' + err.message;
+    } finally { btn.disabled = false; }
+}
+
+async function migrateLyrics() {
+    const btn = document.getElementById('btn-mig-lyrics');
+    const log = document.getElementById('log-mig-lyrics');
+    if(!confirm('🚨 주의: 기존에 업로드된 가사 DB 데이터(/lyrics)를 전부 플러시하고 현재 로컬의 가스로 덮어씁니다.\n계속할까요?')) return;
+    
+    try {
+        btn.disabled = true; log.innerText = '로컬 lyrics.json 불러오는 중... ⏳';
+        const lyricsMap = await (await fetch('lyrics.json')).json();
+        const entries = Object.entries(lyricsMap);
+        log.innerText = `총 ${entries.length}곡의 가사 추출됨. Firebase 구조화 및 전송 시작... 🚀`;
+        
+        const payload = {};
+        entries.forEach(([title, text]) => {
+            const match = title.match(/^(\d+)/);
+            if(match) {
+                payload[`song_${match[1]}`] = text.trim();
+            }
+        });
+        
+        const idToken = await getIdToken();
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/lyrics.json?auth=${idToken}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if(!res.ok) throw new Error('API 응답 HTTP ' + res.status);
+        log.innerText = '✅ 가사 데이터가 Firebase에 성공적으로 적재되었습니다!';
+    } catch(err) {
+        log.innerText = '❌ 오류: ' + err.message;
+    } finally { btn.disabled = false; }
+}
+
+// 최초 로딩 트리거
+document.addEventListener('DOMContentLoaded', () => {
+    switchTab('history');
+});
+</script>
+</body>
+</html>
