@@ -358,6 +358,7 @@
             initPushNotification();
             updateNotifyBtn();
             checkKakaoBrowser();
+            initVersionDisplay(); // ✅ 버전 표시 영역 생성
             setTimeout(precacheAllScores, 3000);
             history.pushState({ page: 'app' }, '');
             if (new URLSearchParams(location.search).get('autoload') === '1') {

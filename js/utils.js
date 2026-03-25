@@ -96,4 +96,17 @@ function normalizeContiText(rawText) {
     while (allLines.length > 0 && allLines[allLines.length - 1] === '') allLines.pop();
     return allLines.join('\n');
 }
+// ─── 버전 관리 ────────────────────────────────────────────────────────────
+const APP_VERSION = "v1.1.0";
+const BUILD_DATE  = "2026.03.25";
 
+function initVersionDisplay() {
+    const footer = document.querySelector('footer');
+    if (footer) {
+        const verDiv = document.createElement('div');
+        verDiv.classList.add('app-version-info');
+        verDiv.style.cssText = 'font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 12px; font-family: "Inter", sans-serif;';
+        verDiv.textContent = `${APP_VERSION} (Build ${BUILD_DATE})`;
+        footer.appendChild(verDiv);
+    }
+}
