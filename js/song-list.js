@@ -9,13 +9,17 @@ const CACHE_KEY_LYRICS = 'cachedLyricsData_v2';
 async function initSongList() {
     const container = document.getElementById('songListContainer');
     
-    // 1️⃣ 캐시 우선 로딩 (가장 빠른 오프라인 경험)
+    // 1️⃣ 캐시 우선 로딩 - 곡 목록 + 가사 동시에
     let hasCached = false;
     const cached = localStorage.getItem(CACHE_KEY_SONGS);
+    const cachedLyrics = localStorage.getItem(CACHE_KEY_LYRICS);
+    if (cachedLyrics) {
+        try { lyricsData = JSON.parse(cachedLyrics); } catch(e) {}
+    }
     if (cached) {
         try {
             songArray = JSON.parse(cached);
-            renderSongList(songArray);
+            renderSongList(songArray);  // 가사 포함 상태로 1회 렌더
             hasCached = true;
         } catch(e) {}
     }
@@ -23,25 +27,52 @@ async function initSongList() {
         container.innerHTML = "<li class='song-item' style='text-align:center;'>최초 데이터 로딩 중... ⏳</li>";
     }
 
-    // 2️⃣ 뒷단에서 실시간 DB 찔러서 최신화 (Stale-While-Revalidate)
+    // 2️⃣ 곡 목록 + 가사를 동시에 Firebase에서 최신화 (병렬 처리)
     try {
         const idToken = await getIdToken();
-        const response = await fetch(`${FIREBASE_CONFIG.databaseURL}/songs.json?auth=${idToken}`);
-        if(response.ok) {
-            const data = await response.json() || {};
-            // Firebase json 구조를 정렬된 기존 songArray 문자열 배열 형식으로 변환
+        const [songsRes, lyricsRes] = await Promise.all([
+            fetch(`${FIREBASE_CONFIG.databaseURL}/songs.json?auth=${idToken}`),
+            fetch(`${FIREBASE_CONFIG.databaseURL}/lyrics.json?auth=${idToken}`)
+        ]);
+
+        let needsRerender = false;
+
+        // 곡 목록 처리
+        if (songsRes.ok) {
+            const data = await songsRes.json() || {};
             const freshArray = Object.values(data)
                 .sort((a,b) => a.num - b.num)
                 .map(s => `${s.num} ${s.title}`);
-            
             const freshString = JSON.stringify(freshArray);
             if (freshString !== cached) {
-                // 변경점이 있으면 교체 후 조용히 리렌더링
                 songArray = freshArray;
                 localStorage.setItem(CACHE_KEY_SONGS, freshString);
-                renderSongList(songArray);
+                needsRerender = true;
             }
         }
+
+        // 가사 처리
+        if (lyricsRes.ok) {
+            const data = await lyricsRes.json() || {};
+            const cleanData = {};
+            Object.entries(data).forEach(([key, lyricsStr]) => {
+                const numRaw = key.replace('song_', '');
+                const numPadded = numRaw.padStart(3, '0');
+                cleanData[numPadded] = { lyrics: lyricsStr || null, tags: [], subtitle: null };
+            });
+            const freshString = JSON.stringify(cleanData);
+            if (freshString !== cachedLyrics) {
+                lyricsData = cleanData;
+                localStorage.setItem(CACHE_KEY_LYRICS, freshString);
+                needsRerender = true;
+            }
+        }
+
+        // 변경이 있으면 가사 포함 상태로 리렌더링
+        if (needsRerender || !hasCached) {
+            renderSongList(songArray);
+        }
+
     } catch (error) {
         if(!hasCached) {
             container.innerHTML = "<li class='song-item' style='color:#fca5a5; text-align:center;'>⚠️ 오프라인 네트워크 에러</li>";
@@ -70,34 +101,13 @@ async function openSongModal() {
 
 function closeSongModal() { document.getElementById('songModal').style.display = 'none'; }
 
+// initLyrics는 이제 initSongList 내부에서 일괄 처리하므로 단독 호출시의 후방 호환성만 유지합니다.
 async function initLyrics() {
-    // 1️⃣ 가사 캐시 우선 로딩
+    // 이미 initSongList가 가사를 포함해서 초기화하므로, 별도 호출 시에는 캐시만 로드합니다.
     const cached = localStorage.getItem(CACHE_KEY_LYRICS);
-    if (cached) {
-        try { lyricsData = JSON.parse(cached); } catch(e){}
+    if (cached && Object.keys(lyricsData).length === 0) {
+        try { lyricsData = JSON.parse(cached); } catch(e) {}
     }
-
-    // 2️⃣ 서버에서 가사 데이터 백그라운드 최신화
-    try {
-        const idToken = await getIdToken();
-        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/lyrics.json?auth=${idToken}`);
-        if (!res.ok) return;
-        const data = await res.json() || {};
-        
-        const cleanData = {};
-        // Firebase 속 구조: { "song_123": "가사...\n가사..." }
-        Object.entries(data).forEach(([key, lyricsStr]) => {
-            const numRaw = key.replace('song_', '');
-            const numPadded = numRaw.padStart(3, '0');
-            cleanData[numPadded] = { lyrics: lyricsStr || null, tags: [], subtitle: null };
-        });
-
-        const freshString = JSON.stringify(cleanData);
-        if (freshString !== cached) {
-            lyricsData = cleanData;
-            localStorage.setItem(CACHE_KEY_LYRICS, freshString);
-        }
-    } catch (e) {}
 }
 
 function showLyrics(numPadded, displayTitle) {
