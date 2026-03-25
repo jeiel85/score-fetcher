@@ -1,0 +1,23 @@
+{
+  "rules": {
+    "history": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$id": {
+        ".validate": "newData.hasChildren(['title','text','date']) && newData.child('text').isString() && newData.child('text').val().length < 5000"
+      }
+    },
+    "fcm_tokens": {
+      ".read": false,
+      ".write": "auth != null"
+    },
+    "songs": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "lyrics": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}

@@ -2,18 +2,50 @@
 
 let _songFreqData = {};  // { '001': 5, '276': 3, ... } 이력 집계 결과
 
+// 로컬 캐시 키 정의 (Stale-While-Revalidate 패턴용)
+const CACHE_KEY_SONGS = 'cachedSongsData_v2';
+const CACHE_KEY_LYRICS = 'cachedLyricsData_v2';
+
 async function initSongList() {
     const container = document.getElementById('songListContainer');
-    container.innerHTML = "<li class='song-item' style='text-align:center;'>목록을 불러오는 중입니다... ⏳</li>";
-    try {
-        const response = await fetch('hymn_list.txt');
-        const text = await response.text();
-        // \r(Windows 줄바꿈 잔재)만 제거 — \s*/g 는 \n도 지워서 목록이 한 줄로 합쳐지는 버그 발생
-        songArray = text.replace(/\r/g, '').split('\n').filter(line => line.trim() !== '');
-        renderSongList(songArray);
+    
+    // 1️⃣ 캐시 우선 로딩 (가장 빠른 오프라인 경험)
+    let hasCached = false;
+    const cached = localStorage.getItem(CACHE_KEY_SONGS);
+    if (cached) {
+        try {
+            songArray = JSON.parse(cached);
+            renderSongList(songArray);
+            hasCached = true;
+        } catch(e) {}
+    }
+    if (!hasCached) {
+        container.innerHTML = "<li class='song-item' style='text-align:center;'>최초 데이터 로딩 중... ⏳</li>";
+    }
 
+    // 2️⃣ 뒷단에서 실시간 DB 찔러서 최신화 (Stale-While-Revalidate)
+    try {
+        const idToken = await getIdToken();
+        const response = await fetch(`${FIREBASE_CONFIG.databaseURL}/songs.json?auth=${idToken}`);
+        if(response.ok) {
+            const data = await response.json() || {};
+            // Firebase json 구조를 정렬된 기존 songArray 문자열 배열 형식으로 변환
+            const freshArray = Object.values(data)
+                .sort((a,b) => a.num - b.num)
+                .map(s => `${s.num} ${s.title}`);
+            
+            const freshString = JSON.stringify(freshArray);
+            if (freshString !== cached) {
+                // 변경점이 있으면 교체 후 조용히 리렌더링
+                songArray = freshArray;
+                localStorage.setItem(CACHE_KEY_SONGS, freshString);
+                renderSongList(songArray);
+            }
+        }
     } catch (error) {
-        container.innerHTML = "<li class='song-item' style='color:red; text-align:center;'>⚠️ 파일 에러</li>";
+        if(!hasCached) {
+            container.innerHTML = "<li class='song-item' style='color:#fca5a5; text-align:center;'>⚠️ 오프라인 네트워크 에러</li>";
+        }
     }
 }
 
@@ -39,22 +71,31 @@ async function openSongModal() {
 function closeSongModal() { document.getElementById('songModal').style.display = 'none'; }
 
 async function initLyrics() {
+    // 1️⃣ 가사 캐시 우선 로딩
+    const cached = localStorage.getItem(CACHE_KEY_LYRICS);
+    if (cached) {
+        try { lyricsData = JSON.parse(cached); } catch(e){}
+    }
+
+    // 2️⃣ 서버에서 가사 데이터 백그라운드 최신화
     try {
-        const res = await fetch('lyrics.json');
+        const idToken = await getIdToken();
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/lyrics.json?auth=${idToken}`);
         if (!res.ok) return;
-        const data = await res.json();
-        if (Array.isArray(data.songs)) {
-            data.songs.forEach(s => {
-                if (s.number) lyricsData[s.number] = {
-                    lyrics:   s.lyrics   || null,
-                    tags:     s.tags     || [],
-                    subtitle: s.subtitle || null,
-                };
-            });
-        } else {
-            Object.entries(data).forEach(([k, v]) => {
-                lyricsData[k] = { lyrics: v, tags: [], subtitle: null };
-            });
+        const data = await res.json() || {};
+        
+        const cleanData = {};
+        // Firebase 속 구조: { "song_123": "가사...\n가사..." }
+        Object.entries(data).forEach(([key, lyricsStr]) => {
+            const numRaw = key.replace('song_', '');
+            const numPadded = numRaw.padStart(3, '0');
+            cleanData[numPadded] = { lyrics: lyricsStr || null, tags: [], subtitle: null };
+        });
+
+        const freshString = JSON.stringify(cleanData);
+        if (freshString !== cached) {
+            lyricsData = cleanData;
+            localStorage.setItem(CACHE_KEY_LYRICS, freshString);
         }
     } catch (e) {}
 }

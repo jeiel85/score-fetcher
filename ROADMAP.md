@@ -15,8 +15,43 @@
 | Cloud Function (새 콘티 알림 발송) | ✅ 운영 중 |
 | 오프라인 지원 (악보 사전 캐싱 + 콘티함 로컬 캐시) | ✅ 운영 중 |
 | Digital Maestro 디자인 리뉴얼 | ✅ 적용 완료 (2026-03-24) |
+| **관리자 대시보드 (admin.html) 구축** | ✅ 배포 완료 (2026-03-25) |
+| **곡 목록 / 가사 Firebase DB 마이그레이션** | ✅ 완료 (2026-03-25) |
+| **곡/가사 오프라인 캐싱 (Stale-While-Revalidate)** | ✅ 적용 완료 (2026-03-25) |
 | Android 앱 | ❌ 미착수 |
 | iOS 앱 | ❌ 미착수 |
+
+---
+
+## 최근 작업 이력 (2026-03-25)
+
+### 🛠 관리자 대시보드 (`admin.html`) 구축 & 기능 확장
+- `importer.html`을 `admin.html`로 리팩토링, 탭 인터페이스 도입
+- **탭 1 : 역대 콘티 관리**
+  - Firebase 전체 이력 페이징(15건) 리스트 + 제목/날짜 실시간 검색
+  - 곡 목록 개행 보존 요약 (최대 3줄) 인라인 표시
+  - 단일 삭제: 팝업 없이 "삭제 중..." 레이블 후 부드러운 페이드아웃(0.4s)
+  - 다중 체크박스 선택 일괄 삭제
+  - 데이터 검사기: ①제목없음 날짜 자동 복구(`YYYY-MM-DD 콘티`) ②특송/광고/빈 곡 의심 데이터 리스트업 ③초기 테스트 데이터 일괄 삭제
+- **탭 2 : 새 찬양 등록기** (신규)
+  - 곡 번호 + 제목 즉시 Firebase `songs/` 등록
+  - 가사 즉시 Firebase `lyrics/` 등록
+  - **Git vs Firebase DB 교차 진단기**: Github API로 `images/` 폴더와 DB 곡 목록을 비교, 누락 곡 번호를 클릭 한 번으로 입력칸에 자동 채워줌
+- **탭 3 : 대량 임포트 도구** (기존 유지)
+- **탭 4 : 곡/가사 DB 통폐합** (기존 유지)
+- **보안**: 익명 로그인 → Google 로그인 전환, `jeiel85@gmail.com` 화이트리스트 인증
+
+### 🚀 곡/가사 오프라인 캐싱 아키텍처 도입 (`js/song-list.js`)
+- 기존 `hymn_list.txt` / `lyrics.json` 로컬 파일 → Firebase Realtime DB 실시간 연동으로 마이그레이션
+- **Stale-While-Revalidate 패턴** 적용:
+  1. 앱 실행 즉시 `localStorage` 캐시에서 곡 목록/가사 0ms 로딩 (오프라인 완벽 지원)
+  2. 백그라운드에서 Firebase `songs/` + `lyrics/` 최신 데이터 비교
+  3. 변경분 있을 때만 조용히 화면 갱신 + 캐시 자동 업데이트
+- `CACHE_KEY_SONGS = 'cachedSongsData_v2'`, `CACHE_KEY_LYRICS = 'cachedLyricsData_v2'`
+
+### 🗄 Firebase Realtime Database 보안 규칙 업데이트
+- `/songs` / `/lyrics` 경로 추가 (인증 사용자 읽기/쓰기 허용)
+- `firebase deploy --only database` 클라우드 배포 완료
 
 ---
 
