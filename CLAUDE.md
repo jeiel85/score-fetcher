@@ -3,15 +3,29 @@
 ## 프로젝트 개요
 교회 예배 콘티(악보 세트리스트)를 관리하고, 악보 이미지를 자동으로 불러오는 단일 페이지 앱입니다.
 
-## 주요 파일
-- `index.html` — 앱 전체 (HTML + CSS + JS 단일 파일)
-- `hymn_list.txt` — 찬양 목록 (번호 + 제목)
-- `lyrics.json` — 찬양 가사 데이터 (번호·가사·태그 포함, 아래 형식 참고)
-- `badge.svg` — 푸시 알림 상태바 아이콘 (흰색 음표, 모노크롬)
-- `images/` — 악보 이미지 (001.png ~ ...)
-- `firebase-config.js` — Firebase 설정 + VAPID 키 (브라우저·서비스워커 공용)
-- `firebase-messaging-sw.js` — FCM 백그라운드 푸시 수신 서비스 워커
-- `functions/index.js` — Cloud Function: 새 콘티 저장 시 FCM 푸시 발송
+## 프로젝트 구조
+
+```
+score-fetcher/
+├── index.html           # 메인 HTML (373줄 - 리팩토링 후)
+├── style.css            # 전체 CSS 스타일 (576줄)
+├── js/
+│   ├── firebase.js         # Firebase 초기화, 익명 인증, 전역변수
+│   ├── utils.js            # showToast, resetAll, Canvas유틸, isTabletLandscape
+│   ├── history.js          # 콘티 저장/이력 관리
+│   ├── song-list.js        # 찬양 목록, 가사 모달, WakeLock
+│   ├── sheet-viewer.js     # 악보 찾기, 전체화면/Landscape 뷰어, 스와이프
+│   ├── push.js             # FCM 푸시 알림, 설정 모달
+│   └── share.js            # Canvas 콘티 이미지 생성 및 공유
+├── firebase-config.js   # Firebase/VAPID 키 설정 (미첨 - .gitignore)
+├── firebase-messaging-sw.js  # 서비스 워커 (FCM 백그라운드 알림)
+├── hymn_list.txt        # 전체 찬양 목록 (\n 구분)
+├── lyrics.json          # 가사 데이터
+├── images/              # 악보 이미지 (001.jpg ~ ...)
+├── manifest.json        # PWA 메니페스트
+├── CLAUDE.md            # 프로젝트 갌이드
+└── ROADMAP.md           # 개발 로드맵
+```
 
 ## Firebase 구조
 - Realtime Database URL: `https://score-fetcher-db-default-rtdb.firebaseio.com`
@@ -96,7 +110,7 @@
 - **포그라운드 알림**: 앱 열려있을 때도 `registration.showNotification()`으로 시스템 알림 표시
 - **알림 클릭 시 자동 로드**: 최신 콘티 불러오기 + 악보 만들기 자동 실행
   - 앱 닫힌 경우: `/?autoload=1` URL 파라미터 감지
-  - 앱 열린 경우: SW → 페이지 `postMessage({ type: 'AUTOLOAD_LATEST' })`
+  - 앱 열린 경우: SW → 페이지 `postMessage({ type: 'AUTOLOCAD_LATEST' })`
 - **서비스워커 즉시 활성화**: `skipWaiting()` + `clients.claim()`
 - 푸시 알림 아이콘: `icon.png` (컬러 대형), `badge.svg` (흰색 음표, 모노크롬, 상태바용)
 - **앱 설치 버튼**: standalone 모드가 아니면 항상 표시, 브라우저별 안내 분기
@@ -156,7 +170,7 @@
 
 ### 메인 버튼 그룹 (btn-group)
 | 버튼 | 색상 | 기능 |
-|------|------|------|
+|------|------|
 | 악보 만들기 🎵 | 인디고 그라디언트 | 입력된 곡 번호로 악보 카드 생성 (제목 자동 치환) |
 | 콘티함에 저장 💾 | 에메랄드 그린 `#059669` | Firebase에 현재 콘티 저장 |
 | 콘티 공유하기 🖼️ | 앰버 `#F59E0B` | 콘티 이미지 생성 후 공유 |
@@ -166,15 +180,16 @@
 | 항목 | 상태 |
 |------|------|
 | main 브랜치 | ✅ 최신 (origin/main 동기화 완료) |
-| `origin/claude/project-analysis-briefing-k7yQF` | ✅ main에 이미 머지됨 (원격 브랜치만 잔존) |
-| `origin/feature/push-notification-setup` | ✅ main에 이미 머지됨 (원격 브랜치만 잔존) |
-| 최신 커밋 | `349dfdf` feat: 태블릿 가로 모드 악보 뷰어 전체화면화 (헤더 숨김) |
+| `origin/claude/project-analysis-briefing-k7yQF` | ✅ main에 이미 머지됨 |
+| `origin/feature/push-notification-setup` | ✅ main에 이미 머지됨 |
+| 최신 커밋 | `97b43c7` refactor: index.html 리팩토링 - CSS/JS 분리 (2002줄→373줄) |
 
 ---
 
 ## 변경 이력 (2026-03-25)
 | 커밋 | 내용 |
 |------|------|
+| `97b43c7` | refactor: index.html 리팩토링 - CSS/JS 분리 (2002줄→373줄) |
 | `349dfdf` | 태블릿 가로 모드: 악보 뷰어 중 헤더 숨김 전체화면화 (CSS `:has()` 선택자) |
 | `85385cd` | 모바일 버튼 패딩 쳖소 (17px→13px), 폰트 크기 조정, 스크롤 최소화 |
 | `85385cd` | 태블릿 가로 모드 좌우 높이 단차 해소 (`align-self: stretch`, grid 레이아웃 수정) |
