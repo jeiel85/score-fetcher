@@ -14,26 +14,14 @@ function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
 }
 
 async function startSearch() {
-    let rawText = document.getElementById('song-input').value;
+    const rawText = document.getElementById('song-input').value;
 
-    let allLines = rawText.split('\n').map(line => {
-        let trimmed = line.trim();
-        if (!trimmed) return '';
-        let match = trimmed.match(/^(\d+)[\.\s]*(.*)/);
-        if (match) {
-            let formattedNum = String(match[1]).padStart(3, '0');
-            let titlePart = match[2].trim();
-            if (songArray.length > 0) {
-                const found = songArray.find(s => s.startsWith(formattedNum + ' '));
-                if (found) titlePart = found.substring(formattedNum.length + 1).trim();
-            }
-            return `${formattedNum} ${titlePart}`;
-        }
-        return trimmed;
-    });
-    while (allLines.length > 0 && allLines[allLines.length - 1] === '') allLines.pop();
+    // 공통 정규화: 곡번호 3자리 + 제목 자동 치환
+    const normalized = normalizeContiText(rawText);
+    document.getElementById('song-input').value = normalized;
 
-    document.getElementById('song-input').value = allLines.join('\n');
+    const allLines = normalized.split('\n');
+
 
     const songLines = allLines.filter(l => /^\d+/.test(l));
     if (songLines.length === 0) return alert('곡 리스트를 입력해주세요!');

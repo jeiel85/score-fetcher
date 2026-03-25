@@ -22,15 +22,26 @@ async function saveToHistory() {
 
 async function saveConti() {
     if (!navigator.onLine) { showToast('📴 오프라인 상태에서는 저장되지 않습니다'); return; }
-    const title = document.getElementById('setlist-title').value.trim();
+
+    // 제목 날짜 정규화
+    const titleEl = document.getElementById('setlist-title');
+    titleEl.value = normalizeDateInTitle(titleEl.value);
+
+    const title = titleEl.value.trim();
     if (!title) {
         alert('콘티 제목을 입력해주세요!\n예) 2026-03-20 금요예배');
-        document.getElementById('setlist-title').focus();
+        titleEl.focus();
         return;
     }
-    const inputText = document.getElementById('song-input').value.trim();
-    if (!inputText || inputText.includes('아래 예시처럼 붙여넣어 주세요')) {
-        alert('곡 목록을 입력해주세요!'); return;
+
+    // 공통 정규화: 곡번호 3자리 + 제목 자동 치환
+    const textareaEl = document.getElementById('song-input');
+    const normalizedText = normalizeContiText(textareaEl.value);
+    textareaEl.value = normalizedText;
+
+    if (!normalizedText || normalizedText.includes('아래 예시처럼 붙여넣어 주세요')) {
+        alert('곡 목록을 입력해주세요!');
+        return;
     }
     await saveToHistory();
     alert('콘티가 저장되었습니다! ✅');
@@ -142,3 +153,20 @@ function renderHistoryList(entries) {
 }
 
 function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
+
+// ─── 이력 기반 찬양 사용 빈도 집계 ─────────────────────────────────────────────
+// entries: [[key, { text, ... }], ...]
+function buildSongFrequency(entries) {
+    const freq = {};
+    entries.forEach(([, item]) => {
+        if (!item.text) return;
+        item.text.split('\n').forEach(line => {
+            const m = line.trim().match(/^(\d+)/);
+            if (m) {
+                const num = m[1].padStart(3, '0');
+                freq[num] = (freq[num] || 0) + 1;
+            }
+        });
+    });
+    return freq;
+}

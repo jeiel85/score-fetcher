@@ -1,5 +1,7 @@
 // ─── 찬양 목록 / 가사 ─────────────────────────────────────────────────────────
 
+let _songFreqData = {};  // { '001': 5, '276': 3, ... } 이력 집계 결과
+
 async function initSongList() {
     const container = document.getElementById('songListContainer');
     container.innerHTML = "<li class='song-item' style='text-align:center;'>목록을 불러오는 중입니다... ⏳</li>";
@@ -19,7 +21,19 @@ async function openSongModal() {
     document.getElementById('searchInput').value = '';
     if (songArray.length === 0) await initSongList();
     else renderSongList(songArray);
+
+    // 이력 기반 사용빈도: 캐시 우선 로드, Firebase에서 백그라운드 로드 후 재렌더링
+    const cachedHistory = localStorage.getItem('cachedHistory');
+    if (cachedHistory) {
+        try {
+            _songFreqData = buildSongFrequency(JSON.parse(cachedHistory));
+            renderSongList(document.getElementById('searchInput').value ? null : songArray);
+        } catch(e) {}
+    }
+    // Firebase에서 신선한 데이터 비동기 로드
+    _loadFreqFromFirebase();
 }
+
 
 function closeSongModal() { document.getElementById('songModal').style.display = 'none'; }
 
@@ -75,21 +89,35 @@ function filterSongs() {
 }
 
 function renderSongList(list) {
+    if (!list) return;  // null 면 리렌더링 안함
     const container = document.getElementById('songListContainer');
     container.innerHTML = '';
     list.forEach(song => {
         const li = document.createElement('li');
         li.className = 'song-item';
         const match = song.match(/^(\d+)/);
-        const numRaw = match ? match[1] : '';
+        const numRaw    = match ? match[1] : '';
         const numPadded = numRaw.padStart(3, '0');
-        const title = match ? song.substring(numRaw.length).trim() : song;
+        const title     = match ? song.substring(numRaw.length).trim() : song;
+
+        // 사용 빈도 배지 (0이면 숨김)
+        const freq = match ? (_songFreqData[numPadded] || 0) : 0;
+        if (freq >= 5) li.classList.add('freq-high');
+        else if (freq >= 3) li.classList.add('freq-med');
+        else if (freq >= 1) li.classList.add('freq-low');
 
         const textSpan = document.createElement('span');
         textSpan.className = 'song-item-text';
         textSpan.innerHTML = match ? `<strong>${numRaw}</strong> ${title}` : song;
         textSpan.onclick = () => addSongToInput(song);
         li.appendChild(textSpan);
+
+        if (freq > 0) {
+            const badge = document.createElement('span');
+            badge.className = `freq-badge${freq >= 5 ? ' freq-badge-high' : freq >= 3 ? ' freq-badge-med' : ' freq-badge-low'}`;
+            badge.textContent = `♪${freq}`;
+            li.appendChild(badge);
+        }
 
         const lyricEntry = lyricsData[numPadded];
         if (match && lyricEntry && lyricEntry.lyrics) {
@@ -101,6 +129,25 @@ function renderSongList(list) {
         }
         container.appendChild(li);
     });
+}
+
+// Firebase에서 신선한 이력 로드 후 빈도 계산 (비동기)
+async function _loadFreqFromFirebase() {
+    try {
+        const idToken = await getIdToken();
+        const res = await fetch(`${FIREBASE_URL}?auth=${idToken}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data) return;
+        const entries = Object.entries(data);
+        _songFreqData = buildSongFrequency(entries);
+        // 모달이 열려있는 동안에만 재렌더링
+        if (document.getElementById('songModal').style.display === 'flex') {
+            const kw = document.getElementById('searchInput').value.trim();
+            renderSongList(kw ? null : songArray);
+            if (kw) filterSongs();
+        }
+    } catch(e) { /* silent */ }
 }
 
 function addSongToInput(songLine) {

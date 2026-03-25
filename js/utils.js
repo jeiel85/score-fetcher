@@ -41,3 +41,59 @@ function _fitText(ctx, text, maxW) {
     while (t.length > 0 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
     return t + '…';
 }
+
+// ─── 날짜 정규화: 다양한 형태 → yyyy-mm-dd ──────────────────────────────────
+function normalizeDateInTitle(title) {
+    if (!title || !title.trim()) return title;
+
+    // Step 1: 구분자 있는 형태 (yyyy.m.d / yyyy/mm/dd / yyyy-mm-dd 등)
+    // 이미 올바른 형태도 포함해서 month/day 0패딩 통일
+    let result = title.replace(/(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/g, (_, y, m, d) => {
+        const my = parseInt(y), mm = parseInt(m), md = parseInt(d);
+        if (my >= 2000 && my <= 2099 && mm >= 1 && mm <= 12 && md >= 1 && md <= 31)
+            return `${y}-${String(mm).padStart(2,'0')}-${String(md).padStart(2,'0')}`;
+        return _;
+    });
+
+    // Step 2: yyyymmdd (8자리 연속 숫자)
+    result = result.replace(/(?<!\d)(\d{4})(\d{2})(\d{2})(?!\d)/g, (_, y, m, d) => {
+        const my = parseInt(y), mm = parseInt(m), md = parseInt(d);
+        if (my >= 2000 && my <= 2099 && mm >= 1 && mm <= 12 && md >= 1 && md <= 31)
+            return `${y}-${m}-${d}`;
+        return _;
+    });
+
+    // Step 3: yymmdd (6자리 연속 숫자, 2000년대 가정)
+    result = result.replace(/(?<!\d)(\d{2})(\d{2})(\d{2})(?!\d)/g, (_, y, m, d) => {
+        const mm = parseInt(m), md = parseInt(d);
+        if (mm >= 1 && mm <= 12 && md >= 1 && md <= 31)
+            return `20${y}-${m}-${d}`;
+        return _;
+    });
+
+    return result;
+}
+
+// ─── 콘티 텍스트 정규화: 곡번호 3자리 + 제목 자동 치환 ─────────────────────
+// startSearch, saveConti 양쪽에서 공유 사용
+function normalizeContiText(rawText) {
+    let allLines = rawText.split('\n').map(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return '';
+        const match = trimmed.match(/^(\d+)[\.\s]*(.*)/);
+        if (match) {
+            const formattedNum = String(match[1]).padStart(3, '0');
+            let titlePart = match[2].trim();
+            // 찬양 목록에서 제목 자동 조회 (songArray는 firebase.js에서 전역)
+            if (songArray.length > 0) {
+                const found = songArray.find(s => s.startsWith(formattedNum + ' '));
+                if (found) titlePart = found.substring(formattedNum.length + 1).trim();
+            }
+            return `${formattedNum} ${titlePart}`;
+        }
+        return trimmed;
+    });
+    while (allLines.length > 0 && allLines[allLines.length - 1] === '') allLines.pop();
+    return allLines.join('\n');
+}
+
