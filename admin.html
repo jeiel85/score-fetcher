@@ -492,6 +492,11 @@ async function submitNewSong() {
         
         document.body.style.cursor = 'default';
         alert('✅ 곡 목록이 데이터베이스에 실시간 반영되었습니다!');
+        
+        // 추가: 등록 후 진단기 결과도 최신화
+        if(document.getElementById('orphan-results').style.display === 'block') {
+            checkOrphanImages();
+        }
     } catch(err) {
         document.body.style.cursor = 'default';
         alert('오류: ' + err.message);
@@ -535,8 +540,8 @@ async function checkOrphanImages() {
     try {
         const idToken = await getIdToken();
         
-        // 1. DB 기준 등록 곡 가져오기
-        const dbRes = await fetch(`${FIREBASE_CONFIG.databaseURL}/songs.json?auth=${idToken}`);
+        // 1. DB 기준 등록 곡 가져오기 (캐시 방지를 위해 타임스탬프 추가)
+        const dbRes = await fetch(`${FIREBASE_CONFIG.databaseURL}/songs.json?auth=${idToken}&t=${Date.now()}`);
         let dbSongs = await dbRes.json() || {};
         const dbIds = Object.keys(dbSongs).map(k => dbSongs[k].num);
 
