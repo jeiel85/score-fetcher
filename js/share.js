@@ -181,14 +181,27 @@ function closeSharePreview() {
 
 async function doShareConti() {
     if (!_shareFile || !_shareCanvas) return;
-    closeSharePreview();
-    const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [_shareFile] });
+
+    // 공유 전에 지역 변수에 먼저 저장 (closeSharePreview가 null로 초기화하기 때문)
+    const shareFile   = _shareFile;
+    const shareCanvas = _shareCanvas;
+    const shareTitle  = _shareTitle;
+
+    const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [shareFile] });
     if (canShareFiles) {
-        try { await navigator.share({ title: _shareTitle || '콘티 공유', files: [_shareFile] }); return; }
-        catch (e) { if (e.name === 'AbortError') return; }
+        try {
+            await navigator.share({ title: shareTitle || '콘티 공유', files: [shareFile] });
+            closeSharePreview();
+            return;
+        } catch (e) {
+            if (e.name === 'AbortError') return; // 사용자가 공유 취소
+            // 공유 실패 시 다운로드로 폴백
+        }
     }
+    // 웹 공유 API 미지원 또는 실패 시 다운로드
     const a = document.createElement('a');
-    a.download = _shareFile.name;
-    a.href = _shareCanvas.toDataURL('image/png');
+    a.download = shareFile.name;
+    a.href = shareCanvas.toDataURL('image/png');
     a.click();
+    closeSharePreview();
 }
