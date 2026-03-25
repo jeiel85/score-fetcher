@@ -554,6 +554,12 @@
             }
         }
 
+        /* ─── 태블릿 가로 ls-active: 헤더 숨기고 전체화면 ─── */
+        @media (min-width: 768px) {
+            body:has(.app-layout.ls-active) header { display: none; }
+            body:has(.app-layout.ls-active) main   { padding-top: 10px; }
+        }
+
         /* ─── Settings Modal ─── */
         #settingsModal { padding: 0; }
         .settings-content {
