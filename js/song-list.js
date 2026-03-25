@@ -83,8 +83,16 @@ async function initSongList() {
 async function openSongModal() {
     document.getElementById('songModal').style.display = 'flex';
     document.getElementById('searchInput').value = '';
-    if (songArray.length === 0) await initSongList();
-    else renderSongList(songArray);
+
+    if (songArray.length === 0) {
+        // 첫 진입: 전체 초기화 (캐시 우선 + Firebase 동기화)
+        await initSongList();
+    } else {
+        // 이미 로드된 적 있으면 캐시로 즉시 렌더링 후,
+        // 백그라운드에서 Firebase 최신 데이터 재동기화 (새로 등록된 곡 반영)
+        renderSongList(songArray);
+        initSongList();  // await 없이 백그라운드 실행 → 변경사항 있으면 자동 재렌더링
+    }
 
     // 이력 기반 사용빈도: 캐시 우선 로드, Firebase에서 백그라운드 로드 후 재렌더링
     const cachedHistory = localStorage.getItem('cachedHistory');
@@ -94,7 +102,7 @@ async function openSongModal() {
             renderSongList(document.getElementById('searchInput').value ? null : songArray);
         } catch(e) {}
     }
-    // Firebase에서 신선한 데이터 비동기 로드
+    // Firebase에서 신선한 이력 데이터 비동기 로드
     _loadFreqFromFirebase();
 }
 

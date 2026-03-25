@@ -29,6 +29,10 @@
 - **원인**: `doShareConti()`에서 `closeSharePreview()` 먼저 호출 → `_shareFile`, `_shareCanvas`가 null로 초기화 후 공유 시도
 - **수정**: 지역 변수에 파일/캔버스 사전 저장 후, 공유/다운로드 완료 후 팝업 닫기
 
+### 🐛 새 찬양 등록 후 앱 목록 미갱신 버그 수정 (`js/song-list.js`) — 17:18
+- **원인**: `openSongModal()`에서 `songArray`(메모리 캐시)가 비어있을 때만 `initSongList()` 호출 → 두 번째 이후 모달 열면 Firebase 재조회 없이 구버전 캐시만 렌더링
+- **수정**: 모달 열 때 `songArray`가 있어도 항상 `initSongList()`를 백그라운드 실행 → Firebase에 변경사항 있으면 자동 재렌더링 (UX 영향 없음 — 우선 캐시로 즉시 표시 후 최신화)
+
 ### 🛠 관리자 대시보드 (`admin.html`) 구축 & 기능 확장
 - `importer.html`을 `admin.html`로 리팩토링, 탭 인터페이스 도입
 - **탭 1 : 역대 콘티 관리**
