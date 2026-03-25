@@ -1,4 +1,5 @@
 # 🗺️ score-fetcher 개발 로드맵
+### `Current Version: v1.1.0` (2026.03.25)
 
 > 최종 목표: 웹 PWA → Capacitor 기반 Android / iOS 네이티브 앱 출시
 

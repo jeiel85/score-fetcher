@@ -4,6 +4,8 @@
 > **콘티 입력부터 악보 검색, 전체화면 뷰어, 실시간 이력 공유, 푸시 알림까지 — 찬양팀 리더를 위한 스마트 워크플로우 도구**
 
 [![배포](https://img.shields.io/badge/배포-score--fetcher.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
+![Version](https://img.shields.io/badge/version-v1.1.0-blue?style=flat-square)
+![Build](https://img.shields.io/badge/build-2026.03.25-green?style=flat-square)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
@@ -179,14 +181,14 @@ npx vercel --prod
 
 ## 🔄 변경 이력
 
-| 버전 | 내용 |
-|------|------|
-| v5.0 | FCM 알림 개선 — 발신자 제외, 콘티 제목 포함, 포그라운드 시스템 알림, 중복 토큰 방지, 알림 클릭 자동 로드 |
-| v4.0 | 버튼 이름·위치 개편, Wake Lock 항상 ON, 가사 통합 검색, Firebase 익명 인증, 공유 미리보기 개선 |
-| v3.0 | 전체화면 악보 뷰어 (스와이프·버튼 네비게이션), FCM 푸시 알림, Cloud Functions 연동, 콘티 공유 이미지 |
-| v2.1 | 지난 콘티 클릭 시 내용 불러오기, Open Graph 링크 미리보기, GitHub 푸터 |
-| v2.0 | Firebase 연동, Wake Lock, 전체 곡 목록 모달 |
-| v1.x | Google Sheets 기반 초기 버전 |
+| 버전 | 날짜 | 내용 |
+|------|------|------|
+| **v1.1.0** | **2026.03.25** | **관리자 대시보드 구축, 실시간 곡/가사 DB 마이그레이션, 공유/동기화 버그 수정** |
+| v1.0.0 | 2026.03.24 | Digital Maestro 디자인 리뉴얼, 폰트(Manrope/Inter) 적용 |
+| v0.5.x | 2026.03.23 | FCM 알림 개선 — 발송자 제외, 알림 클릭 시 자동 로드 |
+| v0.4.x | 2026.03.20 | 버튼 UX 개편, 가사 서칭 추가, Firebase 익명 인증 |
+| v0.3.x | 2026.03.15 | 전체화면 악보 뷰어 및 스와이프 제스처 도입 |
+| v0.1.x | 2026.03.01 | Google Sheets 기반 초기 버전 |
 
 ---
 
