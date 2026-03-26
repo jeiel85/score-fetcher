@@ -263,18 +263,28 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
     right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(24, 29, 58, 0.45); /* 다소 어둡게 */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 20px;
     padding: 8px 3px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
     z-index: 100;
     user-select: none;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    
+    /* 🌟 평상시엔 숨김 (스크롤 시 활성화) */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quick-index-nav.visible {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .index-dot {
@@ -315,11 +325,6 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
 .song-item:active { background-color: var(--surface-low); }
 .song-item strong { color: var(--primary); margin-right: 6px; font-weight: 700; }
 .song-item-text { flex: 1; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* 🌟 퀵 이동 버튼 겹침 방지: 네비게이션이 있을 때만 여백 추가 */
-.modal-body.has-quick-nav .song-item {
-    padding-right: 42px;
-}
 
 .history-item {
     display: flex; flex-direction: column;

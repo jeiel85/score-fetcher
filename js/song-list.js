@@ -317,9 +317,13 @@ async function _loadFreqFromFirebase() {
         const res = await fetch(`${FIREBASE_URL}?auth=${idToken}`);
         if (!res.ok) return;
         const data = await res.json();
-        if (!data) return;
+        
+        // ⚠️ 에러 응답이나 데이터가 없는 경우 무시 (기존 빈도 유지)
+        if (!data || data.error) return;
+
         const entries = Object.entries(data);
         _songFreqData = buildSongFrequency(entries);
+        
         // 모달이 열려있는 동안에만 재렌더링
         if (document.getElementById('songModal').style.display === 'flex') {
             const kw = document.getElementById('searchInput').value.trim();
@@ -327,6 +331,33 @@ async function _loadFreqFromFirebase() {
             if (kw) filterSongs();
         }
     } catch(e) { /* silent */ }
+}
+
+// ─── 퀵 이동 버튼 자동 숨김 로직 ───
+let _quickNavTimer = null;
+function handleQuickNavVisibility() {
+    const nav = document.getElementById('quickIndexNav');
+    if (!nav || nav.style.display === 'none') return;
+
+    nav.classList.add('visible');
+    
+    if (_quickNavTimer) clearTimeout(_quickNavTimer);
+    _quickNavTimer = setTimeout(() => {
+        nav.classList.remove('visible');
+    }, 1500); // 1.5초 후 숨김
+}
+
+// 스크롤 이벤트 리스너 등록 (안정적 초기화)
+function _initScrollListener() {
+    const container = document.getElementById('songListContainer');
+    if (container) {
+        container.addEventListener('scroll', handleQuickNavVisibility);
+    }
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _initScrollListener);
+} else {
+    _initScrollListener();
 }
 
 function addSongToInput(songLine) {
