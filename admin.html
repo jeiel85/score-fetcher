@@ -1322,9 +1322,9 @@ async function migrateSongs() {
         log.innerText = `총 ${Object.keys(payload).length}곡 추출 완료. Firebase PUT 업로드 중... 🚀`;
         const idToken = await getIdToken();
         
-        // 🚨 PUT을 사용하여 컬렉션 통째로 덮어쓰기 (가장 깔끔함)
+        // 🚨 PATCH를 사용하여 기존 데이터를 유지하며 병합 (중요!)
         const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/songs.json?auth=${idToken}`, {
-            method: 'PUT',
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
@@ -1356,8 +1356,9 @@ async function migrateLyrics() {
         });
         
         const idToken = await getIdToken();
+        // 🚨 PATCH를 사용하여 기존 가사는 놔두고 새 가사만 업데이트/추가
         const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/lyrics.json?auth=${idToken}`, {
-            method: 'PUT',
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
