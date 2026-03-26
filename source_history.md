@@ -7,8 +7,10 @@
 
 ## 🚀 주요 마일스톤 (Timeline)
 
+### 🐛 2026-03-26: Firebase Database SDK 누락 수정 (v1.3.6)
+- **SDK 추가**: `index.html`과 `admin.html` 하단에 `firebase-database-compat.js`가 포함되지 않아 발생하던 `firebase.database is undefined` 오류를 해결하기 위해 필수 SDK 스크립트 추가 완료.
+
 ### 🛡️ 2026-03-26: 가사 신고 전송 안정화 (v1.3.5)
-- **SDK 방식 전환**: `fetch` API 대신 이미 로드된 Firebase SDK를 직접 사용하여 데이터를 전송하도록 변경. 인증 토큰 관리가 자동화되어 전송 실패 문제를 원천적으로 해결.
 
 ### 🐛 2026-03-26: 가사 신고 서버 연동 오류 최종 해결 (v1.3.4)
 
