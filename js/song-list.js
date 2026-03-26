@@ -265,17 +265,19 @@ function renderSongList(list) {
 // 🌟 퀵 인덱스 네비게이터 렌더링 🌟
 function renderQuickIndex(currentList) {
     const nav = document.getElementById('quickIndexNav');
-    if (!nav) return;
+    const container = document.getElementById('songListContainer');
+    if (!nav || !container) return;
 
     // 검색 중(필터링 상태)이거나 리스트가 너무 짧으면 숨김
     const searchVal = document.getElementById('searchInput').value.trim();
     if (searchVal !== "" || currentList.length < 50) {
         nav.style.display = 'none';
+        container.classList.remove('has-quick-nav');
         return;
     }
-    // ... (이하 동일)
 
     nav.style.display = 'flex';
+    container.classList.add('has-quick-nav');
     nav.innerHTML = '';
 
     // 100단위로 인덱스 추출 (1, 100, 200, ...)

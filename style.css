@@ -316,6 +316,11 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
 .song-item strong { color: var(--primary); margin-right: 6px; font-weight: 700; }
 .song-item-text { flex: 1; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* 🌟 퀵 이동 버튼 겹침 방지: 네비게이션이 있을 때만 여백 추가 */
+.modal-body.has-quick-nav .song-item {
+    padding-right: 42px;
+}
+
 .history-item {
     display: flex; flex-direction: column;
     align-items: flex-start; text-align: left;

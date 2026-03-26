@@ -19,6 +19,10 @@
       ".read": "auth != null",
       ".write": "auth != null"
     },
+    "reports": {
+      ".read": "auth.token.email == 'jeiel85@gmail.com'",
+      ".write": "auth != null"
+    },
     "settings": {
       ".read": "auth.token.email == 'jeiel85@gmail.com'",
       ".write": "auth.token.email == 'jeiel85@gmail.com'"
