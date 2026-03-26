@@ -100,8 +100,8 @@ function normalizeContiText(rawText) {
     return allLines.join('\n');
 }
 // ─── 버전 관리 ────────────────────────────────────────────────────────────
-const APP_VERSION = "v1.1.0";
-const BUILD_DATE  = "2026.03.25";
+const APP_VERSION = "v1.5.6";
+const BUILD_DATE  = "2026.03.26";
 
 function initVersionDisplay() {
     const footer = document.querySelector('footer');

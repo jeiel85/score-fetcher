@@ -5,7 +5,7 @@
 
 [![배포](https://img.shields.io/badge/배포-score--fetcher.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
 [![관리자](https://img.shields.io/badge/관리자-admin.html-indigo?style=flat-square&logo=google-cloud&logoColor=white)](https://score-fetcher.vercel.app/admin.html)
-![Version](https://img.shields.io/badge/version-v1.2.1-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-v1.5.6-blue?style=flat-square)
 ![Build](https://img.shields.io/badge/build-2026.03.26-indigo?style=flat-square)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
@@ -85,7 +85,7 @@
 
 ```
 score-fetcher/
-├── index.html              # 메인 앱 (v1.2.1)
+├── index.html              # 메인 앱 (v1.5.6)
 ├── admin.html              # 관리자 대시보드 (통합 관리 툴)
 ├── manifest.json           # PWA 설정
 ├── firebase-messaging-sw.js  # FCM 서비스 워커
@@ -181,7 +181,9 @@ npx vercel --prod
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
-| **v1.1.0** | **2026.03.25** | **관리자 대시보드 구축, 실시간 곡/가사 DB 마이그레이션, 공유/동기화 버그 수정** |
+| **v1.5.6** | **2026.03.26** | **성능 최적화 (지능형 프리페칭), 관리자 통계 대시보드(Chart.js), 반응형 UX 개선** |
+| v1.5.5 | 2026.03.26 | 가로 모드 메타 정보 가독성 보정 및 최종 릴리즈 |
+| v1.1.0 | 2026.03.25 | 관리자 대시보드 구축, 실시간 곡/가사 DB 마이그레이션, 공유/동기화 버그 수정 |
 | v1.0.0 | 2026.03.24 | Digital Maestro 디자인 리뉴얼, 폰트(Manrope/Inter) 적용 |
 | v0.5.x | 2026.03.23 | FCM 알림 개선 — 발송자 제외, 알림 클릭 시 자동 로드 |
 | v0.4.x | 2026.03.20 | 버튼 UX 개편, 가사 서칭 추가, Firebase 익명 인증 |

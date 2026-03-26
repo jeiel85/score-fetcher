@@ -1,15 +1,22 @@
 // ─── 악보 찾기 & 뷰어 ────────────────────────────────────────────────────────
 
-function tryLoadImage(imgElement, songNum, extIndex, onSuccess) {
+function tryLoadImage(imgElement, songNum, extIndex, onDone) {
     if (extIndex >= EXTENSIONS.length) {
         imgElement.style.display = 'none';
-        imgElement.parentElement.innerHTML += `<p class="error-msg">❌ images/${songNum} 없음</p>`;
+        // 부모에 에러 메시지가 중복되지 않도록 확인 후 추가
+        if (!imgElement.parentElement.querySelector('.error-msg')) {
+            const errP = document.createElement('p');
+            errP.className = 'error-msg';
+            errP.textContent = `❌ images/${songNum} 없음`;
+            imgElement.parentElement.appendChild(errP);
+        }
+        onDone(null);
         return;
     }
     const trySrc = `images/${songNum}${EXTENSIONS[extIndex]}`;
     const tempImg = new Image();
-    tempImg.onload = () => { imgElement.src = trySrc; onSuccess(trySrc); };
-    tempImg.onerror = () => { tryLoadImage(imgElement, songNum, extIndex + 1, onSuccess); };
+    tempImg.onload = () => { imgElement.src = trySrc; onDone(trySrc); };
+    tempImg.onerror = () => { tryLoadImage(imgElement, songNum, extIndex + 1, onDone); };
     tempImg.src = trySrc;
 }
 
@@ -107,7 +114,17 @@ function updateFullscreenTitle(index) {
 function openFullscreen(index) {
     currentSheetIndex = index;
     const sheet = sheetList[index];
-    document.getElementById('fullscreen-img').src = sheet.src;
+    if (!sheet) return;
+    
+    const imgEl = document.getElementById('fullscreen-img');
+    if (sheet.src) {
+        imgEl.src = sheet.src;
+        imgEl.style.display = 'block';
+    } else {
+        imgEl.src = "";
+        imgEl.style.display = 'none';
+    }
+    
     updateFullscreenTitle(index);
     document.getElementById('fullscreenViewer').style.display = 'flex';
     updateNavBtns();
@@ -117,11 +134,7 @@ function navigateSheet(dir) {
     let newIndex = currentSheetIndex + dir;
     while (newIndex >= 0 && newIndex < sheetList.length && !sheetList[newIndex]) newIndex += dir;
     if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;
-    currentSheetIndex = newIndex;
-    const sheet = sheetList[currentSheetIndex];
-    document.getElementById('fullscreen-img').src = sheet.src;
-    updateFullscreenTitle(currentSheetIndex);
-    updateNavBtns();
+    openFullscreen(newIndex);
 }
 
 function updateNavBtns() {
@@ -140,7 +153,16 @@ function showLsSheet(index) {
     const sheet = sheetList[index];
     if (!sheet) return;
     currentSheetIndex = index;
-    document.getElementById('ls-sheet-img').src = sheet.src;
+    
+    const imgEl = document.getElementById('ls-sheet-img');
+    if (sheet.src) {
+        imgEl.src = sheet.src;
+        imgEl.style.display = 'block';
+    } else {
+        imgEl.src = "";
+        imgEl.style.display = 'none';
+    }
+    
     document.getElementById('ls-sheet-title').textContent =
         `${sheet.label}  (${visibleSheetRank(index)}/${visibleSheetCount()})`;
     updateLsNavBtns();

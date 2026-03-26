@@ -26,7 +26,6 @@ async function getIdToken() {
     return user ? user.getIdToken() : null;
 }
 
-const EXTENSIONS = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
 
 let songArray  = [];
 let lyricsData = {};
