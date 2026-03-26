@@ -303,13 +303,15 @@
 
         .zoom-close-fixed {
             position: fixed; top: 20px; right: 20px; 
-            width: 44px; height: 44px; background: rgba(0,0,0,0.5);
+            width: 50px; height: 50px; background: rgba(0,0,0,0.7);
             color: #fff; font-size: 32px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 3010; transition: background 0.2s;
-            border: 1px solid rgba(255,255,255,0.2);
+            cursor: pointer; z-index: 9999; transition: all 0.2s; /* 절대적인 z-index */
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-        .zoom-close-fixed:hover { background: rgba(255,255,255,0.2); }
+        .zoom-close-fixed:hover { background: #f43f5e; border-color: #fff; transform: scale(1.1); }
+        .zoom-close-fixed:active { transform: scale(0.9); }
         
         @media (max-width: 768px) {
             .modal-grid { grid-template-columns: 1fr; }
@@ -537,13 +539,13 @@
         </div>
     </div>
 
-    <!-- 악보 전체보기(확대) 모달 (구조 개편) -->
-    <div class="zoom-overlay" id="imageZoomModal">
-        <div class="zoom-overlay-bg" onclick="closeZoomModal()"></div>
-        <div class="zoom-content" onclick="closeZoomModal()">
+    <!-- 악보 전체보기(확대) 모달 (최종 구조) -->
+    <div class="zoom-overlay" id="imageZoomModal" onclick="closeZoomModal(event)">
+        <div class="zoom-overlay-bg"></div>
+        <div class="zoom-content">
             <img id="zoom-img" src="" alt="악보 크게 보기" onclick="event.stopPropagation(); toggleZoom(this)">
         </div>
-        <div class="zoom-close-fixed" onclick="closeZoomModal()">×</div>
+        <div class="zoom-close-fixed" onclick="event.stopPropagation(); closeZoomModal(event)">×</div>
     </div>
 </div> <!-- /TAB 5 -->
 
@@ -658,7 +660,7 @@
 
 <script>
 // ─── 버전 및 설정 ────────────────────────────────────────────────────────
-const APP_VERSION = "v1.4.9";
+const APP_VERSION = "v1.5.0";
 const BUILD_DATE  = "2026.03.26";
 document.addEventListener('DOMContentLoaded', () => {
     const v = document.getElementById('admin-version-info');
@@ -1744,16 +1746,17 @@ function openZoomImage(src) {
     document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
 }
 
-function closeZoomModal() {
+function closeZoomModal(e) {
+    if(e) e.stopPropagation();
     const modal = document.getElementById('imageZoomModal');
     modal.classList.remove('active');
     document.body.style.overflow = ''; // 스크롤 복원
 }
 
 function toggleZoom(img) {
+    // toggleZoom(img) 에서 img 파라미터가 없으면 내부에서 가져오도록 보완
     const modal = document.getElementById('imageZoomModal');
     modal.classList.toggle('original');
-    // 줌 모드 전환 시 스크롤 최상단으로 (선택 사항)
     if(modal.classList.contains('original')) modal.scrollTop = 0;
 }
 
