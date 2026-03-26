@@ -1,11 +1,11 @@
-# 🎵 찬양 악보 매니저
-### Praise Sheet Music Manager
+# 🎵 콘티 메이커 (Conti Maker)
+### Premium Praise Setlist & Sheet Music Manager
 
 > **콘티 입력부터 악보 검색, 전체화면 뷰어, 실시간 이력 공유, 푸시 알림까지 — 찬양팀 리더를 위한 스마트 워크플로우 도구**
 
-[![배포](https://img.shields.io/badge/배포-score--fetcher.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
-![Version](https://img.shields.io/badge/version-v1.1.0-blue?style=flat-square)
-![Build](https://img.shields.io/badge/build-2026.03.25-green?style=flat-square)
+[![배포](https://img.shields.io/badge/배포-conti--maker.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
+![Version](https://img.shields.io/badge/version-v1.2.0-blue?style=flat-square)
+![Build](https://img.shields.io/badge/build-2026.03.26-indigo?style=flat-square)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
@@ -50,22 +50,18 @@
 - **Firebase Cloud Functions** — 서버리스 함수로 알림 처리 (`us-central1`)
 - **중복·만료 토큰 자동 정리** — 중복 등록된 토큰 제거, 발송 실패 토큰 DB에서 자동 삭제
 
-### 📖 전체 곡 목록 검색
-- **691곡 내장** — `hymn_list.txt` 기반의 전체 곡 검색 모달
-- **실시간 필터** — 번호 또는 제목으로 즉시 검색
-- **클릭으로 추가** — 곡을 클릭하면 입력창에 바로 추가
+### 📖 전체 곡 목록 & 퀵 인덱스
+- **691+곡 내장** — Firebase DB 연동을 통한 실시간 곡 목록 관리
+- **퀵 인덱스 바** — 600곡이 넘는 리스트를 100단위로 즉시 점프하는 내비게이터 (Apple 스타일)
+- **가사 오류 신고** — 사용자가 즉시 오류를 제보하고 관리자가 대시보드에서 처리하는 시스템
 
-### 💡 화면 꺼짐 방지
-- **Wake Lock API** — 앱 사용 중 화면 자동 꺼짐 항상 차단 (별도 버튼 없음, 자동 활성)
-- **자동 재획득** — 탭 복귀 시 Wake Lock 자동 재요청
+### 💡 하이엔드 사용성
+- **화면 꺼짐 방지** — 앱 사용 중 화면 자동 꺼짐 항상 차단 (Wake Lock API)
+- **반응형 관리자 페이지** — 모바일/PC 어디서나 콘티와 곡 데이터를 관리하는 강력한 대시보드
+- **PWA 지원** — 홈 화면 추가를 통해 앱처럼 설치하고 실행
 
-### 📱 PWA 지원
-- **홈 화면 추가** — 스마트폰 홈 화면에 앱 아이콘으로 설치 가능
-- **스탠드얼론 모드** — 브라우저 UI 없이 앱처럼 실행
-
-### 🔗 링크 미리보기 (Open Graph)
-- 카카오톡, 슬랙, 디스코드 등에서 링크 공유 시 미리보기 카드 표시
-- `og-image.svg` — 1200×630 전용 OG 이미지 내장
+### 🔗 소셜 공유 (Open Graph)
+- 카카오톡, 슬랙 공유 시 **블랙 테마 프리미엄 카드** 이미지(`og-image.png`) 표시
 
 ---
 
