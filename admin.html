@@ -273,6 +273,14 @@
         .field-row label { font-size: 12px; color: #94a3b8; font-weight: 600; }
         .field-row input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; color: #fff; font-size: 14px; }
         #edit-lyrics-text { flex: 1; height: 100%; margin-bottom: 0; resize: none; overflow-y: auto; }
+
+        /* Fullscreen Image Preview */
+        .zoom-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000;
+            display: none; align-items: center; justify-content: center; cursor: zoom-out;
+        }
+        .zoom-overlay.active { display: flex; }
+        .zoom-overlay img { max-width: 98%; max-height: 98%; object-fit: contain; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
         
         @media (max-width: 768px) {
             .modal-grid { grid-template-columns: 1fr; }
@@ -475,7 +483,7 @@
             </div>
             <div class="modal-body">
                 <div class="modal-grid">
-                    <div class="modal-score-wrap">
+                    <div class="modal-score-wrap" style="cursor:zoom-in;" onclick="openZoomImage(document.getElementById('edit-modal-img').src)">
                         <img id="edit-modal-img" src="" alt="악보 미리보기">
                     </div>
                     <div class="modal-fields-wrap">
@@ -498,6 +506,12 @@
                 <button class="btn btn-primary" id="btn-save-lyrics" onclick="saveEditedLyrics()">✅ 수정 및 완료</button>
             </div>
         </div>
+    </div>
+
+    <!-- 악보 전체보기(확대) 모달 -->
+    <div class="zoom-overlay" id="imageZoomModal" onclick="this.classList.remove('active')">
+        <img id="zoom-img" src="" alt="악보 크게 보기">
+        <div style="position:fixed; top:20px; right:20px; color:#fff; font-size:24px; cursor:pointer;">×</div>
     </div>
 </div> <!-- /TAB 5 -->
 
@@ -612,7 +626,7 @@
 
 <script>
 // ─── 버전 및 설정 ────────────────────────────────────────────────────────
-const APP_VERSION = "v1.4.4";
+const APP_VERSION = "v1.4.5";
 const BUILD_DATE  = "2026.03.26";
 document.addEventListener('DOMContentLoaded', () => {
     const v = document.getElementById('admin-version-info');
@@ -1687,6 +1701,15 @@ function switchTab(id) {
     if (id === 'reports') loadReports();
 }
 
+// ─── 유틸 ────────────────────────────────────────────────────────
+function openZoomImage(src) {
+    if(!src || src.includes('data:image')) return;
+    const modal = document.getElementById('imageZoomModal');
+    const img = document.getElementById('zoom-img');
+    img.src = src;
+    modal.classList.add('active');
+}
+
 async function loadReports() {
     const tbody = document.getElementById('reports-tbody');
     const emptyDiv = document.getElementById('reports-empty');
@@ -1725,8 +1748,10 @@ async function loadReports() {
             return `<tr style="${isCompleted ? 'opacity:0.5' : ''}">
                 <td style="font-size:11px; color:#94a3b8;">${date}</td>
                 <td>
-                    <div style="width:40px; height:40px; background:#0f172a; border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
-                        <img src="${thumbUrl}" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; if(!this.src.includes('.jpg')) this.src='images/${pureNum}.jpg'; else this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';">
+                    <div style="width:40px; height:40px; background:#0f172a; border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); cursor:zoom-in;">
+                        <img src="${thumbUrl}" style="width:100%; height:100%; object-fit:cover;" 
+                             onclick="openZoomImage(this.src)"
+                             onerror="this.onerror=null; if(!this.src.includes('.jpg')) this.src='images/${pureNum}.jpg'; else this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';">
                     </div>
                 </td>
                 <td style="font-weight:700; color:#fca5a5; font-size:12px;">${item.songNum}번</td>
