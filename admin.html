@@ -511,9 +511,9 @@
     </div>
 
     <!-- 악보 전체보기(확대) 모달 -->
-    <div class="zoom-overlay" id="imageZoomModal" onclick="if(event.target===this)this.classList.remove('active')">
-        <img id="zoom-img" src="" alt="악보 크게 보기" onclick="toggleZoom(this)">
-        <div style="position:fixed; top:20px; right:20px; color:#fff; font-size:32px; cursor:pointer; text-shadow:0 0 10px rgba(0,0,0,0.8);" onclick="document.getElementById('imageZoomModal').classList.remove('active')">×</div>
+    <div class="zoom-overlay" id="imageZoomModal" onclick="this.classList.remove('active')">
+        <img id="zoom-img" src="" alt="악보 크게 보기" onclick="event.stopPropagation(); toggleZoom(this)">
+        <div style="position:fixed; top:20px; right:20px; color:#fff; font-size:32px; cursor:pointer; text-shadow:0 0 10px rgba(0,0,0,0.8); z-index: 3001;" onclick="document.getElementById('imageZoomModal').classList.remove('active')">×</div>
     </div>
 </div> <!-- /TAB 5 -->
 
@@ -628,7 +628,7 @@
 
 <script>
 // ─── 버전 및 설정 ────────────────────────────────────────────────────────
-const APP_VERSION = "v1.4.7";
+const APP_VERSION = "v1.4.8";
 const BUILD_DATE  = "2026.03.26";
 document.addEventListener('DOMContentLoaded', () => {
     const v = document.getElementById('admin-version-info');
