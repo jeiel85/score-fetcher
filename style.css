@@ -647,4 +647,32 @@ footer svg { width: 16px; height: 16px; fill: currentColor; }
 .song-item.freq-high:active { background: rgba(239, 68, 68, 0.10); }
 .song-item.freq-med:active  { background: rgba(245, 158, 11, 0.12); }
 .song-item.freq-low:active  { background: rgba(34, 197, 94, 0.10); }
+/* 🛠️ 가사 오류 신고 버튼 */
+.btn-report {
+    background: rgba(244, 63, 94, 0.08);
+    color: #fda4af;
+    border: 1px solid rgba(244, 63, 94, 0.15);
+    padding: 7px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Inter', -apple-system, sans-serif;
+}
 
+.btn-report:hover {
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.1);
+}
+
+.btn-report:active {
+    transform: scale(0.95);
+}
+
+.modal-footer {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 0 0 var(--r-xl) var(--r-xl);
+}

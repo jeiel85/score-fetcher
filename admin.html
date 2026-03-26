@@ -222,6 +222,7 @@
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('history')" id="btn-tab-history">📜 역대 콘티 관리</button>
         <button class="tab-btn" onclick="switchTab('register')" id="btn-tab-register">🎵 새 찬양 등록</button>
+        <button class="tab-btn" onclick="switchTab('reports')" id="btn-tab-reports">🚨 가사 신고 관리</button>
         <button class="tab-btn" onclick="switchTab('import')" id="btn-tab-import">📥 대량 임포트 툴</button>
         <button class="tab-btn" onclick="switchTab('migration')" id="btn-tab-migration">📦 곡/가사 DB 통폐합</button>
     </div>
@@ -350,6 +351,33 @@
         </button>
     </div>
 </div>
+
+<!-- TAB 5: 가사 신고 관리 -->
+<div id="tab-reports" class="tab-content">
+    <div class="card" style="border-color: #f43f5e; background: rgba(244,63,94,0.05);">
+        <h2 style="color: #fda4af;">🚨 가사 오류 신고 내역</h2>
+        <p style="font-size: 13px; color: #fecdd3; margin-bottom: 16px;">사용자들이 가사 팝업에서 "신고" 버튼을 누른 내역입니다. 확인 후 가사를 수정하고 삭제하세요.</p>
+        
+        <div class="history-table-wrap">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">날짜/시간</th>
+                        <th style="width: 80px;">곡 번호</th>
+                        <th>상태</th>
+                        <th style="width: 80px;">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="reports-tbody">
+                    <tr><td colspan="4" style="text-align:center;">신고 내역을 불러오는 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="reports-empty" style="display:none; text-align:center; padding:40px; color:#64748b;">
+            🎉 깨끗합니다! 신고된 가사 오류가 없습니다.
+        </div>
+    </div>
+</div> <!-- /TAB 5 -->
 
 <!-- TAB 2: 데이터 임포트 -->
 <div id="tab-import" class="tab-content">
@@ -1456,6 +1484,69 @@ async function migrateLyrics() {
     } catch(err) {
         log.innerText = '❌ 오류: ' + err.message;
     } finally { btn.disabled = false; }
+}
+
+function switchTab(id) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    const btn = document.getElementById(`btn-tab-${id}`);
+    const content = document.getElementById(`tab-${id}`);
+    if (btn) btn.classList.add('active');
+    if (content) content.classList.add('active');
+
+    // 탭별 데이터 로딩 트리거
+    if (id === 'history') loadHistoryPage();
+    if (id === 'reports') loadReports();
+}
+
+async function loadReports() {
+    const tbody = document.getElementById('reports-tbody');
+    const emptyDiv = document.getElementById('reports-empty');
+    if (!tbody) return;
+
+    try {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">신고 내역을 불러오는 중... ⏳</td></tr>';
+        const idToken = await getIdToken();
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/reports.json?auth=${idToken}`);
+        const data = await res.json();
+
+        if (!data) {
+            tbody.innerHTML = '';
+            emptyDiv.style.display = 'block';
+            return;
+        }
+
+        emptyDiv.style.display = 'none';
+        const reports = Object.entries(data).map(([key, val]) => ({ key, ...val }));
+        reports.sort((a, b) => b.timestamp - a.timestamp); // 최신 순
+
+        tbody.innerHTML = reports.map(item => {
+            const date = item.dateStr || new Date(item.timestamp).toLocaleString();
+            return `<tr>
+                <td style="font-size:12px; color:#94a3b8;">${date}</td>
+                <td style="font-weight:700; color:#fca5a5;">${item.songNum}번</td>
+                <td style="font-size:13px; color:#cbd5e1;">가사 오류 제보됨</td>
+                <td>
+                    <button class="action-btn" onclick="deleteReport('${item.key}')">삭제</button>
+                </td>
+            </tr>`;
+        }).join('');
+
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#ef4444;">오류: ${err.message}</td></tr>`;
+    }
+}
+
+async function deleteReport(key) {
+    if (!confirm('신고 내역을 삭제하시겠습니까? (수정 완료 후 삭제를 권장합니다)')) return;
+    try {
+        const idToken = await getIdToken();
+        await fetch(`${FIREBASE_CONFIG.databaseURL}/reports/${key}.json?auth=${idToken}`, { method: 'DELETE' });
+        loadReports(); // 새로고침
+    } catch (err) {
+        alert('삭제 실패: ' + err.message);
+    }
 }
 
 // 최초 로딩 트리거

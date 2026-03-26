@@ -127,9 +127,13 @@ async function initLyrics() {
     }
 }
 
+let _lastLyricsNum = null; // 마지막으로 본 가사 번호 저장용
+
 function showLyrics(numPadded, displayTitle) {
+    _lastLyricsNum = numPadded; // 신고를 위해 번호 기억
     const d = lyricsData[numPadded];
     document.getElementById('lyrics-title').textContent = `🎵 ${displayTitle}`;
+    // ... (이하 동일)
     const tagsEl = document.getElementById('lyrics-tags');
     if (d && d.tags && d.tags.length > 0) {
         tagsEl.innerHTML = d.tags.map(t => `<span class="tag-chip">${t}</span>`).join('');
@@ -138,6 +142,62 @@ function showLyrics(numPadded, displayTitle) {
     document.getElementById('lyrics-content').textContent = (d && d.lyrics) ? d.lyrics : '가사 데이터가 없습니다.';
     document.getElementById('lyricsModal').style.display = 'flex';
 }
+
+async function handleLyricReport() {
+    if (!_lastLyricsNum) return;
+
+    // 1. 1일 5건 제한 체크
+    const today = new Date().toISOString().split('T')[0];
+    let reportHistory = JSON.parse(localStorage.getItem('lyricReports') || '{}');
+    
+    if (reportHistory.date !== today) {
+        reportHistory = { date: today, count: 0 };
+    }
+
+    if (reportHistory.count >= 5) {
+        alert('오늘은 너무 많이 요청을 주셨네요~ 😊\n내일 또 부탁드려요!');
+        return;
+    }
+
+    if (!confirm(`${_lastLyricsNum}번 곡의 가사 오류를 신고하시겠습니까?`)) return;
+
+    const btn = document.getElementById('btn-report-lyrics');
+    const originalText = btn.textContent;
+    
+    try {
+        btn.disabled = true;
+        btn.textContent = '⏳ 신고 중...';
+        
+        const payload = {
+            songNum: _lastLyricsNum,
+            timestamp: Date.now(),
+            dateStr: new Date().toLocaleString(),
+            status: 'pending'
+        };
+
+        // Firebase /reports 에 추가 (인증 토큰 불필요하도록 rules 설정 필요할 수 있음)
+        // 일단 관리자 페이지에서도 접근 가능하도록 Realtime DB 사용
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/reports.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('서버 전송 실패');
+
+        // 2. 카운트 증가 및 저장
+        reportHistory.count++;
+        localStorage.setItem('lyricReports', JSON.stringify(reportHistory));
+
+        alert('신고가 접수되었습니다! 🫡\n빠른 시일 내에 수정할게요. 감사합니다!');
+        btn.textContent = '✅ 신고 완료';
+    } catch (err) {
+        alert('신고 중 오류가 발생했습니다: ' + err.message);
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}
+
 
 function closeLyricsModal() { document.getElementById('lyricsModal').style.display = 'none'; }
 
