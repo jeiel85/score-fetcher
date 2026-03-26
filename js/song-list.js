@@ -175,9 +175,11 @@ async function handleLyricReport() {
             status: 'pending'
         };
 
-        // Firebase /reports 에 추가 (인증 토큰 불필요하도록 rules 설정 필요할 수 있음)
-        // 일단 관리자 페이지에서도 접근 가능하도록 Realtime DB 사용
-        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/reports.json`, {
+        // 🌟 인증 토큰 획득
+        const idToken = await getIdToken();
+        if (!idToken) throw new Error('인증 토큰을 가져올 수 없습니다. 다시 시도해 주세요.');
+
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/reports.json?auth=${idToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
