@@ -519,7 +519,13 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
         padding: 10px; padding-bottom: 0;
         display: flex; flex-direction: column;
     }
-    footer { display: none; }
+    footer { 
+        padding: 6px 16px; 
+        background: rgba(255,255,255,0.05); /* 메인 배경에 녹아들게 */
+        border-top: 1px solid rgba(199, 197, 206, 0.1);
+    }
+    footer .footer-btn-group { display: none; } /* 공간 절약을 위해 버튼군은 가로 모드에서 숨김 */
+    footer a { justify-content: flex-end; opacity: 0.6; } /* 우측 정렬 및 저채도 구성 */
 
     /* 가로 모드: CSS Grid 2열 레이아웃 */
     .app-layout {
