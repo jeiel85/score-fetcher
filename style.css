@@ -475,6 +475,7 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
 /* 가로 모드 전용 영역 — 기본 숨김 */
 .ls-conti-area { display: none; }
 .ls-sheet-area { display: none; }
+.ls-v-info { display: none; } /* 세로 모드에서는 숨김 */
 
 /* ─── Landscape Sheet Header/Body/Footer ─── */
 .ls-sheet-header {
@@ -519,13 +520,18 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
         padding: 10px; padding-bottom: 0;
         display: flex; flex-direction: column;
     }
-    footer { 
-        padding: 6px 16px; 
-        background: rgba(255,255,255,0.05); /* 메인 배경에 녹아들게 */
-        border-top: 1px solid rgba(199, 197, 206, 0.1);
+    /* 가로 모드 전용 하단 메타 정보 (ls-v-info) */
+    .ls-v-info { display: block; margin-top: 10px; padding-right: 4px; }
+    .ls-v-info a {
+        display: flex; align-items: center; justify-content: flex-end; gap: 6px;
+        color: var(--accent); text-decoration: none; font-size: 11px; font-weight: 500;
+        opacity: 0.5; transition: opacity 0.2s;
     }
-    footer .footer-btn-group { display: none; } /* 공간 절약을 위해 버튼군은 가로 모드에서 숨김 */
-    footer a { justify-content: flex-end; opacity: 0.6; } /* 우측 정렬 및 저채도 구성 */
+    .ls-v-info a:hover { opacity: 0.9; }
+    .ls-v-info svg { width: 14px; height: 14px; fill: currentColor; }
+    .ls-v-info .app-version-badge { font-size: 9px; padding: 1px 6px; background: rgba(192, 196, 234, 0.1); }
+
+    footer { display: none; }
 
     /* 가로 모드: CSS Grid 2열 레이아웃 */
     .app-layout {
