@@ -3,7 +3,7 @@
 
 > **콘티 입력부터 악보 검색, 전체화면 뷰어, 실시간 이력 공유, 푸시 알림까지 — 찬양팀 리더를 위한 스마트 워크플로우 도구**
 
-[![배포](https://img.shields.io/badge/배포-conti--maker.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
+[![배포](https://img.shields.io/badge/배포-score--fetcher.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
 ![Version](https://img.shields.io/badge/version-v1.2.0-blue?style=flat-square)
 ![Build](https://img.shields.io/badge/build-2026.03.26-indigo?style=flat-square)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
