@@ -58,13 +58,16 @@ async function initSongList() {
             Object.entries(data).forEach(([key, lyricsStr]) => {
                 const numRaw = key.replace('song_', '');
                 const numPadded = numRaw.padStart(3, '0');
-                cleanData[numPadded] = { lyrics: lyricsStr || null, tags: [], subtitle: null };
+                const entry = { lyrics: lyricsStr || null, tags: [], subtitle: null };
+                cleanData[numRaw] = entry;     // 원본 번호(693 등)로도 매칭
+                cleanData[numPadded] = entry;  // 3자리 패딩(001 등)으로도 매칭
             });
             const freshString = JSON.stringify(cleanData);
-            if (freshString !== cachedLyrics) {
+            if (freshString !== cachedLyrics || Object.keys(lyricsData).length === 0) {
                 lyricsData = cleanData;
                 localStorage.setItem(CACHE_KEY_LYRICS, freshString);
                 needsRerender = true;
+                console.log(`✅ 가사 데이터 ${Object.keys(cleanData).length/2}곡 로드 완료`);
             }
         }
 

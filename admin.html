@@ -1330,6 +1330,7 @@ async function migrateSongs() {
         });
         
         if(!res.ok) throw new Error('API 응답 HTTP ' + res.status);
+        alert(`✅ ${Object.keys(payload).length}곡의 목록이 성공적으로 병합(Merge) 되었습니다!`);
         log.innerText = '✅ 곡 목록 전송이 성공적으로 완료되었습니다!';
     } catch(err) {
         log.innerText = '❌ 오류: ' + err.message;
@@ -1364,6 +1365,7 @@ async function migrateLyrics() {
         });
         
         if(!res.ok) throw new Error('API 응답 HTTP ' + res.status);
+        alert(`✅ ${Object.keys(payload).length}곡의 가사 데이터가 병합(Merge) 되었습니다!`);
         log.innerText = '✅ 가사 데이터가 Firebase에 성공적으로 적재되었습니다!';
     } catch(err) {
         log.innerText = '❌ 오류: ' + err.message;
