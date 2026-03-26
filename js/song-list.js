@@ -192,7 +192,54 @@ function renderSongList(list) {
         }
         container.appendChild(li);
     });
+
+    renderQuickIndex(list);
 }
+
+// 🌟 퀵 인덱스 네비게이터 렌더링 🌟
+function renderQuickIndex(currentList) {
+    const nav = document.getElementById('quickIndexNav');
+    if (!nav) return;
+
+    // 검색 중(필터링 상태)이거나 리스트가 너무 짧으면 숨김
+    const searchVal = document.getElementById('searchInput').value.trim();
+    if (searchVal || currentList.length < 50) {
+        nav.style.display = 'none';
+        return;
+    }
+
+    nav.style.display = 'flex';
+    nav.innerHTML = '';
+
+    // 100단위로 인덱스 추출 (1, 100, 200, ...)
+    const indexes = [1];
+    for (let i = 100; i <= 900; i += 100) {
+        if (currentList.some(s => s.startsWith(i.toString()))) {
+            indexes.push(i);
+        }
+    }
+
+    indexes.forEach(idx => {
+        const dot = document.createElement('div');
+        dot.className = 'index-dot';
+        dot.textContent = idx === 1 ? '1' : (idx / 100); // 1, 1, 2, 3... 표시
+        dot.onclick = () => {
+            const container = document.getElementById('songListContainer');
+            const target = Array.from(container.children).find(li => {
+                const num = parseInt(li.querySelector('strong')?.textContent || "0");
+                return num >= idx;
+            });
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // 시각적 피드백 (잠시 강조)
+                target.style.backgroundColor = 'rgba(99, 102, 241, 0.2)';
+                setTimeout(() => target.style.backgroundColor = '', 800);
+            }
+        };
+        nav.appendChild(dot);
+    });
+}
+
 
 // Firebase에서 신선한 이력 로드 후 빈도 계산 (비동기)
 async function _loadFreqFromFirebase() {
