@@ -214,6 +214,7 @@
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
             <a href="/" target="_blank" rel="noopener" class="btn btn-secondary" style="padding: 6px 14px; font-size: 11px; text-decoration: none; color: #a5b4fc; border-color: #6366f1;">🎵 앱 화면으로</a>
+            <!-- 🚫 삭제 예정: 3월 22일 이전 데이터 지우개 (사용자 요청으로 제거) -->
             <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 11px;" onclick="logout()">로그아웃</button>
         </div>
     </div>
@@ -238,9 +239,6 @@
                 </button>
                 <button class="btn btn-secondary" style="border-color: rgba(244,63,94,0.4); color: #fda4af; text-align: left;" onclick="scanNonConti()">
                     🔎 2. 제목없음 분실/특송/광고 등 의심 콘티 싹 리스트업
-                </button>
-                <button class="btn btn-secondary" style="border-color: rgba(244,63,94,0.4); color: #fda4af; text-align: left;" onclick="cleanupTestData()">
-                    🗑️ 3. 3월 22일 이전 초기 테스트 파일 모두 지우기
                 </button>
             </div>
 
@@ -790,16 +788,24 @@ function handleFiles(files) {
 }
 
 // 곡 목록 추출을 위한 강화된 검증 헬퍼
-function countSongLines(text) {
+function countSongLines(text, title = "") {
+    const combined = (title + " " + text).toLowerCase();
+    
+    // 💡 1. 금지어 필터링 (테스트용 데이터 등)
+    const forbidden = ["테스트", "test", "demo", "데모", "삭제", "비어있음", "empty", "임시", "temp", "광고", "특송", "게임", "계획", "안내"];
+    if (forbidden.some(word => combined.includes(word))) return 0;
+
     const lines = text.split('\n');
     let songCount = 0;
     for (const l of lines) {
         const trimmed = l.trim();
-        // "01/04", "10/11", "2026-03" 처럼 날짜 형식으로 시작하는 줄은 곡으로 취급 안 함
-        if (/^\d{1,4}[-/]\d{1,2}/.test(trimmed)) continue;
+        if (!trimmed) continue;
+
+        // "01/04", "10.11", "2026-03" 처럼 날짜 형식으로 시작하는 줄은 곡으로 취급 안 함
+        if (/^\d{1,4}([.\-\/])\d{1,2}/.test(trimmed)) continue;
         
         // 숫자로 시작하고 그 뒤에 한글이나 영문이 최소 1글자 이상 포함된 줄만 카운트
-        // (ex: "106 지저귀신", "003주님여")
+        // (ex: "106 지저귀신", "003 주님여")
         if (/^\d+.*[가-힣a-zA-Z]/.test(trimmed)) {
             songCount++;
         }
@@ -833,7 +839,7 @@ async function parseData() {
                     if (!body) { skipped++; return; }
 
                     // 🌟 1. 강화된 콘티 검증: 곡으로 인정되는 라인이 1개 이상 있는지 체크
-                    if (countSongLines(body) === 0) { skipped++; return; }
+                    if (countSongLines(body, title) === 0) { skipped++; return; }
 
                     const tsUsec = json.userEditedTimestampUsec || json.createdTimestampUsec || (Date.now() * 1000);
                     const ts = Math.floor(tsUsec / 1000);
@@ -856,7 +862,7 @@ async function parseData() {
                 if (!text) { skipped++; return; }
 
                 // 🌟 2. 텍스트 붙여넣기에도 강화된 콘티 검증 적용
-                if (countSongLines(text) === 0) { skipped++; return; }
+                if (countSongLines(text, title) === 0) { skipped++; return; }
 
                 const ts = parseDateFromTitle(title) || Date.now();
                 parsedEntries.push({ title, text, timestamp: ts });
@@ -886,7 +892,7 @@ function renderPreview() {
     badge.textContent = `${parsedEntries.length}건`;
 
     if (parsedEntries.length === 0) {
-        list.innerHTML = '<div class="preview-empty">파싱된 항목이 없습니다. 형식을 확인해주세요</div>';
+        list.innerHTML = '<div class="preview-empty">데이터를 입력하고 "파싱 & 미리보기"를 눌러주세요</div>';
         document.getElementById('btn-upload').disabled = true;
         document.getElementById('upload-status').textContent = '파싱된 데이터가 없습니다';
         return;
@@ -1003,54 +1009,6 @@ dropZone.addEventListener('drop', e => {
     handleFiles(e.dataTransfer.files);
 });
 
-// ─── 테스트 데이터 청소 ────────────────────────────────────────────────────────
-async function cleanupTestData() {
-    if (!confirm('경고: "제목 없는 콘티" 및 2026-03-22 이전 데이터가 모두 삭제됩니다. 계속하시겠습니까?')) return;
-    
-    try {
-        const idToken = await getIdToken();
-        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/history.json?auth=${idToken}`);
-        const data = await res.json();
-        
-        if (!data) { alert('삭제할 데이터가 없습니다.'); return; }
-        
-        // 기준일: 2026년 3월 22일 00:00:00 (KST 기준)
-        const thresholdTime = new Date('2026-03-22T00:00:00+09:00').getTime();
-        const entries = Object.entries(data);
-        
-        let deleteCount = 0;
-        let deletePromises = [];
-        
-        for (const [key, item] of entries) {
-            const isNoTitle = !item.title || item.title.trim() === '제목 없는 콘티';
-            const isOldData = item.timestamp < thresholdTime;
-            
-            if (isNoTitle || isOldData) {
-                // 삭제 API 전송 (동시 다발적 삭제)
-                deletePromises.push(
-                    fetch(`${FIREBASE_CONFIG.databaseURL}/history/${key}.json?auth=${idToken}`, { method: 'DELETE' })
-                );
-                deleteCount++;
-            }
-        }
-        
-        if (deleteCount === 0) {
-            alert('삭제할 조건에 맞는 데이터가 없습니다!');
-            return;
-        }
-        
-        document.body.style.cursor = 'wait';
-        await Promise.all(deletePromises);
-        document.body.style.cursor = 'default';
-        
-        alert(`청소 완료! 총 ${deleteCount}건의 데이터가 삭제되었습니다.`);
-    } catch(err) {
-        console.error(err);
-        alert('삭제 중 오류 발생: ' + err.message);
-        document.body.style.cursor = 'default';
-    }
-}
-
 // ─── '제목 없음' 데이터 날짜 기반 이름 복구 ──────────────────────────────
 async function fixUntitledContis() {
     try {
@@ -1110,30 +1068,22 @@ async function scanNonConti() {
         if (!data) { alert('업로드된 데이터가 없습니다.'); return; }
         
         suspectDataCache = {};
-        const entries = Object.entries(data);
+        const targets = [];
         
-        for (const [key, item] of entries) {
-            const t = (item.title || '').trim();
-            const txt = (item.text || '').trim();
-            const c = countSongLines(txt);
+        Object.entries(data).forEach(([key, val]) => {
+            const sc = countSongLines(val.text || "", val.title || "");
+            const totalChars = (val.text || "").length;
             
-            // 검출 조건:
-            // 1) 제목이 비어있거나 '제목없음', '제 목 없음' 등 띄어쓰기 섞인 모든 경우
-            const tNoSpace = t.replace(/\s+/g, '');
-            const isNoTitle = !tNoSpace || tNoSpace.includes('제목없음') || tNoSpace.includes('제목없는');
-            
-            // 2) 내가 만든 countSongLines 기준 곡이 0개인 경우
-            const isNoSong = c === 0;
-            // 3) 제목에 특정 키워드가 들어간 경우
-            const isKeyword = ['특송', '광고', '게임', '계획', '안내'].some(kw => t.includes(kw));
-            
-            if (isNoTitle || isNoSong || isKeyword) {
-                suspectDataCache[key] = item;
+            // 🌟 강화된 부적격 기준:
+            // 1. 곡이 2개 미만인 경우 (테스트 가능성 높음)
+            // 2. 전체 글자수가 너무 짧은 경우 (10자 미만)
+            // 3. 제목이 '제목 없음'이면서 가사도 거의 없는 경우
+            if (sc < 2 || totalChars < 10) {
+                targets.push({ key, title: val.title, sc, text: val.text, timestamp: val.timestamp });
             }
-        }
+        });
         
-        const keys = Object.keys(suspectDataCache);
-        if (keys.length === 0) {
+        if (targets.length === 0) {
             alert('의심되는 비정상 데이터가 없습니다!');
             document.getElementById('suspect-area').style.display = 'none';
             return;
@@ -1144,8 +1094,8 @@ async function scanNonConti() {
         const listDiv = document.getElementById('suspect-list');
         document.getElementById('check-all-suspects').checked = true;
         
-        listDiv.innerHTML = keys.map(k => {
-            const item = suspectDataCache[k];
+        listDiv.innerHTML = targets.map(item => {
+            suspectDataCache[item.key] = item; // 캐시에 저장
             const d = new Date(item.timestamp).toLocaleDateString();
             
             // 본문 내용 개행 보존 방식 3줄 요약
@@ -1157,7 +1107,7 @@ async function scanNonConti() {
 
             return `
             <label class="preview-item" style="display:flex; align-items:flex-start; gap:12px; margin-bottom:8px; border-color: rgba(244,63,94,0.3); cursor:pointer;">
-                <input type="checkbox" class="suspect-check" value="${k}" checked style="margin-top:4px; transform:scale(1.2); cursor:pointer;">
+                <input type="checkbox" class="suspect-check" value="${item.key}" checked style="margin-top:4px; transform:scale(1.2); cursor:pointer;">
                 <div style="flex:1;">
                     <div class="pi-title" style="color: #fca5a5; font-size: 14px; font-weight: 700;">📌 ${escHtml(item.title || '(제목없음)')} <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px;">${d}</span></div>
                     <div class="pi-songs" style="color: #cbd5e1; font-size: 13px; margin-top: 6px; line-height: 1.6;">${txtPreview}</div>

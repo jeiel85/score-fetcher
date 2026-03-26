@@ -232,7 +232,7 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
 }
 .modal-content {
     background: var(--surface); width: 100%;
-    max-width: 540px; max-height: 90vh;
+    max-width: 540px; height: 85vh; /* 고정 높이 */
     border-radius: var(--r-xl);
     display: flex; flex-direction: column; overflow: hidden;
     box-shadow: 0 12px 40px rgba(24,29,58,0.25);
