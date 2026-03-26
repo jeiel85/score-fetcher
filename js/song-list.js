@@ -291,7 +291,9 @@ function renderQuickIndex(currentList) {
     indexes.forEach(idx => {
         const dot = document.createElement('div');
         dot.className = 'index-dot';
-        dot.textContent = idx === 1 ? '1' : (idx / 100); // 1, 1, 2, 3... 표시
+        // 라벨: 1~99는 '0', 100단위는 '1','2'...
+        dot.textContent = idx === 1 ? '0' : (idx / 100); 
+        dot.dataset.idx = idx; // 데이터 속성에 실제 인덱스 저장
         dot.onclick = () => {
             const container = document.getElementById('songListContainer');
             const target = Array.from(container.children).find(li => {
@@ -333,18 +335,40 @@ async function _loadFreqFromFirebase() {
     } catch(e) { /* silent */ }
 }
 
-// ─── 퀵 이동 버튼 자동 숨김 로직 ───
+// ─── 퀵 이동 버튼 자동 숨김 및 포커싱 로직 ───
 let _quickNavTimer = null;
 function handleQuickNavVisibility() {
     const nav = document.getElementById('quickIndexNav');
-    if (!nav || nav.style.display === 'none') return;
+    const container = document.getElementById('songListContainer');
+    if (!nav || nav.style.display === 'none' || !container) return;
 
     nav.classList.add('visible');
+
+    // 🌟 스크롤 위치 동기화 (포커싱)
+    const st = container.scrollTop;
+    const items = container.children;
+    if (items.length > 0) {
+        let currentIdx = 1;
+        for (let i = 0; i < items.length; i++) {
+            const li = items[i];
+            if (li.offsetTop + (li.offsetHeight / 2) > st) {
+                const num = parseInt(li.querySelector('strong')?.textContent || "1");
+                currentIdx = num < 100 ? 1 : Math.floor(num / 100) * 100;
+                break;
+            }
+        }
+        
+        // 도트들의 active 클래스 업데이트
+        Array.from(nav.children).forEach(dot => {
+            if (parseInt(dot.dataset.idx) === currentIdx) dot.classList.add('active');
+            else dot.classList.remove('active');
+        });
+    }
     
     if (_quickNavTimer) clearTimeout(_quickNavTimer);
     _quickNavTimer = setTimeout(() => {
         nav.classList.remove('visible');
-    }, 1500); // 1.5초 후 숨김
+    }, 1500); 
 }
 
 // 스크롤 이벤트 리스너 등록 (안정적 초기화)
