@@ -238,6 +238,29 @@
             .container { max-width: 90%; }
             h1 { font-size: 24px; }
         }
+        /* Modal (For Lyric Editing) */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
+            width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+            position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+        .modal-header {
+            padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { font-size: 18px; color: #fff; font-family: 'Manrope', sans-serif; }
+        .modal-body { padding: 20px 24px; }
+        .modal-footer {
+            padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex; gap: 10px; justify-content: flex-end;
+        }
+        .action-btn.edit { background: #3b82f6; border-color: #2563eb; color: #fff; }
+        .action-btn.edit:hover { background: #2563eb; }
     </style>
 </head>
 <body>
@@ -424,6 +447,25 @@
             🎉 깨끗합니다! 신고된 가사 오류가 없습니다.
         </div>
     </div>
+    <!-- 가사 수정 모달 -->
+    <div class="modal-overlay" id="lyricEditModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🛠️ 가사 수정 (<span id="edit-song-num"></span>)</h3>
+                <button class="btn-close" onclick="closeLyricModal()" style="background:none; border:none; color:#64748b; font-size:24px; cursor:pointer;">×</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="edit-lyrics-text" style="height: 350px; margin-bottom: 10px;"></textarea>
+                <div style="font-size:12px; color:#94a3b8;">
+                    * 수정 완료 시 해당 신고 내역은 자동으로 삭제되거나 완료 처리됩니다.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeLyricModal()">취소</button>
+                <button class="btn btn-primary" id="btn-save-lyrics" onclick="saveEditedLyrics()">✅ 수정 및 완료</button>
+            </div>
+        </div>
+    </div>
 </div> <!-- /TAB 5 -->
 
 <!-- TAB 2: 데이터 임포트 -->
@@ -537,7 +579,7 @@
 
 <script>
 // ─── 버전 및 설정 ────────────────────────────────────────────────────────
-const APP_VERSION = "v1.4.0";
+const APP_VERSION = "v1.4.1";
 const BUILD_DATE  = "2026.03.26";
 document.addEventListener('DOMContentLoaded', () => {
     const v = document.getElementById('admin-version-info');
@@ -1635,11 +1677,13 @@ async function loadReports() {
 
         tbody.innerHTML = reports.map(item => {
             const date = item.dateStr || new Date(item.timestamp).toLocaleString();
-            return `<tr>
+            const isCompleted = item.status === 'completed';
+            return `<tr style="${isCompleted ? 'opacity:0.5' : ''}">
                 <td style="font-size:12px; color:#94a3b8;">${date}</td>
                 <td style="font-weight:700; color:#fca5a5;">${item.songNum}번</td>
-                <td style="font-size:13px; color:#cbd5e1;">가사 오류 제보됨</td>
-                <td>
+                <td style="font-size:13px; color:#cbd5e1;">${isCompleted ? '✅ 완료됨' : '🚨 오류 제보'}</td>
+                <td class="btn-row" style="gap:5px;">
+                    <button class="action-btn edit" onclick="openLyricEditor('${item.songNum}', '${item.key}')">수정</button>
                     <button class="action-btn" onclick="deleteReport('${item.key}')">삭제</button>
                 </td>
             </tr>`;
@@ -1651,13 +1695,82 @@ async function loadReports() {
 }
 
 async function deleteReport(key) {
-    if (!confirm('신고 내역을 삭제하시겠습니까? (수정 완료 후 삭제를 권장합니다)')) return;
+    if (!confirm('신고 내역을 삭제하시겠습니까?')) return;
     try {
         const idToken = await getIdToken();
         await fetch(`${FIREBASE_CONFIG.databaseURL}/reports/${key}.json?auth=${idToken}`, { method: 'DELETE' });
         loadReports(); // 새로고침
     } catch (err) {
         alert('삭제 실패: ' + err.message);
+    }
+}
+
+// ─── 가사 수정 및 완료 처리 ───────────────────────────────
+let _currentEditReportKey = null;
+let _currentEditSongNum = null;
+
+async function openLyricEditor(songNum, reportKey) {
+    _currentEditReportKey = reportKey;
+    _currentEditSongNum = songNum;
+    
+    document.getElementById('edit-song-num').textContent = `${songNum}번 곡`;
+    const textarea = document.getElementById('edit-lyrics-text');
+    textarea.value = '불러오는 중... ⏳';
+    document.getElementById('lyricEditModal').classList.add('active');
+
+    try {
+        const idToken = await getIdToken();
+        // songNum 패딩 제거 처리 (001 -> 1)
+        const pureNum = String(songNum).replace(/^0+/, '');
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/lyrics/song_${pureNum}.json?auth=${idToken}`);
+        const data = await res.json();
+        
+        textarea.value = data || ''; // 가사가 없으면 빈칸
+    } catch (err) {
+        alert('가사 로드 실패: ' + err.message);
+    }
+}
+
+function closeLyricModal() {
+    document.getElementById('lyricEditModal').classList.remove('active');
+}
+
+async function saveEditedLyrics() {
+    if (!_currentEditSongNum || !_currentEditReportKey) return;
+    const newLyrics = document.getElementById('edit-lyrics-text').value.trim();
+    if (!newLyrics) return alert('가사 내용을 입력하세요.');
+
+    const btn = document.getElementById('btn-save-lyrics');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ 저장 및 완료 처리 중...';
+
+    try {
+        const idToken = await getIdToken();
+        const pureNum = String(_currentEditSongNum).replace(/^0+/, '');
+
+        // 1. 가사 업데이트
+        await fetch(`${FIREBASE_CONFIG.databaseURL}/lyrics/song_${pureNum}.json?auth=${idToken}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newLyrics)
+        });
+
+        // 2. 신고 내역 완료 처리 (또는 삭제 - 여기서는 완료로 표시)
+        await fetch(`${FIREBASE_CONFIG.databaseURL}/reports/${_currentEditReportKey}.json?auth=${idToken}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'completed' })
+        });
+
+        alert('✅ 가사 수정 및 완료 처리가 성공적으로 수행되었습니다!');
+        closeLyricModal();
+        loadReports(); // 새로고침
+    } catch (err) {
+        alert('저장 실패: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
     }
 }
 
