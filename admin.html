@@ -277,12 +277,12 @@
         /* Fullscreen Image Preview */
         .zoom-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000;
-            display: none; align-items: center; justify-content: center; overflow: auto; padding: 20px;
+            display: none; overflow: auto; padding: 40px;
         }
-        .zoom-overlay.active { display: flex; }
-        .zoom-overlay img { max-width: 98%; max-height: 98%; object-fit: contain; cursor: zoom-in; transition: all 0.2s ease; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
-        .zoom-overlay.original { align-items: flex-start; justify-content: flex-start; }
-        .zoom-overlay.original img { max-width: none; max-height: none; object-fit: none; cursor: zoom-out; }
+        .zoom-overlay.active { display: flex; align-items: center; justify-content: center; }
+        .zoom-overlay img { max-width: 98%; max-height: 98%; object-fit: contain; cursor: zoom-in; box-shadow: 0 0 50px rgba(0,0,0,0.5); margin: auto; }
+        .zoom-overlay.original { display: block; } /* 스크롤이 자연스럽게 발생하도록 block 전환 */
+        .zoom-overlay.original img { max-width: none; max-height: none; object-fit: none; cursor: zoom-out; display: block; margin: 40px auto; }
         
         @media (max-width: 768px) {
             .modal-grid { grid-template-columns: 1fr; }
@@ -628,7 +628,7 @@
 
 <script>
 // ─── 버전 및 설정 ────────────────────────────────────────────────────────
-const APP_VERSION = "v1.4.6";
+const APP_VERSION = "v1.4.7";
 const BUILD_DATE  = "2026.03.26";
 document.addEventListener('DOMContentLoaded', () => {
     const v = document.getElementById('admin-version-info');
