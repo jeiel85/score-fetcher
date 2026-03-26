@@ -1349,12 +1349,35 @@ async function migrateLyrics() {
         log.innerText = `총 ${entries.length}곡의 가사 추출됨. Firebase 구조화 및 전송 시작... 🚀`;
         
         const payload = {};
-        entries.forEach(([title, text]) => {
-            const match = title.match(/^(\d+)/);
-            if(match) {
-                payload[`song_${match[1]}`] = text.trim();
+        
+        // 🌟 1. 데이터 형식에 관계 없이 유연하게 처리
+        let dataList = [];
+        if (Array.isArray(lyricsMap)) {
+            dataList = lyricsMap;
+        } else {
+            // 객체일 경우 [키, 값] 쌍으로 변환
+            dataList = Object.entries(lyricsMap).map(([title, text]) => ({ title, text }));
+        }
+
+        dataList.forEach(item => {
+            // item이 객체인 경우 (배열 모드거나 위에서 변환된 모드)
+            let title = item.title || item.name || item.num || "";
+            let text = item.text || item.lyrics || item.content || (typeof item === 'string' ? "" : item.body) || "";
+            
+            // 만약 item 자체가 값이고 키가 번호였던 경우 (객체 모드)
+            if (!text && typeof item.text === 'undefined') text = item;
+
+            const match = String(title).match(/(\d+)/); // 문자열 어디서든 숫자 추출
+            if(match && text) {
+                payload[`song_${match[1]}`] = String(text).trim();
             }
         });
+
+        const count = Object.keys(payload).length;
+        if (count === 0) {
+            console.error('파싱 실패 데이터 샘플:', lyricsMap);
+            throw new Error(`파일에서 곡 번호를 찾을 수 없습니다. (데이터 샘플: ${JSON.stringify(dataList[0])})`);
+        }
         
         const idToken = await getIdToken();
         // 🚨 PATCH를 사용하여 기존 가사는 놔두고 새 가사만 업데이트/추가
@@ -1365,7 +1388,7 @@ async function migrateLyrics() {
         });
         
         if(!res.ok) throw new Error('API 응답 HTTP ' + res.status);
-        alert(`✅ ${Object.keys(payload).length}곡의 가사 데이터가 병합(Merge) 되었습니다!`);
+        alert(`✅ 총 ${count}곡의 가사 데이터가 정상적으로 매칭되어 병합되었습니다!`);
         log.innerText = '✅ 가사 데이터가 Firebase에 성공적으로 적재되었습니다!';
     } catch(err) {
         log.innerText = '❌ 오류: ' + err.message;
