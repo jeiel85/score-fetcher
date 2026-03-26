@@ -175,14 +175,14 @@ score-fetcher/
 | 콘티함에 저장 💾 | 에메랄드 그린 `#059669` | Firebase에 현재 콘티 저장 |
 | 콘티 공유하기 🖼️ | 앰버 `#F59E0B` | 콘티 이미지 생성 후 공유 |
 
-## 현재 상태 (2026-03-25 기준)
+## 현재 상태 (2026-03-26 기준)
 
 | 항목 | 상태 |
 |------|------|
-| main 브랜치 | ✅ 최신 (origin/main 동기화 완료) |
-| `origin/claude/project-analysis-briefing-k7yQF` | ✅ main에 이미 머지됨 |
-| `origin/feature/push-notification-setup` | ✅ main에 이미 머지됨 |
-| 최신 커밋 | `97b43c7` refactor: index.html 리팩토링 - CSS/JS 분리 (2002줄→373줄) |
+| main 브랜치 | ✅ 최신 (v1.5.5 최종 릴리즈) |
+| `origin/main` 동기화 | ✅ 완료 |
+| 최신 커밋 | `32d74fe` feat: v1.5.5 - 가로 모드 버전 정보 가독성 보정 및 최종 릴리즈 |
+| 서비스 주소 | [score-fetcher.vercel.app](https://score-fetcher.vercel.app/) |
 
 ---
 
