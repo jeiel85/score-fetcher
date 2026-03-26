@@ -150,8 +150,8 @@
             <div class="modal-search">
                 <input type="text" id="searchInput" placeholder="검색어 또는 번호를 입력하세요..." onkeyup="filterSongs()">
             </div>
-                <div style="position:relative; flex:1; overflow:hidden;">
-                    <ul class="modal-body" id="songListContainer"></ul>
+                <div style="position:relative; flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0;">
+                    <ul class="modal-body" id="songListContainer" style="flex:1;"></ul>
                     <div id="quickIndexNav" class="quick-index-nav"></div>
                 </div>
         </div>
