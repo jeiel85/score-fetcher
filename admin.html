@@ -291,12 +291,13 @@
             max-width: 100%; max-height: 90vh; object-fit: contain; 
             cursor: zoom-in; transition: transform 0.2s ease; 
             box-shadow: 0 0 50px rgba(0,0,0,0.5); 
-            background: #fff; /* 악보 배경이 투명할 경우 대비 */
+            background: #fff;
         }
         
-        .zoom-overlay.original { display: block; } /* 스크롤 활성화 */
-        .zoom-overlay.original .zoom-content { display: block; text-align: center; }
-        .zoom-overlay.original img { 
+        /* 중요: active와 original이 동시에 있을 때만 표시 및 스크롤 */
+        .zoom-overlay.active.original { display: block; } 
+        .zoom-overlay.active.original .zoom-content { display: block; text-align: center; }
+        .zoom-overlay.active.original img { 
             max-width: none; max-height: none; object-fit: none; 
             cursor: zoom-out; margin: 0 auto; 
         }
@@ -660,7 +661,7 @@
 
 <script>
 // ─── 버전 및 설정 ────────────────────────────────────────────────────────
-const APP_VERSION = "v1.5.0";
+const APP_VERSION = "v1.5.1";
 const BUILD_DATE  = "2026.03.26";
 document.addEventListener('DOMContentLoaded', () => {
     const v = document.getElementById('admin-version-info');
@@ -1750,6 +1751,7 @@ function closeZoomModal(e) {
     if(e) e.stopPropagation();
     const modal = document.getElementById('imageZoomModal');
     modal.classList.remove('active');
+    modal.classList.remove('original');
     document.body.style.overflow = ''; // 스크롤 복원
 }
 
