@@ -17,7 +17,10 @@ function resetAll() {
     document.getElementById('app-layout').classList.remove('ls-active');
 }
 
-function isTabletLandscape() { return window.innerWidth >= 768; }
+function isTabletLandscape() { 
+    // 최소 너비 768px 이상이면서 가로가 세로보다 길 때만 가로 레이아웃 적용
+    return window.innerWidth >= 768 && window.innerWidth > window.innerHeight; 
+}
 
 // Canvas 드로잉 유틸
 function _roundRect(ctx, x, y, w, h, r) {

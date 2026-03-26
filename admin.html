@@ -309,9 +309,12 @@
                 <label style="font-size: 13px; color: #a5b4fc; font-weight: 700;">🔑 Github 연동 설정 (이미지 자동 푸시용)</label>
                 <div id="token-status" style="font-size: 11px; color: #94a3b8;">토큰이 등록되지 않았습니다.</div>
             </div>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
                 <input type="password" id="gh-token" placeholder="Github Personal Access Token 입력" style="flex:1; padding:8px 12px; font-size:12px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff;">
                 <button class="btn btn-secondary" onclick="saveGhToken()" style="padding: 6px 12px; font-size: 11px; border-color: #6366f1; color: #a5b4fc;">토큰 저장</button>
+            </div>
+            <div style="font-size: 11px; color: #94a3b8;">
+                💡 토큰이 없으신가요? <a href="https://github.com/settings/tokens/new?scopes=repo&description=ScoreFetcherAdmin" target="_blank" style="color:#818cf8; text-decoration:underline;">여기서 발급</a> (repo 권한 필요)
             </div>
         </div>
 
@@ -747,8 +750,16 @@ async function checkOrphanImages() {
         if(missingInGit.length > 0) {
             html += `<div style="padding:12px; background:rgba(251,191,36,0.1); border-left:3px solid #fbbf24; color:#fde68a;">
                 <b style="color:#fcd34d; display:block; margin-bottom:4px;">⚠️ DB에 이름은 있는데 정작 Git에 이미지가 없는 곡 (${missingInGit.length}건)</b>
-                ${missingInGit.join('번, ')}번
-                <div style="font-size:11px; margin-top:6px; line-height: 1.4;">↑ 이 곡들은 앱에서 터치하면 "악보 로딩 중"만 뱅글뱅글 돕니다.<br>빨리 이미지를 구해서 Git에 <code>숫자.png</code> 형식으로 올려주세요!</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    ${missingInGit.map(id => {
+                        const song = Object.values(dbSongs).find(s => s.num == id);
+                        const title = song ? song.title : '제목 없음';
+                        return `<span style="padding:4px 8px; background:rgba(0,0,0,0.3); border-radius:4px; font-size:12px; border:1px solid rgba(251,191,36,0.2);">
+                            <b>${id}번</b>: ${title}
+                        </span>`;
+                    }).join('')}
+                </div>
+                <div style="font-size:11px; margin-top:10px; line-height: 1.4; color:#d1d5db;">↑ 이 곡들은 앱에서 터치하면 "악보 로딩 중"만 뱅글뱅글 돕니다.<br>빨리 이미지를 구해서 위 <b>2단계</b> 도구로 이미지를 올려주세요!</div>
             </div>`;
         } else {
             html += `<div style="color: #6ee7b7; padding:12px; background:rgba(16,185,129,0.1); border-left:3px solid #10b981;">✅ [DB ➡️ Git] 누락 이미지 없음! 등록된 모든 곡이 이미지를 가지고 있습니다.</div>`;
