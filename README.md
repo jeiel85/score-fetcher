@@ -4,7 +4,8 @@
 > **콘티 입력부터 악보 검색, 전체화면 뷰어, 실시간 이력 공유, 푸시 알림까지 — 찬양팀 리더를 위한 스마트 워크플로우 도구**
 
 [![배포](https://img.shields.io/badge/배포-score--fetcher.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
-![Version](https://img.shields.io/badge/version-v1.2.0-blue?style=flat-square)
+[![관리자](https://img.shields.io/badge/관리자-admin.html-indigo?style=flat-square&logo=google-cloud&logoColor=white)](https://score-fetcher.vercel.app/admin.html)
+![Version](https://img.shields.io/badge/version-v1.2.1-blue?style=flat-square)
 ![Build](https://img.shields.io/badge/build-2026.03.26-indigo?style=flat-square)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
@@ -56,6 +57,7 @@
 - **가사 오류 신고** — 사용자가 즉시 오류를 제보하고 관리자가 대시보드에서 처리하는 시스템
 
 ### 💡 하이엔드 사용성
+- **강제 업데이트 시스템** — 새 빌드 배포 시 기기 버전 체크를 통해 사용자에게 최신 버전을 실시간으로 강제 적용합니다.
 - **화면 꺼짐 방지** — 앱 사용 중 화면 자동 꺼짐 항상 차단 (Wake Lock API)
 - **반응형 관리자 페이지** — 모바일/PC 어디서나 콘티와 곡 데이터를 관리하는 강력한 대시보드
 - **PWA 지원** — 홈 화면 추가를 통해 앱처럼 설치하고 실행
@@ -83,12 +85,12 @@
 
 ```
 score-fetcher/
-├── index.html              # 메인 앱 (스타일·로직 포함 단일 파일)
+├── index.html              # 메인 앱 (v1.2.1)
+├── admin.html              # 관리자 대시보드 (통합 관리 툴)
 ├── manifest.json           # PWA 설정
-├── firebase-messaging-sw.js  # FCM 서비스 워커 (푸시 알림 수신)
-├── hymn_list.txt           # 찬양 곡 목록 (691곡)
-├── icon.png                # 앱 아이콘
-├── og-image.svg            # 링크 공유 미리보기 이미지 (1200×630)
+├── firebase-messaging-sw.js  # FCM 서비스 워커
+├── icon.png                # 앱 아이콘 (512x512, Black Theme)
+├── og-image-premium.png    # 링크 공유용 프리미엄 블랙 카드 이미지
 ├── images/                 # 악보 이미지 (001.png, 002.jpg, ..., 693곡)
 └── functions/              # Firebase Cloud Functions
     ├── index.js            # 새 콘티 저장 시 FCM 푸시 발송 함수
