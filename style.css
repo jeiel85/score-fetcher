@@ -182,8 +182,8 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
     cursor: pointer; transition: box-shadow 0.2s;
 }
 .sheet-music-card:active { box-shadow: 0 8px 28px rgba(24,29,58,0.15); }
-.sheet-music-card img { width: 100%; height: auto; border-radius: 6px; min-height: 100px; background: var(--surface-low); }
-.sheet-title { margin-bottom: 10px; font-family: 'Manrope', -apple-system, sans-serif; font-weight: 700; color: var(--primary); font-size: 14px; }
+.sheet-music-card img { width: 100%; height: auto; border-radius: 8px; min-height: 100px; background: var(--surface-low); }
+.sheet-title { margin-bottom: 12px; font-family: 'Manrope', -apple-system, sans-serif; font-weight: 700; color: var(--primary); font-size: 15px; letter-spacing: -0.2px; }
 .error-msg { color: var(--error); font-size: 14px; margin-top: 10px; font-weight: 600; }
 
 /* ─── Fullscreen Viewer ─── */
@@ -489,12 +489,13 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     background: rgba(255,255,255,0.18); color: white;
     border: 1.5px solid rgba(255,255,255,0.3);
     border-radius: var(--r-md);
-    padding: 10px 22px; font-size: 15px; font-weight: 700;
+    padding: 12px 24px; font-size: 16px; font-weight: 700;
     cursor: pointer; font-family: 'Inter', -apple-system, sans-serif;
-    transition: background 0.15s;
+    transition: all 0.2s;
     white-space: nowrap;
 }
-.ls-back-btn:active { background: rgba(255,255,255,0.35); }
+.ls-back-btn:hover { background: rgba(255,255,255,0.25); border-color: #fff; }
+.ls-back-btn:active { background: rgba(255,255,255,0.35); transform: scale(0.95); }
 .ls-sheet-body {
     flex: 1; overflow: hidden; display: flex;
     align-items: center; justify-content: center; min-height: 0;
@@ -506,8 +507,8 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     border-top: 1px solid rgba(255,255,255,0.1);
     padding: 8px 12px; flex-shrink: 0; gap: 8px;
 }
-.ls-sheet-footer .fullscreen-nav { font-size: 18px; padding: 7px 0; }
-#ls-sheet-title { font-size: 22px; }
+.ls-sheet-footer .fullscreen-nav { font-size: 28px; padding: 10px 0; border-radius: 12px; }
+#ls-sheet-title { font-size: 17px; font-weight: 800; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ─── Landscape / Tablet Mode 전용 (가로 모드일 때만 활성화) ─── */
 @media (min-width: 768px) and (orientation: landscape) {

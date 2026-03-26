@@ -202,24 +202,25 @@ window.addEventListener('resize', () => {
 
     if (isLS && !isTabletLandscape()) {
         // 1. 가로 모드(분할 뷰)였다가 세로 모드(모바일 뷰)로 변한 경우
-        const lastIdx = currentSheetIndex; // 보고 있던 곡 인덱스 저장
-        closeLandscapeView();
+        const lastIdx = currentSheetIndex;
+        // 즉시 클래스 제거하여 media query가 result-container를 보이게 함
+        layout.classList.remove('ls-active');
         
-        // 악보 데이터가 로드된 상태라면 즉시 전체화면으로 띄워줌
-        if (lastIdx >= 0 && sheetList[lastIdx]) {
-            openFullscreen(lastIdx);
-        }
-        
-        // 세로 모드에서는 결과 컨테이너를 다시 그려야 함 (DOM 구조가 다름)
+        // DOM 구조가 다르므로 세로용 리스트 강제 재생성
         startSearch(); 
+        
+        if (lastIdx >= 0 && sheetList[lastIdx]) {
+            setTimeout(() => openFullscreen(lastIdx), 100);
+        }
     } 
     else if (isFS && isTabletLandscape()) {
         // 2. 세로 모드(전체화면)였다가 가로 모드(태블릿 분할 뷰)로 변한 경우
         const lastIdx = currentSheetIndex;
         closeFullscreen();
-        startSearch(); // 가로 모드로 다시 그리면서 해당 곡 보여줌
+        layout.classList.add('ls-active'); // 강제 활성화
+        startSearch(); 
         if (lastIdx >= 0) {
-            setTimeout(() => showLsSheet(lastIdx), 100);
+            setTimeout(() => showLsSheet(lastIdx), 150);
         }
     }
 });
