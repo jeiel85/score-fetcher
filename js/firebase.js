@@ -13,7 +13,9 @@ const authReady = new Promise(resolve => {
             resolve(user);
         } else {
             // 로그인 정보가 전혀 없는 경우에만 익명 로그인 진행
-            firebase.auth().signInAnonymously().then(cred => resolve(cred.user));
+            firebase.auth().signInAnonymously()
+                .then(cred => resolve(cred.user))
+                .catch(err => { console.warn('익명 로그인 실패:', err); resolve(null); });
         }
         unsubscribe(); // 1회 확인 후 감시 종료
     });
