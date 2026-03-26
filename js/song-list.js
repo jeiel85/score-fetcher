@@ -140,6 +140,14 @@ function showLyrics(numPadded, displayTitle) {
         tagsEl.style.display = 'flex';
     } else { tagsEl.style.display = 'none'; }
     document.getElementById('lyrics-content').textContent = (d && d.lyrics) ? d.lyrics : '가사 데이터가 없습니다.';
+    
+    // 🛠️ 신고 버튼 상태 초기화 (다른 곡에서 완료된 상태가 유지되는 버그 수정)
+    const reportBtn = document.getElementById('btn-report-lyrics');
+    if (reportBtn) {
+        reportBtn.disabled = false;
+        reportBtn.textContent = '🛠️ 가사 오류 신고';
+    }
+
     document.getElementById('lyricsModal').style.display = 'flex';
 }
 
