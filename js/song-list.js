@@ -175,7 +175,8 @@ async function handleLyricReport() {
             status: 'pending'
         };
 
-        // 🌟 Firebase SDK를 사용하여 전송 (토큰 관리 자동)
+        // 🌟 인증 완료 대기 후 전송 (permission denied 방지)
+        if (typeof authReady !== 'undefined') await authReady;
         await firebase.database().ref('reports').push(payload);
 
         // 2. 카운트 증가 및 저장

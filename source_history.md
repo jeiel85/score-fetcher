@@ -7,8 +7,10 @@
 
 ## 🚀 주요 마일스톤 (Timeline)
 
+### 🛡️ 2026-03-26: 전송 권한 보강 및 오류 수정 (v1.3.7)
+- **인증 동기화**: `firebase.database()` 호출 전 `authReady` 상태를 확인하여 익명 인증이 완료될 때까지 대기하도록 구현. 이를 통해 `permission denied` 오류 해결.
+
 ### 🐛 2026-03-26: Firebase Database SDK 누락 수정 (v1.3.6)
-- **SDK 추가**: `index.html`과 `admin.html` 하단에 `firebase-database-compat.js`가 포함되지 않아 발생하던 `firebase.database is undefined` 오류를 해결하기 위해 필수 SDK 스크립트 추가 완료.
 
 ### 🛡️ 2026-03-26: 가사 신고 전송 안정화 (v1.3.5)
 

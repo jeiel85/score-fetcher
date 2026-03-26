@@ -1,5 +1,5 @@
 # 🗺️ Conti Maker 개발 로드맵
-### `Current Version: v1.3.6` (2026.03.26)
+### `Current Version: v1.3.7` (2026.03.26)
 
 > 최종 목표: 웹 PWA → Capacitor 기반 Android / iOS 네이티브 앱 출시
 
@@ -21,9 +21,9 @@
 
 ---
 
-## 최근 작업 이력 (2026-03-26) / v1.3.6 릴리즈 🚀
-- **🐛 Firebase Database SDK 누락 수정**: `index.html`과 `admin.html`에 필수 SDK가 누락되어 발생하던 `firebase.database is undefined` 오류 해결
-- **🛡️ 가사 신고 전송 안정화**: Firebase SDK 전용 방식(`push()`)으로 연동 완료
+## 최근 작업 이력 (2026-03-26) / v1.3.7 릴리즈 🚀
+- **🛡️ 권한 오류(Permission Denied) 수정**: 가사 신고 시 인증 데이터가 완전히 로드될 때까지 대기하도록 로직을 개선하여 권한 거부 오류 해결
+- **🐛 Firebase Database SDK 누락 수정**: `index.html`과 `admin.html`에 필수 SDK 추가 완료
 - **🐛 사용 빈도(♪) 집계 로직 안정화**: Firebase 데이터 로딩 중 발생할 수 있는 데이터 구조 불일치 및 에러 응답 예외 처리 강화
 - **✨ 퀵 네비게이션 자동 활성/비활성**: 평상시엔 오버레이 형태로 숨겨져 있다가, 스크롤 발생 시에만 나타나도록 UX 개선 (1.5초 후 자동 숨김)
 
