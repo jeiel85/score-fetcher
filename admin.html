@@ -1340,43 +1340,48 @@ async function migrateSongs() {
 async function migrateLyrics() {
     const btn = document.getElementById('btn-mig-lyrics');
     const log = document.getElementById('log-mig-lyrics');
-    if(!confirm('🚨 주의: 기존에 업로드된 가사 DB 데이터(/lyrics)를 전부 플러시하고 현재 로컬의 가스로 덮어씁니다.\n계속할까요?')) return;
+    if(!confirm('🚨 주의: 기존 가사 DB(/lyrics)에 현재 lyrics.json 파일의 내용을 병합(Merge) 합니다.\n693번 등 웹에서 수동 추가한 가사는 유지됩니다.\n계속할까요?')) return;
     
     try {
         btn.disabled = true; log.innerText = '로컬 lyrics.json 불러오는 중... ⏳';
         const lyricsMap = await (await fetch('lyrics.json')).json();
-        const entries = Object.entries(lyricsMap);
-        log.innerText = `총 ${entries.length}곡의 가사 추출됨. Firebase 구조화 및 전송 시작... 🚀`;
-        
         const payload = {};
         
-        // 🌟 1. 데이터 형식에 관계 없이 유연하게 처리
-        let dataList = [];
-        if (Array.isArray(lyricsMap)) {
-            dataList = lyricsMap;
+        // 🌟 1. 파일 구조 분석 (상세 로그 포함)
+        let songs = [];
+        if (lyricsMap.songs && Array.isArray(lyricsMap.songs)) {
+            // 구조: { metadata: ..., songs: [...] }
+            songs = lyricsMap.songs;
+        } else if (Array.isArray(lyricsMap)) {
+            // 구조: [...]
+            songs = lyricsMap;
         } else {
-            // 객체일 경우 [키, 값] 쌍으로 변환
-            dataList = Object.entries(lyricsMap).map(([title, text]) => ({ title, text }));
+            // 구조: { "1": "가사", ... } 혹은 다른 형태
+            songs = Object.entries(lyricsMap).map(([k, v]) => ({ number: k, lyrics: v }));
         }
 
-        dataList.forEach(item => {
-            // item이 객체인 경우 (배열 모드거나 위에서 변환된 모드)
-            let title = item.title || item.name || item.num || "";
-            let text = item.text || item.lyrics || item.content || (typeof item === 'string' ? "" : item.body) || "";
+        songs.forEach(item => {
+            // 곡 번호 추출 (number 필드가 우선, 없으면 title에서 추출)
+            let numRaw = item.number || item.num || item.id || "";
+            let text = item.lyrics || item.text || item.content || "";
             
-            // 만약 item 자체가 값이고 키가 번호였던 경우 (객체 모드)
-            if (!text && typeof item.text === 'undefined') text = item;
+            // 번호가 없으면 title에서 숫자 추출 시도
+            if (!numRaw && item.title) {
+                const match = String(item.title).match(/(\d+)/);
+                if (match) numRaw = match[1];
+            }
 
-            const match = String(title).match(/(\d+)/); // 문자열 어디서든 숫자 추출
-            if(match && text) {
-                payload[`song_${match[1]}`] = String(text).trim();
+            // 가사가 존재하고 번호가 있을 때만 페이로드에 포함
+            if (numRaw && text && typeof text === 'string') {
+                const num = String(numRaw).replace(/^0+/, ''); // 앞의 0 제거 (001 -> 1)
+                payload[`song_${num}`] = text.trim();
             }
         });
 
         const count = Object.keys(payload).length;
         if (count === 0) {
-            console.error('파싱 실패 데이터 샘플:', lyricsMap);
-            throw new Error(`파일에서 곡 번호를 찾을 수 없습니다. (데이터 샘플: ${JSON.stringify(dataList[0])})`);
+            console.error('파싱 실패 데이터:', lyricsMap);
+            throw new Error(`파일에서 유효한 가사 데이터를 찾을 수 없습니다. (데이터 구조를 확인해주세요)`);
         }
         
         const idToken = await getIdToken();
@@ -1388,7 +1393,7 @@ async function migrateLyrics() {
         });
         
         if(!res.ok) throw new Error('API 응답 HTTP ' + res.status);
-        alert(`✅ 총 ${count}곡의 가사 데이터가 정상적으로 매칭되어 병합되었습니다!`);
+        alert(`✅ 총 ${count}곡의 가사가 성공적으로 추출되어 병합되었습니다!\n(693번 등 기존 웹 추가 곡은 유지됩니다)`);
         log.innerText = '✅ 가사 데이터가 Firebase에 성공적으로 적재되었습니다!';
     } catch(err) {
         log.innerText = '❌ 오류: ' + err.message;
