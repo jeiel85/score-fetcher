@@ -84,8 +84,13 @@ async function initSongList() {
 }
 
 async function openSongModal() {
-    document.getElementById('songModal').style.display = 'flex';
-    document.getElementById('searchInput').value = '';
+    const modal = document.getElementById('songModal');
+    const container = document.getElementById('songListContainer');
+    const searchInput = document.getElementById('searchInput');
+
+    modal.style.display = 'flex';
+    searchInput.value = ''; // 검색창 비우기
+    container.scrollTop = 0; // 스크롤 맨 위로 초기화 (중요!)
 
     if (songArray.length === 0) {
         // 첫 진입: 전체 초기화 (캐시 우선 + Firebase 동기화)
@@ -102,7 +107,8 @@ async function openSongModal() {
     if (cachedHistory) {
         try {
             _songFreqData = buildSongFrequency(JSON.parse(cachedHistory));
-            renderSongList(document.getElementById('searchInput').value ? null : songArray);
+            // 검색창이 비어있으면 전체 목록을, 아니면 필터링된 목록을 다시 렌더링
+            renderSongList(searchInput.value ? null : songArray);
         } catch(e) {}
     }
     // Firebase에서 신선한 이력 데이터 비동기 로드
@@ -203,10 +209,11 @@ function renderQuickIndex(currentList) {
 
     // 검색 중(필터링 상태)이거나 리스트가 너무 짧으면 숨김
     const searchVal = document.getElementById('searchInput').value.trim();
-    if (searchVal || currentList.length < 50) {
+    if (searchVal !== "" || currentList.length < 50) {
         nav.style.display = 'none';
         return;
     }
+    // ... (이하 동일)
 
     nav.style.display = 'flex';
     nav.innerHTML = '';
