@@ -143,54 +143,12 @@ function showLyrics(numPadded, displayTitle) {
     document.getElementById('lyricsModal').style.display = 'flex';
 }
 
+/* 🛠️ 가사 신고 기능 (서버 권한 이슈로 인해 일시 중단)
 async function handleLyricReport() {
     if (!_lastLyricsNum) return;
-
-    // 1. 1일 5건 제한 체크
-    const today = new Date().toISOString().split('T')[0];
-    let reportHistory = JSON.parse(localStorage.getItem('lyricReports') || '{}');
-    
-    if (reportHistory.date !== today) {
-        reportHistory = { date: today, count: 0 };
-    }
-
-    if (reportHistory.count >= 5) {
-        alert('오늘은 너무 많이 요청을 주셨네요~ 😊\n내일 또 부탁드려요!');
-        return;
-    }
-
-    if (!confirm(`${_lastLyricsNum}번 곡의 가사 오류를 신고하시겠습니까?`)) return;
-
-    const btn = document.getElementById('btn-report-lyrics');
-    const originalText = btn.textContent;
-    
-    try {
-        btn.disabled = true;
-        btn.textContent = '⏳ 신고 중...';
-        
-        const payload = {
-            songNum: _lastLyricsNum,
-            timestamp: Date.now(),
-            dateStr: new Date().toLocaleString(),
-            status: 'pending'
-        };
-
-        // 🌟 인증 완료 대기 후 전송 (permission denied 방지)
-        if (typeof authReady !== 'undefined') await authReady;
-        await firebase.database().ref('reports').push(payload);
-
-        // 2. 카운트 증가 및 저장
-        reportHistory.count++;
-        localStorage.setItem('lyricReports', JSON.stringify(reportHistory));
-
-        alert('신고가 접수되었습니다! 🫡\n빠른 시일 내에 수정할게요. 감사합니다!');
-        btn.textContent = '✅ 신고 완료';
-    } catch (err) {
-        alert('신고 중 오류가 발생했습니다: ' + err.message);
-        btn.textContent = originalText;
-        btn.disabled = false;
-    }
+    // ... 내용 생략 (필요 시 복구)
 }
+*/
 
 
 function closeLyricsModal() { document.getElementById('lyricsModal').style.display = 'none'; }

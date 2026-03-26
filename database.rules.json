@@ -21,7 +21,7 @@
     },
     "reports": {
       ".read": "auth.token.email == 'jeiel85@gmail.com'",
-      ".write": "true"
+      ".write": "auth != null"
     },
     "settings": {
       ".read": "auth.token.email == 'jeiel85@gmail.com'",
