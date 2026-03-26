@@ -316,14 +316,17 @@
             </div>
         </div>
 
-        <h2 style="color: #a5b4fc;">➕ 1단계: 신규 찬양 번호 및 제목 등록</h2>
+        <h2 style="color: #a5b4fc;">➕ 1단계: 신규 찬양 번호 및 제목/가사 등록</h2>
         <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 16px;">Vercel의 <code>hymn_list.txt</code>나 Git을 건드릴 필요 없이, 여기서 등록하면 즉시 앱에 연동됩니다.<br>
-        <strong style="color:#fca5a5;">(주의: 악보 이미지는 반드시 <code>images/곡번호.png</code> 형태로 Git에 올려두셔야 앱에서 보입니다!)</strong></p>
+        <strong style="color:#fca5a5;">(번호만 입력하고 제목이나 가사만 적어도 해당 정보만 업데이트됩니다!)</strong></p>
         
-        <div style="display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap;">
-            <input type="number" id="reg-num" placeholder="곡 번호 (ex: 123)" style="flex:1; max-width: 140px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-size:14px;" onchange="updateImgPreviewLabel()">
-            <input type="text" id="reg-title" placeholder="찬양 제목 (띄어쓰기 포함)" style="flex:2; min-width: 200px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-size:14px;">
-            <button class="btn btn-primary" onclick="submitNewSong()" style="min-width: 100px;">실시간 DB 등록하기</button>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:24px;">
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <input type="number" id="reg-num" placeholder="곡 번호 (ex: 123)" style="flex:1; max-width: 140px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-size:14px;" onchange="updateImgPreviewLabel()">
+                <input type="text" id="reg-title" placeholder="찬양 제목 (기존 곡 업데이트 시 생략 가능)" style="flex:2; min-width: 200px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-size:14px;">
+            </div>
+            <textarea id="reg-lyrics" placeholder="가사 내용을 입력하세요... (생략 시 기존 제목만 업데이트)" style="width:100%; height:180px; font-family:'Inter'; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:12px;"></textarea>
+            <button class="btn btn-primary" onclick="submitNewSong()" style="width: 100%; padding: 14px; font-size: 16px; font-weight: 700;">💾 번호/제목/가사 한꺼번에 저장하기 (Firebase)</button>
         </div>
 
         <!-- 🖼️ 2단계: 악보 이미지 직접 업로드 (신규) -->
@@ -334,7 +337,7 @@
             <input type="file" id="reg-img" accept="image/*" style="display:none;" onchange="handleImgPreview(this.files[0])">
             <div id="img-drop-zone" onclick="document.getElementById('reg-img').click()" style="cursor:pointer;">
                 <div style="font-size: 30px; margin-bottom: 8px;">📷</div>
-                <div id="img-preview-label" style="font-size: 14px; color: #94a3b8; font-weight: 600;">클릭하여 악보 이미지를 선택하세요</div>
+                <div id="img-preview-label" style="font-size: 14px; color: #94a3b8; font-weight: 600;">클력하여 악보 이미지를 선택하세요</div>
                 <div style="font-size: 11px; color: #64748b; margin-top: 4px;">PNG, JPG 파일 권장 (파일명은 번호로 자동 변환됨)</div>
             </div>
             <div id="img-preview-container" style="display:none; margin-top: 15px; position:relative;">
@@ -345,11 +348,6 @@
         <button class="btn btn-primary" id="btn-push-img" onclick="pushImageToGithub()" style="width: 100%; background: linear-gradient(135deg, #10b981, #059669); margin-bottom: 24px;" disabled>
             🚀 Github 저장소로 바로 쏘기 (Push)
         </button>
-
-        <h2 style="color: #a5b4fc;">📝 3단계: 가사 데이터 등록 (선택사항)</h2>
-        <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 12px;">위에서 지정한 곡 번호의 가사를 등록합니다. (가사가 여러 줄이면 그대로 엔터 치시면 됩니다)</p>
-        <textarea id="reg-lyrics" placeholder="가사를 입력하세요... (생략 가능)" style="width:100%; height:180px; margin-bottom:12px; font-family:'Inter'; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:12px;"></textarea>
-        <button class="btn btn-secondary" onclick="submitNewLyrics()" style="width:100%; border-color:#8b5cf6; color:#a5b4fc;">가사 데이터 클라우드에 쏘기 🚀</button>
     </div>
 </div>
 
@@ -1296,6 +1294,66 @@ async function deleteSelectedHistory() {
         alert(`${keys.length}건 완전 삭제 완료!`);
         loadHistoryPage();
     } catch(err) { alert(err.message); } finally { document.body.style.cursor = 'default'; }
+}
+
+// ─── [TAB 2] 새 찬양 등록 로직 ──────────────────────────────────────
+async function submitNewSong() {
+    const num = document.getElementById('reg-num').value.trim();
+    const title = document.getElementById('reg-title').value.trim();
+    const lyrics = document.getElementById('reg-lyrics').value.trim();
+
+    if (!num) return alert('곡 번호를 입력해주세요! (필수)');
+    if (!title && !lyrics) return alert('제목이나 가사 중 최소 하나는 입력해야 합니다.');
+
+    const btn = document.querySelector('button[onclick="submitNewSong()"]');
+    const originalText = btn.textContent;
+    
+    try {
+        btn.disabled = true;
+        btn.textContent = '⏳ Firebase에 저장 중...';
+        const idToken = await getIdToken();
+        const results = [];
+
+        // 1. 제목 업데이트 (입력된 경우만)
+        if (title) {
+            const songPayload = {
+                num: parseInt(num, 10),
+                title: title,
+                searchKey: title.replace(/\s+/g, '')
+            };
+            const songRes = await fetch(`${FIREBASE_CONFIG.databaseURL}/songs/song_${num}.json?auth=${idToken}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(songPayload)
+            });
+            if (songRes.ok) results.push('제목');
+        }
+
+        // 2. 가사 업데이트 (입력된 경우만)
+        if (lyrics) {
+            const lyricRes = await fetch(`${FIREBASE_CONFIG.databaseURL}/lyrics/song_${num}.json?auth=${idToken}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(lyrics)
+            });
+            if (lyricRes.ok) results.push('가사');
+        }
+
+        if (results.length > 0) {
+            alert(`✅ ${num}번 곡의 [${results.join(', ')}] 정보가 성공적으로 업데이트되었습니다!`);
+            // 입력창 초기화 (번호는 유지)
+            document.getElementById('reg-title').value = '';
+            document.getElementById('reg-lyrics').value = '';
+        } else {
+            throw new Error('저장에 실패했습니다.');
+        }
+
+    } catch (err) {
+        alert('❌ 저장 중 오류 발생: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
 }
 
 // ─── [TAB 3] DB 마이그레이션 도구 로직 ──────────────────────────────────────
