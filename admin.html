@@ -12,6 +12,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <!-- 프로젝트 Firebase 설정 (같은 폴더의 firebase-config.js 사용) -->
     <script src="firebase-config.js"></script>
 
@@ -553,7 +554,11 @@ firebase.auth().onAuthStateChanged(user => {
             // 통과!
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('admin-container').style.display = 'block';
-            user.getIdToken().then(t => currentUserToken = t);
+            user.getIdToken().then(t => {
+                currentUserToken = t;
+                // 구글 로그인 성공 후 클라우드에서 GitHub 토큰 동기화 시도
+                syncGhTokenFromCloud();
+            });
             loadHistoryPage();
         } else {
             alert(`접근 권한이 없는 계정입니다: ${user.email}\njeiel85@gmail.com 으로 로그인해주세요.`);
@@ -621,24 +626,85 @@ async function submitNewSong() {
 const GH_OWNER = 'jeiel85';
 const GH_REPO  = 'score-fetcher';
 
-function saveGhToken() {
+// 🔒 암호화 키 생성 (사용자 UID 기반 + 고정 솔트)
+function getEntropyKey() {
+    const user = firebase.auth().currentUser;
+    if (!user) return null;
+    return user.uid + "_score_fetcher_salt_2026";
+}
+
+// ☁️ 클라우드(Firebase)에서 토큰 가져와서 로컬에 복호화 저장
+async function syncGhTokenFromCloud() {
+    const key = getEntropyKey();
+    if (!key) return;
+
+    try {
+        const idToken = await getIdToken();
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/settings/github_token.json?auth=${idToken}`);
+        if (!res.ok) return;
+        
+        const encryptedToken = await res.json();
+        if (!encryptedToken) return;
+
+        // 복호화 시도
+        const bytes = CryptoJS.AES.decrypt(encryptedToken, key);
+        const originalToken = bytes.toString(CryptoJS.enc.Utf8);
+        
+        if (originalToken) {
+            localStorage.setItem('gh_personal_token', originalToken);
+            updateTokenStatus();
+            console.log("✅ Github 토큰이 클라우드와 동기화되었습니다.");
+        }
+    } catch (e) {
+        console.error("클라우드 토큰 동기화 실패:", e);
+    }
+}
+
+async function saveGhToken() {
     const t = document.getElementById('gh-token').value.trim();
-    if(!t) return alert('토큰을 입력해주세요.');
-    localStorage.setItem('gh_personal_token', t);
-    updateTokenStatus();
-    alert('✅ Github 토큰이 브라우저에 안전하게 저장되었습니다.');
+    if (!t || t === '********') return alert('새 토큰을 입력해주세요.');
+    
+    const key = getEntropyKey();
+    if (!key) return alert('인증 정보가 없습니다.');
+
+    if (!confirm('Github 토큰을 암호화하여 클라우드(Firebase)에 저장하시겠습니까?\n이제 다른 PC에서도 로그인만 하면 자동으로 동기화됩니다.')) return;
+
+    try {
+        // 1. 암호화
+        const encrypted = CryptoJS.AES.encrypt(t, key).toString();
+
+        // 2. Firebase 저장
+        const idToken = await getIdToken();
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/settings/github_token.json?auth=${idToken}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(encrypted)
+        });
+
+        if (!res.ok) throw new Error('클라우드 저장 실패');
+
+        // 3. 로컬 저장 및 UI 업데이트
+        localStorage.setItem('gh_personal_token', t);
+        updateTokenStatus();
+        alert('✅ Github 토큰이 암호화되어 클라우드에 안전하게 저장되었습니다.');
+    } catch (err) {
+        alert('토큰 저장 오류: ' + err.message);
+    }
 }
 
 function updateTokenStatus() {
     const t = localStorage.getItem('gh_personal_token');
     const status = document.getElementById('token-status');
-    if(t) {
-        status.textContent = '✅ 토큰 등록됨';
+    const input = document.getElementById('gh-token');
+    
+    if (t) {
+        status.textContent = '✅ 클라우드 동기화됨 (암호화 유지)';
         status.style.color = '#34d399';
-        document.getElementById('gh-token').value = '********';
+        input.value = '********';
     } else {
         status.textContent = '❌ 토큰 미등록';
         status.style.color = '#f87171';
+        input.value = '';
     }
 }
 

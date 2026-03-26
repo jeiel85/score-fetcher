@@ -7,6 +7,11 @@
 
 ## 🚀 주요 마일스톤 (Timeline)
 
+### 🔐 2026-03-26: GitHub 토큰 관리 혁신 (v1.3.0 예정)
+- **클라우드 동기화**: 기존 로컬 DB(`localStorage`)에만 저장되던 GitHub Personal Access Token을 Firebase Realtime DB로 이전하여 어떤 PC에서든 로그인만 하면 자동 동기화되도록 개선.
+- **종단간 암호화(E2EE) 유사 구현**: 사용자의 고유 UID와 솔트를 조합한 키로 `CryptoJS` (AES-256) 암호화 후 서버에 전송하여 데이터 보안성 강화.
+- **보안 규칙**: Firebase Database Rules를 통해 `jeiel85@gmail.com` 계정 외에는 설정 노드 접근을 원천 차단.
+
 ### 🌑 2026-03-26: 대대적인 리브랜딩 및 사용성 고도화 (v1.2.1)
 - **리브랜딩**: 서비스 명칭을 **"콘티 메이커 (Conti Maker)"**로 확정.
 - **아이덴티티**: 블랙 테마 기반의 프리미엄 아이콘(`icon.png`) 및 소셜 공유용 **Premium Black Card**(`og-image-premium.png`) 제작 적용.
