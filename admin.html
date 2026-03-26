@@ -277,10 +277,12 @@
         /* Fullscreen Image Preview */
         .zoom-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000;
-            display: none; align-items: center; justify-content: center; cursor: zoom-out;
+            display: none; align-items: center; justify-content: center; overflow: auto; padding: 20px;
         }
         .zoom-overlay.active { display: flex; }
-        .zoom-overlay img { max-width: 98%; max-height: 98%; object-fit: contain; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        .zoom-overlay img { max-width: 98%; max-height: 98%; object-fit: contain; cursor: zoom-in; transition: all 0.2s ease; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        .zoom-overlay.original { align-items: flex-start; justify-content: flex-start; }
+        .zoom-overlay.original img { max-width: none; max-height: none; object-fit: none; cursor: zoom-out; }
         
         @media (max-width: 768px) {
             .modal-grid { grid-template-columns: 1fr; }
@@ -475,7 +477,7 @@
         </div>
     </div>
     <!-- 가사 수정 모달 -->
-    <div class="modal-overlay" id="lyricEditModal">
+    <div class="modal-overlay" id="lyricEditModal" onclick="if(event.target===this)closeLyricModal()">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>🛠️ 가사/정보 수정 (<span id="edit-song-num"></span>)</h3>
@@ -509,9 +511,9 @@
     </div>
 
     <!-- 악보 전체보기(확대) 모달 -->
-    <div class="zoom-overlay" id="imageZoomModal" onclick="this.classList.remove('active')">
-        <img id="zoom-img" src="" alt="악보 크게 보기">
-        <div style="position:fixed; top:20px; right:20px; color:#fff; font-size:24px; cursor:pointer;">×</div>
+    <div class="zoom-overlay" id="imageZoomModal" onclick="if(event.target===this)this.classList.remove('active')">
+        <img id="zoom-img" src="" alt="악보 크게 보기" onclick="toggleZoom(this)">
+        <div style="position:fixed; top:20px; right:20px; color:#fff; font-size:32px; cursor:pointer; text-shadow:0 0 10px rgba(0,0,0,0.8);" onclick="document.getElementById('imageZoomModal').classList.remove('active')">×</div>
     </div>
 </div> <!-- /TAB 5 -->
 
@@ -626,7 +628,7 @@
 
 <script>
 // ─── 버전 및 설정 ────────────────────────────────────────────────────────
-const APP_VERSION = "v1.4.5";
+const APP_VERSION = "v1.4.6";
 const BUILD_DATE  = "2026.03.26";
 document.addEventListener('DOMContentLoaded', () => {
     const v = document.getElementById('admin-version-info');
@@ -1707,7 +1709,13 @@ function openZoomImage(src) {
     const modal = document.getElementById('imageZoomModal');
     const img = document.getElementById('zoom-img');
     img.src = src;
+    modal.classList.remove('original'); // 항상 맞춤 모드로 시작
     modal.classList.add('active');
+}
+
+function toggleZoom(img) {
+    const modal = document.getElementById('imageZoomModal');
+    modal.classList.toggle('original');
 }
 
 async function loadReports() {
