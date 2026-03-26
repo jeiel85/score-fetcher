@@ -274,15 +274,42 @@
         .field-row input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; color: #fff; font-size: 14px; }
         #edit-lyrics-text { flex: 1; height: 100%; margin-bottom: 0; resize: none; overflow-y: auto; }
 
-        /* Fullscreen Image Preview */
+        /* Fullscreen Image Preview - Refactored */
         .zoom-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000;
-            display: none; overflow: auto; padding: 40px;
+            display: none; flex-direction: column; overflow: auto;
         }
-        .zoom-overlay.active { display: flex; align-items: center; justify-content: center; }
-        .zoom-overlay img { max-width: 98%; max-height: 98%; object-fit: contain; cursor: zoom-in; box-shadow: 0 0 50px rgba(0,0,0,0.5); margin: auto; }
-        .zoom-overlay.original { display: block; } /* 스크롤이 자연스럽게 발생하도록 block 전환 */
-        .zoom-overlay.original img { max-width: none; max-height: none; object-fit: none; cursor: zoom-out; display: block; margin: 40px auto; }
+        .zoom-overlay.active { display: flex; }
+        .zoom-overlay-bg { position: fixed; inset: 0; z-index: -1; } /* 배경 전용 구역 */
+        
+        /* 줌 컨텐츠 (이미지 감싸는 격자) */
+        .zoom-content { 
+            flex: 1; display: flex; align-items: center; justify-content: center; 
+            padding: 60px; min-height: 100%; min-width: 100%; box-sizing: border-box;
+        }
+        .zoom-overlay img { 
+            max-width: 100%; max-height: 90vh; object-fit: contain; 
+            cursor: zoom-in; transition: transform 0.2s ease; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); 
+            background: #fff; /* 악보 배경이 투명할 경우 대비 */
+        }
+        
+        .zoom-overlay.original { display: block; } /* 스크롤 활성화 */
+        .zoom-overlay.original .zoom-content { display: block; text-align: center; }
+        .zoom-overlay.original img { 
+            max-width: none; max-height: none; object-fit: none; 
+            cursor: zoom-out; margin: 0 auto; 
+        }
+
+        .zoom-close-fixed {
+            position: fixed; top: 20px; right: 20px; 
+            width: 44px; height: 44px; background: rgba(0,0,0,0.5);
+            color: #fff; font-size: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 3010; transition: background 0.2s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .zoom-close-fixed:hover { background: rgba(255,255,255,0.2); }
         
         @media (max-width: 768px) {
             .modal-grid { grid-template-columns: 1fr; }
@@ -510,10 +537,13 @@
         </div>
     </div>
 
-    <!-- 악보 전체보기(확대) 모달 -->
-    <div class="zoom-overlay" id="imageZoomModal" onclick="this.classList.remove('active')">
-        <img id="zoom-img" src="" alt="악보 크게 보기" onclick="event.stopPropagation(); toggleZoom(this)">
-        <div style="position:fixed; top:20px; right:20px; color:#fff; font-size:32px; cursor:pointer; text-shadow:0 0 10px rgba(0,0,0,0.8); z-index: 3001;" onclick="document.getElementById('imageZoomModal').classList.remove('active')">×</div>
+    <!-- 악보 전체보기(확대) 모달 (구조 개편) -->
+    <div class="zoom-overlay" id="imageZoomModal">
+        <div class="zoom-overlay-bg" onclick="closeZoomModal()"></div>
+        <div class="zoom-content" onclick="closeZoomModal()">
+            <img id="zoom-img" src="" alt="악보 크게 보기" onclick="event.stopPropagation(); toggleZoom(this)">
+        </div>
+        <div class="zoom-close-fixed" onclick="closeZoomModal()">×</div>
     </div>
 </div> <!-- /TAB 5 -->
 
@@ -628,7 +658,7 @@
 
 <script>
 // ─── 버전 및 설정 ────────────────────────────────────────────────────────
-const APP_VERSION = "v1.4.8";
+const APP_VERSION = "v1.4.9";
 const BUILD_DATE  = "2026.03.26";
 document.addEventListener('DOMContentLoaded', () => {
     const v = document.getElementById('admin-version-info');
@@ -1709,13 +1739,22 @@ function openZoomImage(src) {
     const modal = document.getElementById('imageZoomModal');
     const img = document.getElementById('zoom-img');
     img.src = src;
-    modal.classList.remove('original'); // 항상 맞춤 모드로 시작
+    modal.classList.remove('original');
     modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+}
+
+function closeZoomModal() {
+    const modal = document.getElementById('imageZoomModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = ''; // 스크롤 복원
 }
 
 function toggleZoom(img) {
     const modal = document.getElementById('imageZoomModal');
     modal.classList.toggle('original');
+    // 줌 모드 전환 시 스크롤 최상단으로 (선택 사항)
+    if(modal.classList.contains('original')) modal.scrollTop = 0;
 }
 
 async function loadReports() {
