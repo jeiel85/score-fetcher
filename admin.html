@@ -609,7 +609,7 @@
 
 <script>
 // ─── 버전 및 설정 ────────────────────────────────────────────────────────
-const APP_VERSION = "v1.4.2";
+const APP_VERSION = "v1.4.3";
 const BUILD_DATE  = "2026.03.26";
 document.addEventListener('DOMContentLoaded', () => {
     const v = document.getElementById('admin-version-info');
@@ -1713,16 +1713,17 @@ async function loadReports() {
             const date = item.dateStr || new Date(item.timestamp).toLocaleString();
             const isCompleted = item.status === 'completed';
             const pureNum = String(item.songNum).replace(/^0+/, '');
+            const paddedNum = pureNum.padStart(3, '0');
             const songInfo = songsDict[`song_${item.songNum}`] || songsDict[`song_${pureNum}`] || { title: '(정보 없음)' };
             
-            // 썸네일 URL (일단 .jpg 시도)
-            const thumbUrl = `images/${pureNum}.jpg`;
+            // 썸네일 URL (패딩된 번호가 더 많으므로 우선 시도)
+            const thumbUrl = `images/${paddedNum}.png`;
 
             return `<tr style="${isCompleted ? 'opacity:0.5' : ''}">
                 <td style="font-size:11px; color:#94a3b8;">${date}</td>
                 <td>
                     <div style="width:40px; height:40px; background:#0f172a; border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
-                        <img src="${thumbUrl}" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='">
+                        <img src="${thumbUrl}" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; if(!this.src.includes('.jpg')) this.src='images/${pureNum}.jpg'; else this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';">
                     </div>
                 </td>
                 <td style="font-weight:700; color:#fca5a5; font-size:12px;">${item.songNum}번</td>
@@ -1773,10 +1774,41 @@ async function openLyricEditor(songNum, reportKey) {
     try {
         const idToken = await getIdToken();
         const pureNum = String(songNum).replace(/^0+/, '');
+        const paddedNum = pureNum.padStart(3, '0');
         
-        // 1. 악보 로드 (tryLoadImage 유사 로직)
-        scoreImg.src = `images/${pureNum}.jpg`;
-        scoreImg.onerror = () => { if(!scoreImg.src.includes('.png')) scoreImg.src = `images/${pureNum}.png`; };
+        // 1. 악보 로드 (다양한 확장자와 패딩 시도)
+        const tryExts = ['.png', '.jpg', '.gif', '.jfif', '.PNG', '.JPG', '.GIF', '.JFIF'];
+        let extIdx = 0;
+        
+        const tryLoad = (num) => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(img.src);
+                img.onerror = () => {
+                    extIdx++;
+                    if (extIdx < tryExts.length) {
+                        img.src = `images/${num}${tryExts[extIdx]}`;
+                    } else {
+                        resolve(null);
+                    }
+                };
+                img.src = `images/${num}${tryExts[extIdx]}`;
+            });
+        };
+
+        // 패딩된 번호 먼저 시도, 안되면 원본 시도
+        let src = await tryLoad(paddedNum);
+        if (!src) {
+            extIdx = 0;
+            src = await tryLoad(pureNum);
+        }
+        if (!src) {
+            extIdx = 0;
+            src = await tryLoad(songNum); // 전달받은 그대로
+        }
+        
+        scoreImg.src = src || '';
+        if (!src) console.warn(`${songNum}번 악보를 이미지 폴더에서 찾을 수 없습니다.`);
 
         // 2. 제목 로드
         const songRes = await fetch(`${FIREBASE_CONFIG.databaseURL}/songs/song_${songNum}.json?auth=${idToken}`);
