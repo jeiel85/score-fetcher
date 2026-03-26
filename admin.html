@@ -194,6 +194,48 @@
         .page-btn.active { background: #6366f1; color: #fff; }
         #history-search { width: 100%; max-width: 240px; padding: 8px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-family: 'Inter'; font-size: 13px; }
         .admin-version-info { text-align: center; color: rgba(255,255,255,0.2); font-size: 11px; margin: 40px 0 20px 0; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; }
+
+        /* 📱 모바일 및 태블릿 대응 반응형 스타일 */
+        @media (max-width: 768px) {
+            .container { padding: 16px; width: 100%; }
+            h1 { font-size: 20px; }
+            .subtitle { font-size: 12px; }
+            
+            /* 탭 스크롤링 개선 */
+            .tabs {
+                gap: 4px; border-bottom-width: 1px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .tab-btn { padding: 8px 12px; font-size: 13px; }
+
+            /* 카드 레이아웃 */
+            .card { padding: 16px; margin-bottom: 20px; }
+            h2 { font-size: 15px; margin-bottom: 8px; }
+
+            /* 입력 폼 세로 정렬 */
+            .tab-content { padding: 0; }
+            #tab-register .btn-primary { width: 100%; }
+            
+            /* 테이블 최적화 */
+            table { font-size: 12px; }
+            th, td { padding: 10px 8px; }
+            .action-btn { font-size: 10px; padding: 6px 10px; min-height: 32px; min-width: 44px; } /* 터치 밸런스 조정 */
+
+            /* 컨텐츠 헤더 (제목 + 로그아웃) */
+            #admin-container > div:first-child { flex-direction: column; gap: 16px; }
+            #admin-container > div:first-child > div:last-child { width: 100%; justify-content: space-between; gap: 8px; }
+            #admin-container > div:first-child > div:last-child .btn { flex: 1; text-align: center; padding: 10px; }
+            
+            /* 임포트 도구 단계 바 */
+            .steps { gap: 6px; overflow-x: auto; padding-bottom: 8px; justify-content: flex-start; }
+            .step-badge { font-size: 11px; padding: 6px 10px; }
+        }
+
+        /* 💻 가로 모드 및 태블릿 미세조정 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container { max-width: 90%; }
+            h1 { font-size: 24px; }
+        }
     </style>
 </head>
 <body>
