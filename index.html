@@ -64,7 +64,7 @@
                     <label class="field-label">콘티 제목</label>
                     <input type="text" id="setlist-title" class="title-input" placeholder="예: 2026-03-15 수요예배">
                     <label class="field-label">찬양 목록 입력</label>
-                    <textarea id="song-input" placeholder="276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분"></textarea>
+                    <textarea id="song-input" placeholder="276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분" oninput="handleInputPrefetch(this.value)"></textarea>
                 </div>
                 <!-- 가로 모드: 악보 만들기 후 콘티 공유 이미지 -->
                 <div class="ls-conti-area" id="ls-conti-area">
@@ -311,28 +311,60 @@
             } catch (e) { console.warn('autoLoad 실패:', e); }
         }
 
-        // ─── 오프라인 악보 사전 캐싱 ───────────────────────────────────────────
+        // ─── 오프라인 악보 사전 캐싱 (백그라운드 유휴 시간 활용) ───────────────
         async function precacheAllScores() {
             if (!('caches' in window) || !navigator.onLine) return;
             try {
                 const cache = await caches.open('scores-v1');
                 const isFirst = !localStorage.getItem('scoresCachedAt');
-                if (isFirst) showToast('📥 악보 저장 중... 오프라인 사용 준비');
+                
+                // 1. 현재 입력창 곡들 최우선순위로 캐싱
+                const currentTxt = document.getElementById('song-input').value;
+                const currentNumbers = [...currentTxt.matchAll(/^(\d+)/gm)].map(m => m[1]);
+                if (currentNumbers.length > 0) {
+                    await Promise.all(currentNumbers.map(num => prefetchImage(num)));
+                }
+
+                if (isFirst) showToast('📥 악보 저장 중... (백그라운드 유휴시간 활용)');
+                
                 const resp = await fetch('hymn_list.txt');
                 const text = await resp.text();
                 const numbers = [...text.matchAll(/^(\d+)/gm)].map(m => m[1]);
-                for (let i = 0; i < numbers.length; i += 10) {
+                
+                // 2. 전체 목록은 점진적으로 캐싱 (브라우저 부하 최소화)
+                for (let i = 0; i < numbers.length; i += 20) {
                     if (!navigator.onLine) break;
-                    await Promise.all(numbers.slice(i, i + 10).map(async (num) => {
+                    await Promise.all(numbers.slice(i, i + 20).map(async (num) => {
+                        // utils.js의 prefetchImage와는 별도로 PWA 캐시 스토리지에 직접 저장
+                        const numPadded = String(num).padStart(3, '0');
                         for (const ext of EXTENSIONS) {
-                            const url = `images/${num}${ext}`;
-                            if (await cache.match(url)) return;
-                            try { const res = await fetch(url); if (res.ok) { await cache.put(url, res); return; } } catch(e) {}
+                            const url = `images/${numPadded}${ext}`;
+                            if (await cache.match(url)) return; 
+                            try {
+                                const res = await fetch(url);
+                                if (res.ok) { await cache.put(url, res); break; }
+                            } catch(e) {}
                         }
                     }));
+                    // 약 2초마다 다음 배치 진행 (네트워크 부하 분산)
+                    await new Promise(r => setTimeout(r, 2000));
                 }
-                if (isFirst) { localStorage.setItem('scoresCachedAt', Date.now()); showToast('✅ 악보 저장 완료! 오프라인에서도 사용 가능합니다'); }
+                
+                if (isFirst) {
+                    localStorage.setItem('scoresCachedAt', Date.now());
+                    showToast('✅ 악보 최적화 완료! 오프라인에서도 매우 빠르게 작동합니다');
+                }
             } catch(e) {}
+        }
+
+        // ─── 실시간 입력 번호 프리페칭 ─────────────────────────────────────────
+        let _inputPrefetchTimer = null;
+        function handleInputPrefetch(val) {
+            clearTimeout(_inputPrefetchTimer);
+            _inputPrefetchTimer = setTimeout(() => {
+                const numbers = [...val.matchAll(/^(\d+)/gm)].map(m => m[1]);
+                numbers.forEach(num => prefetchImage(num));
+            }, 500); // 사용자가 입력을 멈춘 뒤 0.5초 후 실행
         }
 
         // ─── 카카오 인앱 브라우저 안내 ─────────────────────────────────────────

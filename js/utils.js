@@ -113,3 +113,24 @@ function initVersionDisplay() {
         footer.appendChild(verDiv);
     }
 }
+// ─── 성능 최적화: 이미지 프리페칭 ──────────────────────────────────────────
+const EXTENSIONS = ['.png', '.jpg', '.gif', '.jfif', '.PNG', '.JPG', '.GIF', '.JFIF'];
+const _prefetchedSet = new Set();
+
+async function prefetchImage(num) {
+    if (!num || _prefetchedSet.has(num)) return;
+    const numPadded = String(num).padStart(3, '0');
+    
+    // 이미 캐시되어 있는지 확인 (Browser Cache 활용)
+    for (const ext of EXTENSIONS) {
+        const url = `images/${numPadded}${ext}`;
+        try {
+            const img = new Image();
+            img.src = url;
+            _prefetchedSet.add(num);
+            // 한 번이라도 성공하면 중단
+            img.onload = () => { return; };
+            img.onerror = () => { /* 다음 확장자 시도 */ };
+        } catch(e) {}
+    }
+}

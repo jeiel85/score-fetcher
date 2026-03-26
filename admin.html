@@ -15,7 +15,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <!-- 프로젝트 Firebase 설정 (같은 폴더의 firebase-config.js 사용) -->
-    <script src="firebase-config.js"></script>
+    <!-- Chart.js for Statistics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -198,39 +199,82 @@
         .admin-version-info { text-align: center; color: rgba(255,255,255,0.2); font-size: 11px; margin: 40px 0 20px 0; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; }
 
         /* 📱 모바일 및 태블릿 대응 반응형 스타일 */
-        @media (max-width: 768px) {
-            .container { padding: 16px; width: 100%; }
-            h1 { font-size: 20px; }
-            .subtitle { font-size: 12px; }
+        @media (max-width: 650px) {
+            body { padding: 16px 12px; }
+            .container { padding: 0; width: 100%; }
+            h1 { font-size: 20px; text-align: center; }
+            .subtitle { font-size: 12px; text-align: center; margin-bottom: 24px; }
             
-            /* 탭 스크롤링 개선 */
+            /* 탭 스크롤링 및 버튼 크기 확대 */
             .tabs {
                 gap: 4px; border-bottom-width: 1px;
-                -webkit-overflow-scrolling: touch;
+                padding-bottom: 8px;
+                margin-bottom: 16px;
+                display: flex; flex-wrap: nowrap;
+                overflow-x: auto; -webkit-overflow-scrolling: touch;
             }
-            .tab-btn { padding: 8px 12px; font-size: 13px; }
+            .tab-btn { padding: 12px 14px; font-size: 14px; flex-shrink: 0; border-radius: 10px; }
 
-            /* 카드 레이아웃 */
-            .card { padding: 16px; margin-bottom: 20px; }
-            h2 { font-size: 15px; margin-bottom: 8px; }
+            /* 카드 레이아웃 표준화 */
+            .card { padding: 16px; margin-bottom: 16px; border-radius: 12px; }
+            h2 { font-size: 15px; margin-bottom: 12px; }
 
-            /* 입력 폼 세로 정렬 */
-            .tab-content { padding: 0; }
-            #tab-register .btn-primary { width: 100%; }
+            /* 테이블을 카드 형태로 변환 (핵심!) */
+            .table-wrap table, .table-wrap thead, .table-wrap tbody, .table-wrap th, .table-wrap td, .table-wrap tr { 
+                display: block; 
+            }
+            .table-wrap thead { display: none; } /* 헤더 숨김 */
+            .table-wrap tr {
+                background: rgba(255,255,255,0.03);
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 12px;
+                margin-bottom: 12px;
+                padding: 16px;
+                position: relative;
+            }
+            .table-wrap td {
+                border: none;
+                padding: 4px 0;
+                text-align: left;
+                width: 100% !important;
+            }
+            /* 특정 컬럼 스타일 (히스토리 탭) */
+            #history-tbody td:nth-of-type(1) { position: absolute; top: 16px; right: 16px; width: auto !important; } /* 체크박스 */
+            #history-tbody td:nth-of-type(2) { font-size: 11px; color: #94a3b8; margin-bottom: 2px; } /* 날짜 */
+            #history-tbody td:nth-of-type(3) { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; } /* 제목 & 목록 */
+            #history-tbody td:nth-of-type(4) { display: inline-block; width: auto !important; margin-right: 8px; } /* 배지 */
+            #history-tbody td:nth-of-type(5) { margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; text-align: right; } /* 삭제 버튼 */
+
+            /* 신고 관리 탭 카드 변환 */
+            #reports-tbody tr { padding-left: 72px; min-height: 80px; }
+            #reports-tbody td:nth-of-type(2) { position: absolute; left: 16px; top: 16px; width: 44px !important; height: 44px !important; padding:0; } /* 썸네일 */
+            #reports-tbody td:nth-of-type(1) { font-size: 11px; margin-bottom: 2px; } /* 날짜 */
+            #reports-tbody td:nth-of-type(3) { display: inline-block; width: auto !important; margin-right: 6px; font-size: 14px; } /* 번호 */
+            #reports-tbody td:nth-of-type(4) { display: inline-block; width: auto !important; font-size: 14px; font-weight: 700; color: #fff; } /* 제목 */
+            #reports-tbody td:nth-of-type(5) { font-size: 12px; margin-top: 4px; } /* 상태 */
+            #reports-tbody td:nth-of-type(6) { margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; text-align: right; }
+
+            /* 입력 폼 폰트 크기 확대 (iOS 줌 방지) */
+            input[type="text"], input[type="number"], input[type="password"], textarea, #history-search {
+                font-size: 16px !important;
+                padding: 12px 14px !important;
+                height: auto !important;
+            }
             
-            /* 테이블 최적화 */
-            table { font-size: 12px; }
-            th, td { padding: 10px 8px; }
-            .action-btn { font-size: 10px; padding: 6px 10px; min-height: 32px; min-width: 44px; } /* 터치 밸런스 조정 */
-
-            /* 컨텐츠 헤더 (제목 + 로그아웃) */
-            #admin-container > div:first-child { flex-direction: column; gap: 16px; }
-            #admin-container > div:first-child > div:last-child { width: 100%; justify-content: space-between; gap: 8px; }
-            #admin-container > div:first-child > div:last-child .btn { flex: 1; text-align: center; padding: 10px; }
+            /* 버튼 전체 너비 */
+            #admin-container > div:first-child { flex-direction: column; align-items: center; gap: 16px; margin-bottom: 24px; }
+            #admin-container > div:first-child > div:last-child { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            #admin-container > div:first-child > div:last-child a, 
+            #admin-container > div:first-child > div:last-child button { width: 100%; text-align: center; padding: 10px; }
             
-            /* 임포트 도구 단계 바 */
-            .steps { gap: 6px; overflow-x: auto; padding-bottom: 8px; justify-content: flex-start; }
-            .step-badge { font-size: 11px; padding: 6px 10px; }
+            .btn { height: 48px; display: flex; align-items: center; justify-content: center; width: 100%; }
+            .btn-row { flex-direction: column; }
+            .btn-row button { width: 100%; }
+
+            /* 모달 대응 */
+            .modal-content { height: 95vh; border-radius: 12px; }
+            .modal-grid { grid-template-columns: 1fr; gap: 12px; }
+            .modal-score-wrap { height: 180px; }
         }
 
         /* 💻 가로 모드 및 태블릿 미세조정 */
@@ -347,11 +391,12 @@
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('history')" id="btn-tab-history">📜 역대 콘티 관리</button>
-        <button class="tab-btn" onclick="switchTab('register')" id="btn-tab-register">🎵 새 찬양 등록</button>
-        <button class="tab-btn" onclick="switchTab('reports')" id="btn-tab-reports">🚨 가사 신고 관리</button>
-        <button class="tab-btn" onclick="switchTab('import')" id="btn-tab-import">📥 대량 임포트 툴</button>
-        <button class="tab-btn" onclick="switchTab('migration')" id="btn-tab-migration">📦 곡/가사 DB 통폐합</button>
+        <button class="tab-btn active" onclick="switchTab('history')" id="btn-tab-history">📜 역대 콘티</button>
+        <button class="tab-btn" onclick="switchTab('stats')" id="btn-tab-stats">📊 찬양 통계</button>
+        <button class="tab-btn" onclick="switchTab('register')" id="btn-tab-register">🎵 새 곡 등록</button>
+        <button class="tab-btn" onclick="switchTab('reports')" id="btn-tab-reports">🚨 가사 신고</button>
+        <button class="tab-btn" onclick="switchTab('import')" id="btn-tab-import">📥 임포트</button>
+        <button class="tab-btn" onclick="switchTab('migration')" id="btn-tab-migration">📦 마이그레이션</button>
     </div>
 
     <!-- TAB 1: 역대 콘티 관리 -->
@@ -414,6 +459,40 @@
         </div>
     </div>
 </div> <!-- /TAB 1 -->
+
+    <!-- TAB: 찬양 통계 -->
+    <div id="tab-stats" class="tab-content">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 24px;">
+            <div class="card" style="margin-bottom:0;">
+                <h2>📊 전체 요약</h2>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#94a3b8; font-size:14px;">총 등록 콘티</span>
+                        <span id="stat-total-conti" style="color:#fff; font-size:18px; font-weight:800;">-</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#94a3b8; font-size:14px;">불린 곡 합계</span>
+                        <span id="stat-total-songs" style="color:#fff; font-size:18px; font-weight:800;">-</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#94a3b8; font-size:14px;">고유 곡 수 (레퍼토리)</span>
+                        <span id="stat-unique-songs" style="color:#fff; font-size:18px; font-weight:800;">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="margin-bottom:0;">
+                <h2>📈 월별 찬양 활동</h2>
+                <canvas id="monthlyChart" style="max-height: 180px;"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="color: #a5b4fc;">🏆 가장 많이 불린 찬양 TOP 10</h2>
+            <div id="top-songs-list" style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+                <div style="text-align:center; padding: 40px; color:#64748b;">통계 데이터를 계산하고 있습니다...</div>
+            </div>
+        </div>
+    </div>
 
 <!-- TAB 4: 새 찬양 등록 (중간에 삽입) -->
 <div id="tab-register" class="tab-content">
@@ -1732,8 +1811,9 @@ function switchTab(id) {
     if (content) content.classList.add('active');
 
     // 탭별 데이터 로딩 트리거
-    if (id === 'history') loadHistoryPage();
+    if (id === 'history' && allHistoryData.length === 0) loadHistoryPage();
     if (id === 'reports') loadReports();
+    if (id === 'stats') loadStatistics();
 }
 
 // ─── 유틸 ────────────────────────────────────────────────────────
@@ -1960,6 +2040,123 @@ async function saveEditedLyrics() {
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
+    }
+}
+
+async function loadStatistics() {
+    const listEl = document.getElementById('top-songs-list');
+    try {
+        const idToken = await getIdToken();
+        // 히스토리 전체 데이터가 없으면 먼저 로드
+        if (allHistoryData.length === 0) {
+            const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/history.json?auth=${idToken}`);
+            const data = await res.json();
+            if (data) {
+                allHistoryData = Object.entries(data).map(([key, val]) => ({ key, ...val }));
+            }
+        }
+
+        if (allHistoryData.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; padding: 40px; color:#64748b;">데이터가 없어 통계를 낼 수 없습니다.</div>';
+            return;
+        }
+
+        // 1. 데이터 집계
+        const songCounts = {};
+        const monthCounts = {};
+        let totalSongPlays = 0;
+
+        allHistoryData.forEach(entry => {
+            // 월별 집계
+            const d = new Date(entry.timestamp);
+            const monKey = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}`;
+            monthCounts[monKey] = (monthCounts[monKey] || 0) + 1;
+
+            // 곡별 집계
+            const lines = (entry.text || '').split('\n').map(l => l.trim());
+            lines.forEach(line => {
+                const match = line.match(/^(\d+)/);
+                if (match) {
+                    const num = parseInt(match[1], 10);
+                    songCounts[num] = (songCounts[num] || 0) + 1;
+                    totalSongPlays++;
+                }
+            });
+        });
+
+        // 2. 곡 정보 매핑 (제목 가져오기)
+        const songsRes = await fetch(`${FIREBASE_CONFIG.databaseURL}/songs.json?auth=${idToken}`);
+        const songsDict = await songsRes.json() || {};
+
+        const sortedSongs = Object.entries(songCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+
+        // 3. UI 렌더링
+        document.getElementById('stat-total-conti').textContent = `${allHistoryData.length}건`;
+        document.getElementById('stat-total-songs').textContent = `${totalSongPlays}회`;
+        document.getElementById('stat-unique-songs').textContent = `${Object.keys(songCounts).length}곡`;
+
+        // 리스트 렌더링
+        const maxCnt = sortedSongs[0][1];
+        listEl.innerHTML = sortedSongs.map(([num, count], i) => {
+            const song = songsDict[`song_${num}`] || { title: `(${num}번 곡)` };
+            const percent = Math.round((count / maxCnt) * 100);
+            return `
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <div style="display:flex; justify-content:space-between; font-size:13px; color:#cbd5e1;">
+                        <span><b style="color:#6366f1; margin-right:8px;">${i+1}위</b> ${num}번 ${song.title}</span>
+                        <span style="font-weight:700;">${count}회</span>
+                    </div>
+                    <div style="height:8px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden;">
+                        <div style="width:${percent}%; height:100%; background:linear-gradient(90deg, #6366f1, #8b5cf6); border-radius:4px;"></div>
+                    </div>
+                </div>`;
+        }).join('');
+
+        // 4. 차트 렌더링 (Chart.js)
+        const sortedMonths = Object.keys(monthCounts).sort().slice(-6);
+        const ctx = document.getElementById('monthlyChart').getContext('2d');
+        
+        // 기존 차트 파괴 (재진입 시)
+        if (window.myStatsChart) window.myStatsChart.destroy();
+        
+        window.myStatsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: sortedMonths,
+                datasets: [{
+                    label: '콘티 등록 수',
+                    data: sortedMonths.map(m => monthCounts[m]),
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99,102,241,0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#8b5cf6',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#64748b', stepSize: 1 }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: '#64748b' }
+                    }
+                }
+            }
+        });
+
+    } catch (err) {
+        listEl.innerHTML = `<div style="color:#ef4444; text-align:center;">통계 로드 실패: ${err.message}</div>`;
     }
 }
 

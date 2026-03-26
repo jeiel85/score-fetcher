@@ -1,4 +1,5 @@
 // ─── 찬양 목록 / 가사 ─────────────────────────────────────────────────────────
+let _prefetchObserver = null;
 
 let _songFreqData = {};  // { '001': 5, '276': 3, ... } 이력 집계 결과
 
@@ -259,9 +260,26 @@ function renderSongList(list) {
             li.appendChild(btn);
         }
         container.appendChild(li);
+
+        // 이미지 프리페칭을 위한 관찰 대상 등록
+        if (_prefetchObserver) _prefetchObserver.observe(li);
     });
 
     renderQuickIndex(list);
+}
+
+// 🌟 프리페칭 관찰기 초기화 🌟
+function initPrefetchObserver() {
+    if (_prefetchObserver) return;
+    _prefetchObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const numRaw = entry.target.querySelector('strong')?.textContent;
+                if (numRaw) prefetchImage(numRaw);
+                _prefetchObserver.unobserve(entry.target); // 한 번 로드하면 관찰 중단
+            }
+        });
+    }, { root: document.getElementById('songListContainer'), rootMargin: '200px' });
 }
 
 // 🌟 퀵 인덱스 네비게이터 렌더링 🌟
@@ -384,6 +402,7 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', _initScrollListener);
 } else {
     _initScrollListener();
+    initPrefetchObserver(); // 프리페칭 옵저버 시작
 }
 
 function addSongToInput(songLine) {
