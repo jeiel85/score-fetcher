@@ -376,13 +376,26 @@ footer {
     flex-shrink: 0;
 }
 footer a {
-    display: inline-flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 8px;
     color: var(--on-surface-variant); text-decoration: none;
-    font-family: 'Inter', -apple-system, sans-serif;
-    font-size: 12px; transition: color 0.2s;
+    font-size: 13px; opacity: 0.8; transition: opacity 0.2s;
 }
-footer a:hover { color: var(--primary); }
-footer svg { width: 16px; height: 16px; fill: currentColor; }
+footer a:hover { opacity: 1; }
+footer svg { width: 18px; height: 18px; fill: currentColor; }
+
+/* 🏷️ 앱 버전 배지 */
+.app-version-badge {
+    background: rgba(99, 102, 241, 0.12);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.02em;
+    margin-left: 4px;
+}
 .footer-btn-group { display: flex; gap: 8px; justify-content: center; margin-bottom: 8px; }
 .footer-btn {
     padding: 9px 18px; border: none; border-radius: var(--r-full);
