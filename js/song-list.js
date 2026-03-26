@@ -175,17 +175,8 @@ async function handleLyricReport() {
             status: 'pending'
         };
 
-        // 🌟 인증 토큰 획득
-        const idToken = await getIdToken();
-        if (!idToken) throw new Error('인증 토큰을 가져올 수 없습니다. 다시 시도해 주세요.');
-
-        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/reports.json?auth=${idToken}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) throw new Error('서버 전송 실패');
+        // 🌟 Firebase SDK를 사용하여 전송 (토큰 관리 자동)
+        await firebase.database().ref('reports').push(payload);
 
         // 2. 카운트 증가 및 저장
         reportHistory.count++;
