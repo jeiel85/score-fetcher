@@ -535,15 +535,24 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
         display: flex; flex-direction: column;
     }
     /* 가로 모드 전용 하단 메타 정보 (ls-v-info) - 보정 */
-    .ls-v-info { display: block; margin-top: 12px; padding-right: 16px; }
+    .ls-v-info {
+        display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+        margin-top: 10px; padding-right: 16px;
+    }
     .ls-v-info a {
-        display: flex; align-items: center; justify-content: flex-end; gap: 7px;
+        display: flex; align-items: center; gap: 6px;
         color: var(--accent); text-decoration: none; font-size: 13px; font-weight: 600;
         opacity: 0.85; transition: opacity 0.2s;
     }
     .ls-v-info a:hover { opacity: 1; }
     .ls-v-info svg { width: 16px; height: 16px; fill: currentColor; }
     .ls-v-info .app-version-badge { font-size: 10px; padding: 2px 8px; background: rgba(192, 196, 234, 0.2); }
+    .ls-v-divider { color: var(--on-surface-variant); opacity: 0.35; font-size: 13px; }
+
+    /* 가로 모드: 버튼 패딩 절약 (#43) */
+    .top-btn { padding: 10px 8px; font-size: 13px; }
+    .btn-search { padding: 11px 8px; font-size: 14px; }
+    .btn-save, .btn-share { padding: 11px 8px; font-size: 13px; }
 
     footer { display: none; }
 
@@ -622,6 +631,13 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
 @media (min-width: 768px) and (orientation: landscape) {
     body:has(.app-layout.ls-active) header { display: none; }
     body:has(.app-layout.ls-active) main   { padding-top: 10px; }
+}
+
+/* ─── 세로 모드 소형 화면 버튼 폰트/패딩 조정 (#42) ─── */
+@media (max-width: 390px) and (orientation: portrait) {
+    .top-btn { padding: 10px 6px; font-size: 13px; }
+    .btn-search { font-size: 14px; }
+    .btn-save, .btn-share { font-size: 13px; }
 }
 
 /* ─── Settings Modal ─── */

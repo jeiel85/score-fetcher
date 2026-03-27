@@ -240,10 +240,16 @@ window.addEventListener('resize', () => {
         const lastIdx = currentSheetIndex;
         closeFullscreen();
         layout.classList.add('ls-active'); // 강제 활성화
-        startSearch(); 
+        startSearch();
         if (lastIdx >= 0) {
             setTimeout(() => showLsSheet(lastIdx), 150);
         }
+    }
+    else if (!isLS && !isFS && sheetList.length > 0 && isTabletLandscape()) {
+        // 3. 악보가 있는 세로 모드에서 가로 모드로 전환된 경우 → 분할 뷰 자동 전환
+        layout.classList.add('ls-active');
+        startSearch();
+        setTimeout(() => showLsSheet(currentSheetIndex >= 0 ? currentSheetIndex : 0), 150);
     }
 });
 
