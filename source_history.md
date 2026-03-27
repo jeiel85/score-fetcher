@@ -7,6 +7,11 @@
 
 ## 🚀 주요 마일스톤 (Timeline)
 
+### ✨ 2026-03-27: 모니터링 강화 및 UX 개선 (v1.5.8)
+- **Admin 통계 BOTTOM 10**: 한 번이라도 사용된 곡 중 가장 적게 불린 찬양 10곡을 오렌지 바 차트로 표시. 잘 안 부르는 찬양 파악 용도.
+- **찬양 목록 정렬 버튼**: 검색창 옆 토글 버튼으로 `🔢 번호순` → `🔥 많이 부른 순` → `📉 적게 부른 순` 3단계 순환 정렬. 모달 열 때마다 번호순으로 초기화.
+- **전체 소스 문법 검수**: js/ 전체 파일 + index.html + firebase-messaging-sw.js + functions/index.js 이상 없음 확인.
+
 ### 🔐 2026-03-27: 관리자 접근성 개선 (v1.5.7)
 - **버그 수정**: `admin.html`에서 `firebase-config.js` `<script>` 태그 누락으로 `FIREBASE_CONFIG`가 `undefined`가 되어 Google 로그인 버튼이 동작하지 않던 문제 수정. (Closes #35)
 - **UX**: 메인 앱 푸터에 `👑 관리자` 바로가기 링크 추가. GitHub 링크 옆에 `·` 구분자로 배치, `footer-meta-row` 레이아웃 신설.
