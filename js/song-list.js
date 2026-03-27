@@ -2,6 +2,16 @@
 let _prefetchObserver = null;
 
 let _songFreqData = {};  // { '001': 5, '276': 3, ... } 이력 집계 결과
+let _sortMode = 'num';  // 'num' | 'freq-desc' | 'freq-asc'
+
+function cycleSortMode() {
+    const modes = ['num', 'freq-desc', 'freq-asc'];
+    _sortMode = modes[(modes.indexOf(_sortMode) + 1) % modes.length];
+    const labels = { 'num': '🔢 번호순', 'freq-desc': '🔥 많이 부른 순', 'freq-asc': '📉 적게 부른 순' };
+    const btn = document.getElementById('btn-sort-freq');
+    if (btn) btn.textContent = labels[_sortMode];
+    filterSongs();
+}
 
 // 로컬 캐시 키 정의 (Stale-While-Revalidate 패턴용)
 const CACHE_KEY_SONGS = 'cachedSongsData_v2';
@@ -92,6 +102,10 @@ async function openSongModal() {
     modal.style.display = 'flex';
     searchInput.value = ''; // 검색창 비우기
     container.scrollTop = 0; // 스크롤 맨 위로 초기화 (중요!)
+    // 정렬 상태 초기화
+    _sortMode = 'num';
+    const sortBtn = document.getElementById('btn-sort-freq');
+    if (sortBtn) sortBtn.textContent = '🔢 번호순';
 
     if (songArray.length === 0) {
         // 첫 진입: 전체 초기화 (캐시 우선 + Firebase 동기화)
@@ -204,10 +218,33 @@ async function handleLyricReport() {
 
 function closeLyricsModal() { document.getElementById('lyricsModal').style.display = 'none'; }
 
+function _applySortMode(list) {
+    if (_sortMode === 'freq-desc') {
+        return [...list].sort((a, b) => {
+            const na = a.match(/^(\d+)/)?.[1].padStart(3,'0');
+            const nb = b.match(/^(\d+)/)?.[1].padStart(3,'0');
+            return (_songFreqData[nb] || 0) - (_songFreqData[na] || 0);
+        });
+    }
+    if (_sortMode === 'freq-asc') {
+        return [...list].sort((a, b) => {
+            const na = a.match(/^(\d+)/)?.[1].padStart(3,'0');
+            const nb = b.match(/^(\d+)/)?.[1].padStart(3,'0');
+            const fa = _songFreqData[na] || 0;
+            const fb = _songFreqData[nb] || 0;
+            // 한 번도 안 부른 곡은 뒤로
+            if (fa === 0 && fb === 0) return 0;
+            if (fa === 0) return 1;
+            if (fb === 0) return -1;
+            return fa - fb;
+        });
+    }
+    return list; // 'num' — 기본 번호순 유지
+}
+
 function filterSongs() {
     const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
-    if (!keyword) { renderSongList(songArray); return; }
-    const filtered = songArray.filter(song => {
+    let base = keyword ? songArray.filter(song => {
         if (song.toLowerCase().includes(keyword)) return true;
         const numMatch = song.match(/^(\d+)/);
         if (!numMatch) return false;
@@ -216,8 +253,8 @@ function filterSongs() {
         if (d.tags && d.tags.some(t => t.toLowerCase().includes(keyword))) return true;
         if (d.lyrics && d.lyrics.toLowerCase().includes(keyword)) return true;
         return false;
-    });
-    renderSongList(filtered);
+    }) : songArray;
+    renderSongList(_applySortMode(base));
 }
 
 function renderSongList(list) {

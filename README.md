@@ -5,7 +5,7 @@
 
 [![배포](https://img.shields.io/badge/배포-score--fetcher.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
 [![관리자](https://img.shields.io/badge/관리자-admin.html-indigo?style=flat-square&logo=google-cloud&logoColor=white)](https://score-fetcher.vercel.app/admin.html)
-![Version](https://img.shields.io/badge/version-v1.5.7-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-v1.5.8-blue?style=flat-square)
 ![Build](https://img.shields.io/badge/build-2026.03.27-indigo?style=flat-square)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
@@ -181,7 +181,8 @@ npx vercel --prod
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
-| **v1.5.7** | **2026.03.27** | **관리자 Google 로그인 버그 수정, 메인 푸터에 관리자 페이지 링크 추가** |
+| **v1.5.8** | **2026.03.27** | **관리자 통계 BOTTOM 10 추가, 찬양 목록 빈도 정렬 버튼 추가, 전체 소스 문법 검수** |
+| v1.5.7 | 2026.03.27 | 관리자 Google 로그인 버그 수정, 메인 푸터에 관리자 페이지 링크 추가 |
 | v1.5.6 | 2026.03.26 | 성능 최적화 (지능형 프리페칭), 관리자 통계 대시보드(Chart.js), 반응형 UX 개선 |
 | v1.5.5 | 2026.03.26 | 가로 모드 메타 정보 가독성 보정 및 최종 릴리즈 |
 | v1.1.0 | 2026.03.25 | 관리자 대시보드 구축, 실시간 곡/가사 DB 마이그레이션, 공유/동기화 버그 수정 |
