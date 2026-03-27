@@ -1,4 +1,4 @@
-### `Current Version: v1.5.6` (2026.03.26)
+### `Current Version: v1.5.6` (2026.03.27)
 
 > 최종 목표: 웹 PWA → Capacitor 기반 Android / iOS 네이티브 앱 출시
 
