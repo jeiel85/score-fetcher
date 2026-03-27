@@ -325,9 +325,9 @@ function renderQuickIndex(currentList) {
     const container = document.getElementById('songListContainer');
     if (!nav || !container) return;
 
-    // 검색 중(필터링 상태)이거나 리스트가 너무 짧으면 숨김
+    // 검색 중(필터링 상태), 리스트가 짧거나, 번호순이 아니면 숨김
     const searchVal = document.getElementById('searchInput').value.trim();
-    if (searchVal !== "" || currentList.length < 50) {
+    if (searchVal !== "" || currentList.length < 50 || _sortMode !== 'num') {
         nav.style.display = 'none';
         container.classList.remove('has-quick-nav');
         return;
