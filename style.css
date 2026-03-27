@@ -299,7 +299,7 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
 .index-dot {
     width: 25px;
     height: 25px;
-    pointer-events: auto; /* 점은 클릭 가능 */
+    /* pointer-events는 부모(.quick-index-nav)에서 제어 — 명시 제거로 오버라이드 방지 */
     display: flex;
     align-items: center;
     justify-content: center;
