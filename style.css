@@ -406,6 +406,11 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     letter-spacing: 0.02em;
     margin-left: 4px;
 }
+.footer-meta-row {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.footer-meta-row a { display: flex; align-items: center; gap: 6px; }
+.footer-meta-divider { color: var(--on-surface-variant); opacity: 0.35; font-size: 13px; }
 .footer-btn-group { display: flex; gap: 8px; justify-content: center; margin-bottom: 8px; }
 .footer-btn {
     padding: 9px 18px; border: none; border-radius: var(--r-full);
