@@ -187,10 +187,18 @@ async function doShareConti() {
     const shareCanvas = _shareCanvas;
     const shareTitle  = _shareTitle;
 
+    // 딥링크 URL 생성을 위해 Firebase 저장 (조용히)
+    // 저장 실패 또는 오프라인이면 URL 없이 이미지만 공유
+    let shareText = shareTitle || '콘티 공유';
+    try {
+        const key = await saveToHistory();
+        if (key) shareText += `\n${location.origin}/?conti=${key}`;
+    } catch(e) { /* URL 없이 이미지만 공유 진행 */ }
+
     const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [shareFile] });
     if (canShareFiles) {
         try {
-            await navigator.share({ title: shareTitle || '콘티 공유', files: [shareFile] });
+            await navigator.share({ title: shareTitle || '콘티 공유', text: shareText, files: [shareFile] });
             closeSharePreview();
             return;
         } catch (e) {

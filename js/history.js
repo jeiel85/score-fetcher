@@ -48,18 +48,8 @@ async function saveConti() {
         alert('곡 목록을 입력해주세요!');
         return;
     }
-    const key = await saveToHistory();
-    if (key) {
-        const shareUrl = `${location.origin}/?conti=${key}`;
-        try {
-            await navigator.clipboard.writeText(shareUrl);
-            showToast('콘티가 저장되었습니다! ✅\n링크가 클립보드에 복사되었습니다 📋');
-        } catch(e) {
-            showToast(`콘티가 저장되었습니다! ✅\n링크: ${shareUrl}`);
-        }
-    } else {
-        alert('콘티가 저장되었습니다! ✅');
-    }
+    await saveToHistory();
+    alert('콘티가 저장되었습니다! ✅');
 }
 
 let historyLimit = 20;
