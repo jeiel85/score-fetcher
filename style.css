@@ -246,7 +246,7 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
 .btn-close { background: none; border: none; color: rgba(255,255,255,0.65); font-size: 24px; cursor: pointer; }
 .modal-search { padding: 12px 16px; background: var(--surface-low); display: flex; align-items: center; gap: 10px; }
 .modal-search input {
-    flex: 1; padding: 10px 0;
+    flex: 1; min-width: 0; padding: 10px 0;
     border: none; border-bottom: 2px solid var(--outline-variant);
     border-radius: 0; outline: none;
     font-family: 'Inter', -apple-system, sans-serif;
