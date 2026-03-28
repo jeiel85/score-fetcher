@@ -4,6 +4,38 @@ let _prefetchObserver = null;
 let _songFreqData = {};  // { '001': 5, '276': 3, ... } 이력 집계 결과
 let _sortMode = 'num';  // 'num' | 'freq-desc' | 'freq-asc'
 
+// ─── 즐겨찾기 ─────────────────────────────────────────────────────────────────
+let _favorites = new Set(JSON.parse(localStorage.getItem('songFavorites') || '[]'));
+let _favFilterOn = false;
+
+function _saveFavorites() {
+    localStorage.setItem('songFavorites', JSON.stringify([..._favorites]));
+}
+
+function toggleFavorite(numPadded, btn) {
+    if (_favorites.has(numPadded)) {
+        _favorites.delete(numPadded);
+        btn.textContent = '☆';
+        btn.classList.remove('fav-on');
+    } else {
+        _favorites.add(numPadded);
+        btn.textContent = '★';
+        btn.classList.add('fav-on');
+    }
+    _saveFavorites();
+    if (_favFilterOn) filterSongs();
+}
+
+function toggleFavFilter() {
+    _favFilterOn = !_favFilterOn;
+    const btn = document.getElementById('btn-fav-filter');
+    if (btn) {
+        btn.classList.toggle('fav-filter-on', _favFilterOn);
+        btn.textContent = _favFilterOn ? '★' : '⭐';
+    }
+    filterSongs();
+}
+
 function cycleSortMode() {
     const modes = ['num', 'freq-desc', 'freq-asc'];
     _sortMode = modes[(modes.indexOf(_sortMode) + 1) % modes.length];
@@ -102,10 +134,13 @@ async function openSongModal() {
     modal.style.display = 'flex';
     searchInput.value = ''; // 검색창 비우기
     container.scrollTop = 0; // 스크롤 맨 위로 초기화 (중요!)
-    // 정렬 상태 초기화
+    // 정렬/필터 상태 초기화
     _sortMode = 'num';
     const sortBtn = document.getElementById('btn-sort-freq');
     if (sortBtn) sortBtn.textContent = '🔢 번호순';
+    _favFilterOn = false;
+    const favBtn = document.getElementById('btn-fav-filter');
+    if (favBtn) { favBtn.classList.remove('fav-filter-on'); favBtn.textContent = '⭐'; }
 
     if (songArray.length === 0) {
         // 첫 진입: 전체 초기화 (캐시 우선 + Firebase 동기화)
@@ -254,6 +289,15 @@ function filterSongs() {
         if (d.lyrics && d.lyrics.toLowerCase().includes(keyword)) return true;
         return false;
     }) : songArray;
+
+    // 즐겨찾기 필터
+    if (_favFilterOn) {
+        base = base.filter(song => {
+            const m = song.match(/^(\d+)/);
+            return m && _favorites.has(m[1].padStart(3, '0'));
+        });
+    }
+
     renderSongList(_applySortMode(base));
 }
 
@@ -286,6 +330,16 @@ function renderSongList(list) {
             badge.className = `freq-badge${freq >= 5 ? ' freq-badge-high' : freq >= 3 ? ' freq-badge-med' : ' freq-badge-low'}`;
             badge.textContent = `♪${freq}`;
             li.appendChild(badge);
+        }
+
+        // 즐겨찾기 버튼
+        if (match) {
+            const favBtn = document.createElement('button');
+            favBtn.className = 'btn-fav' + (_favorites.has(numPadded) ? ' fav-on' : '');
+            favBtn.textContent = _favorites.has(numPadded) ? '★' : '☆';
+            favBtn.title = '즐겨찾기';
+            favBtn.onclick = (e) => { e.stopPropagation(); toggleFavorite(numPadded, favBtn); };
+            li.appendChild(favBtn);
         }
 
         const lyricEntry = lyricsData[numPadded];
