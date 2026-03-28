@@ -647,6 +647,41 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     body:has(.app-layout.ls-active) main   { padding-top: 10px; }
 }
 
+/* ─── 태블릿 세로 모드 (768px+) — 버튼·아이콘 크기 확대 (#59) ─── */
+@media (min-width: 768px) and (orientation: portrait) {
+    .header-settings-btn { width: 44px; height: 44px; font-size: 22px; }
+
+    .top-btn { padding: 16px 10px; font-size: 16px; }
+    .btn-search { padding: 18px 8px; font-size: 17px; }
+    .btn-save, .btn-share { padding: 16px 8px; font-size: 16px; }
+
+    .song-item { font-size: 15px; padding: 13px 16px; }
+    .btn-lyrics { font-size: 13px; padding: 6px 14px; }
+    .field-label { font-size: 12px; }
+
+    .fullscreen-nav { font-size: 48px; padding: 20px 0; }
+}
+
+/* ─── 태블릿 가로 모드 (768px+) — landscape 소형 축소값 복원 (#59) ─── */
+@media (min-width: 768px) and (orientation: landscape) {
+    .header-settings-btn { width: 44px; height: 44px; font-size: 22px; }
+
+    /* 소형 폰 landscape에서 줄인 버튼 크기를 태블릿에서는 다시 키움 */
+    .top-btn { padding: 14px 10px; font-size: 15px; }
+    .btn-search { padding: 15px 8px; font-size: 16px; }
+    .btn-save, .btn-share { padding: 14px 8px; font-size: 15px; }
+
+    /* 분할 뷰 악보 내비 버튼 */
+    .ls-sheet-footer .fullscreen-nav { font-size: 38px; padding: 14px 0; }
+    #ls-sheet-title { font-size: 15px; }
+    .ls-sheet-header { font-size: 15px; padding: 14px 20px; }
+    .ls-back-btn { padding: 14px 28px; font-size: 15px; }
+
+    /* 모달 */
+    .song-item { font-size: 15px; padding: 13px 16px; }
+    .btn-lyrics { font-size: 13px; padding: 6px 14px; }
+}
+
 /* ─── 세로 모드 소형 화면 버튼 폰트/패딩 조정 (#42) ─── */
 @media (max-width: 390px) and (orientation: portrait) {
     .top-btn { padding: 10px 6px; font-size: 13px; }
