@@ -195,7 +195,7 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
 .drag-handle { font-size: 20px; color: rgba(99,102,241,0.45); cursor: grab; user-select: none; -webkit-user-select: none; flex-shrink: 0; padding: 2px 4px; touch-action: none; transition: color 0.15s; }
 .drag-handle:active { cursor: grabbing; color: rgba(99,102,241,0.85); }
 .card-dragging { opacity: 0.25; pointer-events: none; }
-.drag-placeholder { border: 2px dashed rgba(99,102,241,0.4); border-radius: var(--r-xl); background: rgba(99,102,241,0.06); margin-bottom: 16px; }
+.drag-placeholder { border: 2px dashed rgba(99,102,241,0.4); border-radius: var(--r-xl); background: rgba(99,102,241,0.06); min-height: 80px; }
 .error-msg { color: var(--error); font-size: 14px; margin-top: 10px; font-weight: 600; }
 
 /* ─── Fullscreen Viewer ─── */
