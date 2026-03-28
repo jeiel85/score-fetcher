@@ -39,8 +39,8 @@ body {
     transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 태블릿/데스크탑 가로 모드일 때만 전체 너비 사용 */
-@media (min-width: 768px) and (orientation: landscape) {
+/* 가로 모드일 때 전체 너비 사용 (폰 포함, 480px+) */
+@media (min-width: 480px) and (orientation: landscape) {
     body { max-width: 100%; box-shadow: none; }
 }
 
@@ -540,7 +540,7 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
 #ls-sheet-title { font-size: 17px; font-weight: 800; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ─── Landscape / Tablet Mode 전용 (가로 모드일 때만 활성화) ─── */
-@media (min-width: 768px) and (orientation: landscape) {
+@media (min-width: 480px) and (orientation: landscape) {
     html { background-color: var(--primary); }
     body { max-width: 100%; border-radius: 0; box-shadow: none; }
     main {
@@ -641,8 +641,8 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     }
 }
 
-/* ─── 태블릿 가로 ls-active: 헤더 숨기고 전체화면 ─── */
-@media (min-width: 768px) and (orientation: landscape) {
+/* ─── 가로 ls-active: 헤더 숨기고 전체화면 (폰 포함) ─── */
+@media (min-width: 480px) and (orientation: landscape) {
     body:has(.app-layout.ls-active) header { display: none; }
     body:has(.app-layout.ls-active) main   { padding-top: 10px; }
 }

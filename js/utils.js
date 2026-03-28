@@ -17,9 +17,9 @@ function resetAll() {
     document.getElementById('app-layout').classList.remove('ls-active');
 }
 
-function isTabletLandscape() { 
-    // 최소 너비 768px 이상이면서 가로가 세로보다 길 때만 가로 레이아웃 적용
-    return window.innerWidth >= 768 && window.innerWidth > window.innerHeight; 
+function isTabletLandscape() {
+    // 최소 너비 480px 이상이면서 가로가 세로보다 길 때만 가로 레이아웃 적용 (폰 포함)
+    return window.innerWidth >= 480 && window.innerWidth > window.innerHeight;
 }
 
 // Canvas 드로잉 유틸
