@@ -7,7 +7,7 @@ let _sortMode = 'num';  // 'num' | 'freq-desc' | 'freq-asc'
 function cycleSortMode() {
     const modes = ['num', 'freq-desc', 'freq-asc'];
     _sortMode = modes[(modes.indexOf(_sortMode) + 1) % modes.length];
-    const labels = { 'num': '🔢 번호순', 'freq-desc': '🔥 많이 부른 순', 'freq-asc': '📉 적게 부른 순' };
+    const labels = { 'num': '🔢 번호순', 'freq-desc': '🔥 많이순', 'freq-asc': '📉 적게순' };
     const btn = document.getElementById('btn-sort-freq');
     if (btn) btn.textContent = labels[_sortMode];
     filterSongs();
