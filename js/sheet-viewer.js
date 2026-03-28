@@ -7,7 +7,7 @@ function tryLoadImage(imgElement, songNum, extIndex, onDone) {
         if (!imgElement.parentElement.querySelector('.error-msg')) {
             const errP = document.createElement('p');
             errP.className = 'error-msg';
-            errP.textContent = `❌ images/${songNum} 없음`;
+            errP.textContent = `⚠️ 악보 미등록 (${songNum}번)`;
             imgElement.parentElement.appendChild(errP);
         }
         onDone(null);

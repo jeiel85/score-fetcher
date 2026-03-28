@@ -10,6 +10,7 @@ function showToast(msg, duration = 2500) {
 function showInstallToast(msg) { showToast(msg, 6000); }
 
 function resetAll() {
+    if (!confirm('입력한 콘티를 초기화할까요?')) return;
     document.getElementById('setlist-title').value = '';
     document.getElementById('song-input').value = '';
     document.getElementById('result-container').innerHTML = '';
