@@ -21,6 +21,7 @@ function tryLoadImage(imgElement, songNum, extIndex, onDone) {
 }
 
 async function startSearch() {
+    _lsUserDismissed = false; // 악보 만들기 실행 시 플래그 초기화
     const rawText = document.getElementById('song-input').value;
 
     // 공통 정규화: 곡번호 3자리 + 제목 자동 치환
@@ -296,7 +297,12 @@ function updateLsNavBtns() {
     if (next) next.classList.toggle('hidden', !hasNext);
 }
 
-function closeLandscapeView() { document.getElementById('app-layout').classList.remove('ls-active'); }
+// 사용자가 직접 가로 뷰를 닫은 경우 resize로 재활성화 방지
+let _lsUserDismissed = false;
+function closeLandscapeView() {
+    document.getElementById('app-layout').classList.remove('ls-active');
+    _lsUserDismissed = true;
+}
 
 // 터치: 전체화면 뷰어 (핀치줌 + 패닝 + 스와이프 + 더블탭 리셋)
 (() => {
@@ -439,16 +445,13 @@ window.addEventListener('resize', () => {
     if (isLS && !isTabletLandscape()) {
         // 1. 가로 모드(분할 뷰)였다가 세로 모드(모바일 뷰)로 변한 경우
         const lastIdx = currentSheetIndex;
-        // 즉시 클래스 제거하여 media query가 result-container를 보이게 함
         layout.classList.remove('ls-active');
-        
-        // DOM 구조가 다르므로 세로용 리스트 강제 재생성
-        startSearch(); 
-        
+        _lsUserDismissed = false; // 실제 회전이므로 플래그 초기화
+        startSearch();
         if (lastIdx >= 0 && sheetList[lastIdx]) {
             setTimeout(() => openFullscreen(lastIdx), 100);
         }
-    } 
+    }
     else if (isFS && isTabletLandscape()) {
         // 2. 세로 모드(전체화면)였다가 가로 모드(태블릿 분할 뷰)로 변한 경우
         const lastIdx = currentSheetIndex;
@@ -459,8 +462,9 @@ window.addEventListener('resize', () => {
             setTimeout(() => showLsSheet(lastIdx), 150);
         }
     }
-    else if (!isLS && !isFS && sheetList.length > 0 && isTabletLandscape()) {
+    else if (!isLS && !isFS && sheetList.length > 0 && isTabletLandscape() && !_lsUserDismissed) {
         // 3. 악보가 있는 세로 모드에서 가로 모드로 전환된 경우 → 분할 뷰 자동 전환
+        // (_lsUserDismissed=true면 사용자가 직접 닫은 것이므로 재활성화 안 함)
         layout.classList.add('ls-active');
         startSearch();
         setTimeout(() => showLsSheet(currentSheetIndex >= 0 ? currentSheetIndex : 0), 150);

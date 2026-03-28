@@ -174,16 +174,24 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
 
 /* ─── Result Area ─── */
 .result-area { margin-top: 20px; }
+#result-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+@media (max-width: 479px) {
+    #result-container { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
 .sheet-music-card {
     background: #ffffff; border-radius: var(--r-xl);
-    padding: 16px; margin-bottom: 16px;
+    padding: 12px;
     box-shadow: 0 4px 20px var(--shadow);
     outline: 1px solid rgba(199, 197, 206, 0.15);
     cursor: pointer; transition: box-shadow 0.2s;
 }
 .sheet-music-card:active { box-shadow: 0 8px 28px rgba(24,29,58,0.15); }
 .sheet-music-card img { width: 100%; height: auto; border-radius: 8px; min-height: 100px; background: var(--surface-low); }
-.sheet-title { margin-bottom: 12px; font-family: 'Manrope', -apple-system, sans-serif; font-weight: 700; color: var(--primary); font-size: 15px; letter-spacing: -0.2px; display: flex; align-items: center; gap: 8px; }
+.sheet-title { margin-bottom: 8px; font-family: 'Manrope', -apple-system, sans-serif; font-weight: 700; color: var(--primary); font-size: 13px; letter-spacing: -0.2px; display: flex; align-items: center; gap: 6px; }
 .drag-handle { font-size: 20px; color: rgba(99,102,241,0.45); cursor: grab; user-select: none; -webkit-user-select: none; flex-shrink: 0; padding: 2px 4px; touch-action: none; transition: color 0.15s; }
 .drag-handle:active { cursor: grabbing; color: rgba(99,102,241,0.85); }
 .card-dragging { opacity: 0.25; pointer-events: none; }
@@ -689,6 +697,14 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     /* 모달 */
     .song-item { font-size: 15px; padding: 13px 16px; }
     .btn-lyrics { font-size: 13px; padding: 6px 14px; }
+}
+
+/* ─── 모바일 가로 모드 전체화면 뷰어 버튼 축소 (#67) ─── */
+@media (max-width: 767px) and (orientation: landscape) {
+    .fullscreen-nav { font-size: 22px; padding: 8px 0; }
+    .fullscreen-header { padding: 8px 14px; }
+    .fullscreen-header .btn-close { font-size: 22px; }
+    .fullscreen-footer { padding: 6px 10px; }
 }
 
 /* ─── 세로 모드 소형 화면 버튼 폰트/패딩 조정 (#42) ─── */
