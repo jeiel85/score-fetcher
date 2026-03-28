@@ -206,7 +206,7 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
     flex: 1; overflow: hidden; display: flex;
     justify-content: center; align-items: center;
 }
-.fullscreen-body img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.fullscreen-body img { width: 100%; height: 100%; object-fit: contain; display: block; transform-origin: center center; will-change: transform; }
 .fullscreen-footer {
     display: flex; justify-content: space-between; align-items: center;
     background: rgba(24, 29, 58, 0.88);
@@ -529,7 +529,7 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     flex: 1; overflow: hidden; display: flex;
     align-items: center; justify-content: center; min-height: 0;
 }
-.ls-sheet-body img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.ls-sheet-body img { width: 100%; height: 100%; object-fit: contain; display: block; transform-origin: center center; will-change: transform; }
 .ls-sheet-footer {
     display: flex; justify-content: space-between; align-items: center;
     background: rgba(24, 29, 58, 0.88);

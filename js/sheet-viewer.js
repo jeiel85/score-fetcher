@@ -115,7 +115,7 @@ function openFullscreen(index) {
     currentSheetIndex = index;
     const sheet = sheetList[index];
     if (!sheet) return;
-    
+
     const imgEl = document.getElementById('fullscreen-img');
     if (sheet.src) {
         imgEl.src = sheet.src;
@@ -124,7 +124,8 @@ function openFullscreen(index) {
         imgEl.src = "";
         imgEl.style.display = 'none';
     }
-    
+
+    if (window._resetFullscreenZoom) window._resetFullscreenZoom();
     updateFullscreenTitle(index);
     document.getElementById('fullscreenViewer').style.display = 'flex';
     updateNavBtns();
@@ -153,7 +154,7 @@ function showLsSheet(index) {
     const sheet = sheetList[index];
     if (!sheet) return;
     currentSheetIndex = index;
-    
+
     const imgEl = document.getElementById('ls-sheet-img');
     if (sheet.src) {
         imgEl.src = sheet.src;
@@ -162,7 +163,8 @@ function showLsSheet(index) {
         imgEl.src = "";
         imgEl.style.display = 'none';
     }
-    
+
+    if (window._resetLsZoom) window._resetLsZoom();
     document.getElementById('ls-sheet-title').textContent =
         `${sheet.label}  (${visibleSheetRank(index)}/${visibleSheetCount()})`;
     updateLsNavBtns();
@@ -187,31 +189,134 @@ function updateLsNavBtns() {
 
 function closeLandscapeView() { document.getElementById('app-layout').classList.remove('ls-active'); }
 
-// 터치 스와이프 (전체화면 뷰어: 좌우=페이지이동, 하단=닫기)
+// 터치: 전체화면 뷰어 (핀치줌 + 패닝 + 스와이프 + 더블탭 리셋)
 (() => {
-    let touchStartX = 0, touchStartY = 0;
     const viewer = document.getElementById('fullscreenViewer');
+    const imgEl  = document.getElementById('fullscreen-img');
+
+    let scale = 1, tx = 0, ty = 0;
+    let touchStartX = 0, touchStartY = 0;
+    let panStartX = 0, panStartY = 0, panStartTX = 0, panStartTY = 0;
+    let isPinching = false, pinchStartDist = 0, pinchStartScale = 1;
+    let lastTapTime = 0;
+
+    function applyTransform() {
+        imgEl.style.transform = `scale(${scale}) translate(${tx}px, ${ty}px)`;
+    }
+    function resetZoom() { scale = 1; tx = 0; ty = 0; applyTransform(); }
+    window._resetFullscreenZoom = resetZoom;
+
+    function dist2(t0, t1) {
+        const dx = t0.clientX - t1.clientX, dy = t0.clientY - t1.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
     viewer.addEventListener('touchstart', e => {
-        touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
+        if (e.touches.length === 2) {
+            isPinching = true;
+            pinchStartDist  = dist2(e.touches[0], e.touches[1]);
+            pinchStartScale = scale;
+            e.preventDefault();
+        } else if (e.touches.length === 1) {
+            isPinching = false;
+            const now = Date.now();
+            if (now - lastTapTime < 280) { resetZoom(); lastTapTime = 0; e.preventDefault(); return; }
+            lastTapTime = now;
+            touchStartX = panStartX = e.touches[0].clientX;
+            touchStartY = panStartY = e.touches[0].clientY;
+            panStartTX = tx; panStartTY = ty;
+        }
     }, { passive: false });
-    viewer.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
+
+    viewer.addEventListener('touchmove', e => {
+        if (e.touches.length === 2 && isPinching) {
+            const newScale = Math.min(4, Math.max(1, pinchStartScale * (dist2(e.touches[0], e.touches[1]) / pinchStartDist)));
+            scale = newScale;
+            applyTransform();
+            e.preventDefault();
+        } else if (e.touches.length === 1) {
+            if (scale > 1) {
+                tx = panStartTX + (e.touches[0].clientX - panStartX) / scale;
+                ty = panStartTY + (e.touches[0].clientY - panStartY) / scale;
+                applyTransform();
+                e.preventDefault();
+            } else {
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
+
     viewer.addEventListener('touchend', e => {
-        const dx = e.changedTouches[0].clientX - touchStartX;
-        const dy = e.changedTouches[0].clientY - touchStartY;
-        if (dy > 80 && Math.abs(dy) > Math.abs(dx)) { closeFullscreen(); }
-        else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { navigateSheet(dx < 0 ? 1 : -1); }
+        if (isPinching) { isPinching = false; return; }
+        if (scale <= 1 && e.changedTouches.length === 1) {
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
+            if (dy > 80 && Math.abs(dy) > Math.abs(dx)) { closeFullscreen(); }
+            else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { navigateSheet(dx < 0 ? 1 : -1); }
+        }
     }, { passive: true });
 })();
 
-// landscape 악보 뷰어 좌우 스와이프
+// 터치: Landscape 뷰어 (핀치줌 + 패닝 + 좌우 스와이프 + 더블탭 리셋)
 (() => {
-    let tsX = 0, tsY = 0;
     const lsArea = document.getElementById('ls-sheet-area');
-    lsArea.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; }, { passive: true });
+    const imgEl  = document.getElementById('ls-sheet-img');
+
+    let scale = 1, tx = 0, ty = 0;
+    let tsX = 0, tsY = 0;
+    let panStartX = 0, panStartY = 0, panStartTX = 0, panStartTY = 0;
+    let isPinching = false, pinchStartDist = 0, pinchStartScale = 1;
+    let lastTapTime = 0;
+
+    function applyTransform() {
+        imgEl.style.transform = `scale(${scale}) translate(${tx}px, ${ty}px)`;
+    }
+    function resetZoom() { scale = 1; tx = 0; ty = 0; applyTransform(); }
+    window._resetLsZoom = resetZoom;
+
+    function dist2(t0, t1) {
+        const dx = t0.clientX - t1.clientX, dy = t0.clientY - t1.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    lsArea.addEventListener('touchstart', e => {
+        if (e.touches.length === 2) {
+            isPinching = true;
+            pinchStartDist  = dist2(e.touches[0], e.touches[1]);
+            pinchStartScale = scale;
+            e.preventDefault();
+        } else if (e.touches.length === 1) {
+            isPinching = false;
+            const now = Date.now();
+            if (now - lastTapTime < 280) { resetZoom(); lastTapTime = 0; e.preventDefault(); return; }
+            lastTapTime = now;
+            tsX = panStartX = e.touches[0].clientX;
+            tsY = panStartY = e.touches[0].clientY;
+            panStartTX = tx; panStartTY = ty;
+        }
+    }, { passive: false });
+
+    lsArea.addEventListener('touchmove', e => {
+        if (e.touches.length === 2 && isPinching) {
+            const newScale = Math.min(4, Math.max(1, pinchStartScale * (dist2(e.touches[0], e.touches[1]) / pinchStartDist)));
+            scale = newScale;
+            applyTransform();
+            e.preventDefault();
+        } else if (e.touches.length === 1 && scale > 1) {
+            tx = panStartTX + (e.touches[0].clientX - panStartX) / scale;
+            ty = panStartTY + (e.touches[0].clientY - panStartY) / scale;
+            applyTransform();
+            e.preventDefault();
+        }
+    }, { passive: false });
+
     lsArea.addEventListener('touchend', e => {
-        const dx = e.changedTouches[0].clientX - tsX;
-        const dy = e.changedTouches[0].clientY - tsY;
-        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { navigateLandscapeSheet(dx < 0 ? 1 : -1); }
+        if (isPinching) { isPinching = false; return; }
+        if (scale <= 1 && e.changedTouches.length === 1) {
+            const dx = e.changedTouches[0].clientX - tsX;
+            const dy = e.changedTouches[0].clientY - tsY;
+            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { navigateLandscapeSheet(dx < 0 ? 1 : -1); }
+        }
     }, { passive: true });
 })();
 
