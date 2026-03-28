@@ -448,8 +448,13 @@ window.addEventListener('resize', () => {
         layout.classList.remove('ls-active');
         _lsUserDismissed = false; // 실제 회전이므로 플래그 초기화
         startSearch();
-        if (lastIdx >= 0 && sheetList[lastIdx]) {
-            setTimeout(() => openFullscreen(lastIdx), 100);
+        if (lastIdx >= 0) {
+            // 이미지 로드 완료 대기 후 전체화면 오픈 (#68)
+            const _waitAndOpen = () => {
+                if (sheetList[lastIdx]) openFullscreen(lastIdx);
+                else setTimeout(_waitAndOpen, 80);
+            };
+            setTimeout(_waitAndOpen, 80);
         }
     }
     else if (isFS && isTabletLandscape()) {
