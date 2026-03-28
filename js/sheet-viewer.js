@@ -80,7 +80,9 @@ async function startSearch() {
 
             const card = document.createElement('div');
             card.className = 'sheet-music-card';
-            card.innerHTML = `<div class="sheet-title">${label}</div>`;
+            card.dataset.lineIndex = String(index);
+            card.dataset.originalLine = line;
+            card.innerHTML = `<div class="sheet-title"><span class="drag-handle" title="길게 눌러 순서 변경">⠿</span>${label}</div>`;
             const imgTag = document.createElement('img');
             imgTag.alt = `${songNumber} 악보 찾는 중...`;
             card.appendChild(imgTag);
@@ -90,9 +92,116 @@ async function startSearch() {
                 card.onclick = () => openFullscreen(index);
             });
         });
+        enableCardDragDrop(resultContainer);
         const btnGroup = document.querySelector('.btn-group');
         if (btnGroup) btnGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+}
+
+// ─── 카드 드래그 앤 드롭 (세로 모드) ──────────────────────────────────────────
+
+function syncAfterDrag(container) {
+    const textarea = document.getElementById('song-input');
+    const allLines = textarea.value.split('\n');
+
+    // 원래 textarea에서 곡번호 줄의 위치(슬롯) 수집
+    const songSlots = allLines.reduce((acc, l, i) => {
+        if (/^\d+/.test(l.trim())) acc.push(i);
+        return acc;
+    }, []);
+
+    // 현재 DOM 카드 순서대로 originalLine 수집
+    const cards = Array.from(container.querySelectorAll('.sheet-music-card'));
+    const newSongLines = cards.map(c => c.dataset.originalLine || '');
+
+    // 새 곡번호 줄로 textarea 재구성
+    const newLines = [...allLines];
+    songSlots.forEach((slotIdx, i) => { if (newSongLines[i] !== undefined) newLines[slotIdx] = newSongLines[i]; });
+    textarea.value = newLines.join('\n');
+
+    // sheetList 재구성: 슬롯 i → 원래 카드 데이터
+    const newSheetData = cards.map(c => sheetList[parseInt(c.dataset.lineIndex)]);
+    songSlots.forEach((slotIdx, i) => {
+        sheetList[slotIdx] = newSheetData[i] || null;
+        // 카드 dataset 업데이트 (재드래그 시 정확성 유지)
+        if (cards[i]) {
+            cards[i].dataset.lineIndex = String(slotIdx);
+            cards[i].dataset.originalLine = newLines[slotIdx] || '';
+        }
+    });
+
+    // onclick 핸들러 재연결
+    cards.forEach((card, i) => {
+        const slotIdx = songSlots[i];
+        card.onclick = null;
+        if (sheetList[slotIdx]) card.onclick = () => openFullscreen(slotIdx);
+    });
+}
+
+function enableCardDragDrop(container) {
+    let dragging = null, ghost = null, placeholder = null, ghostOffsetY = 0;
+
+    function onMove(e) {
+        if (!dragging) return;
+        e.preventDefault();
+        const y = e.touches[0].clientY;
+        ghost.style.top = (y - ghostOffsetY) + 'px';
+
+        // 플레이스홀더 숨기고 아래 요소 탐지
+        placeholder.style.display = 'none';
+        const elBelow = document.elementFromPoint(e.touches[0].clientX, y);
+        placeholder.style.display = '';
+
+        const over = elBelow && elBelow.closest('.sheet-music-card');
+        if (over && over !== dragging) {
+            const mid = over.getBoundingClientRect().top + over.getBoundingClientRect().height / 2;
+            if (y < mid) container.insertBefore(placeholder, over);
+            else over.after(placeholder);
+        }
+    }
+
+    function onEnd() {
+        if (!dragging) return;
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        document.removeEventListener('touchcancel', onEnd);
+
+        placeholder.replaceWith(dragging);
+        dragging.classList.remove('card-dragging');
+        ghost.remove();
+        syncAfterDrag(container);
+        dragging = null; ghost = null; placeholder = null;
+    }
+
+    container.addEventListener('touchstart', e => {
+        const handle = e.target.closest('.drag-handle');
+        if (!handle) return;
+        e.preventDefault();
+        const card = handle.closest('.sheet-music-card');
+        if (!card) return;
+        const rect = card.getBoundingClientRect();
+        ghostOffsetY = e.touches[0].clientY - rect.top;
+
+        // 고스트 생성
+        ghost = card.cloneNode(true);
+        ghost.classList.add('drag-ghost');
+        ghost.style.cssText = `position:fixed;z-index:1000;pointer-events:none;opacity:0.88;
+            width:${rect.width}px;left:${rect.left}px;top:${rect.top}px;
+            box-shadow:0 12px 40px rgba(0,0,0,0.35);border-radius:16px;`;
+        document.body.appendChild(ghost);
+
+        // 플레이스홀더
+        placeholder = document.createElement('div');
+        placeholder.className = 'drag-placeholder';
+        placeholder.style.height = rect.height + 'px';
+        card.after(placeholder);
+        dragging = card;
+        card.classList.add('card-dragging');
+
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd, { passive: true });
+        document.addEventListener('touchcancel', onEnd, { passive: true });
+    }, { passive: false });
 }
 
 // ─── 전체화면 뷰어 ─────────────────────────────────────────────────────────────
