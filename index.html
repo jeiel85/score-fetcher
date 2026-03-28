@@ -429,9 +429,14 @@
             initVersionDisplay(); // ✅ 버전 표시 영역 생성
             setTimeout(precacheAllScores, 3000);
             history.pushState({ page: 'app' }, '');
-            if (new URLSearchParams(location.search).get('autoload') === '1') {
+            const _params = new URLSearchParams(location.search);
+            if (_params.get('autoload') === '1') {
                 history.replaceState({ page: 'app' }, '', '/');
                 autoLoadLatestConti();
+            } else if (_params.get('conti')) {
+                const _contiKey = _params.get('conti');
+                history.replaceState({ page: 'app' }, '', '/');
+                loadContiByKey(_contiKey);
             }
             navigator.serviceWorker?.addEventListener('message', (e) => {
                 if (e.data?.type === 'AUTOLOAD_LATEST') autoLoadLatestConti();

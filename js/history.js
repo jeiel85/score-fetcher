@@ -1,10 +1,10 @@
 // ─── 이력 관리 (Firebase) ─────────────────────────────────────────────────────
 
 async function saveToHistory() {
-    if (!FIREBASE_URL) return;
+    if (!FIREBASE_URL) return null;
     const titleText = document.getElementById('setlist-title').value.trim() || '제목 없는 콘티';
     const inputText = document.getElementById('song-input').value.trim();
-    if (!inputText || inputText.includes('아래 예시처럼 붙여넣어 주세요')) return;
+    if (!inputText || inputText.includes('아래 예시처럼 붙여넣어 주세요')) return null;
 
     const now = new Date();
     const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -12,12 +12,17 @@ async function saveToHistory() {
 
     try {
         const idToken = await getIdToken();
-        await fetch(`${FIREBASE_URL}?auth=${idToken}`, {
+        const res = await fetch(`${FIREBASE_URL}?auth=${idToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+        if (res.ok) {
+            const data = await res.json();
+            return data?.name || null;  // Firebase POST → { "name": "-KEY..." }
+        }
     } catch (error) { console.error('이력 저장 실패:', error); }
+    return null;
 }
 
 async function saveConti() {
@@ -43,8 +48,18 @@ async function saveConti() {
         alert('곡 목록을 입력해주세요!');
         return;
     }
-    await saveToHistory();
-    alert('콘티가 저장되었습니다! ✅');
+    const key = await saveToHistory();
+    if (key) {
+        const shareUrl = `${location.origin}/?conti=${key}`;
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            showToast('콘티가 저장되었습니다! ✅\n링크가 클립보드에 복사되었습니다 📋');
+        } catch(e) {
+            showToast(`콘티가 저장되었습니다! ✅\n링크: ${shareUrl}`);
+        }
+    } else {
+        alert('콘티가 저장되었습니다! ✅');
+    }
 }
 
 let historyLimit = 20;
@@ -153,6 +168,25 @@ function renderHistoryList(entries) {
 }
 
 function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
+
+// ─── 특정 키로 콘티 불러오기 (딥링크 ?conti=KEY 용) ────────────────────────
+async function loadContiByKey(key) {
+    try {
+        const BASE = 'https://score-fetcher-db-default-rtdb.firebaseio.com';
+        if (typeof authReady !== 'undefined') await authReady;
+        const idToken = await getIdToken();
+        const res = await fetch(`${BASE}/history/${key}.json?auth=${idToken}`);
+        if (!res.ok) { showToast('⚠️ 콘티를 불러올 수 없습니다'); return; }
+        const item = await res.json();
+        if (!item) { showToast('⚠️ 해당 콘티가 존재하지 않습니다'); return; }
+        document.getElementById('setlist-title').value = item.title || '';
+        document.getElementById('song-input').value = item.text || '';
+        document.getElementById('result-container').innerHTML = '';
+        sheetList = [];
+        startSearch();
+        showToast(`📌 "${item.title || '콘티'}" 불러왔습니다`);
+    } catch(e) { console.warn('콘티 딥링크 로드 실패:', e); showToast('⚠️ 콘티 로드 중 오류가 발생했습니다'); }
+}
 
 // ─── 이력 기반 찬양 사용 빈도 집계 ─────────────────────────────────────────────
 // entries: [[key, { text, ... }], ...]
