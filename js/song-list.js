@@ -502,7 +502,7 @@ function addSongToInput(songLine) {
     if (currentText.includes('아래 예시처럼 붙여넣어 주세요')) currentText = '';
     else if (currentText.length > 0 && !currentText.endsWith('\n')) currentText += '\n';
     textarea.value = currentText + songLine;
-    closeSongModal();
+    showToast('✅ 추가됨 — 계속 선택하거나 ✕를 눌러 닫아주세요', 1800);
 }
 
 // ─── 화면 꺼짐 방지 ────────────────────────────────────────────────────────────

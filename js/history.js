@@ -34,7 +34,7 @@ async function saveConti() {
 
     const title = titleEl.value.trim();
     if (!title) {
-        alert('콘티 제목을 입력해주세요!\n예) 2026-03-20 금요예배');
+        showToast('⚠️ 콘티 제목을 입력해주세요 (예: 2026-03-20 금요예배)', 3000); // #78
         titleEl.focus();
         return;
     }
@@ -49,7 +49,7 @@ async function saveConti() {
         return;
     }
     await saveToHistory();
-    alert('콘티가 저장되었습니다! ✅');
+    showToast('✅ 콘티가 저장되었습니다!'); // #78
 }
 
 let historyLimit = 20;
@@ -57,6 +57,7 @@ let allHistoryEntries = [];  // 전체 이력 캐시 (검색용)
 
 async function openHistoryModal() {
     if (!FIREBASE_URL) return;
+    historyLimit = 20; // 재오픈 시 항상 초기값으로 리셋 (#81)
     const container = document.getElementById('historyListContainer');
     container.innerHTML = "<li class='song-item' style='text-align:center;'>서버에서 이력을 불러오는 중입니다... ⚡</li>";
     document.getElementById('historySearchInput').value = '';
@@ -119,7 +120,7 @@ function renderHistoryList(entries) {
             pressTimer = setTimeout(async () => {
                 didLongPress = true; li.classList.remove('pressing');
                 if (confirm(`"${displayTitle}" 이력을 삭제할까요?`)) {
-                    const BASE = 'https://score-fetcher-db-default-rtdb.firebaseio.com';
+                    const BASE = FIREBASE_CONFIG.databaseURL; // #84: 하드코딩 제거
                     const idToken = await getIdToken();
                     await fetch(`${BASE}/history/${key}.json?auth=${idToken}`, { method: 'DELETE' });
                     openHistoryModal();
@@ -143,6 +144,7 @@ function renderHistoryList(entries) {
             document.getElementById('result-container').innerHTML = '';
             sheetList = [];
             closeHistoryModal();
+            startSearch(); // 불러오기 후 악보 자동 실행 (#77)
         };
         container.appendChild(li);
     });
@@ -162,7 +164,7 @@ function closeHistoryModal() { document.getElementById('historyModal').style.dis
 // ─── 특정 키로 콘티 불러오기 (딥링크 ?conti=KEY 용) ────────────────────────
 async function loadContiByKey(key) {
     try {
-        const BASE = 'https://score-fetcher-db-default-rtdb.firebaseio.com';
+        const BASE = FIREBASE_CONFIG.databaseURL; // #84: 하드코딩 제거
         if (typeof authReady !== 'undefined') await authReady;
         const idToken = await getIdToken();
         const res = await fetch(`${BASE}/history/${key}.json?auth=${idToken}`);
