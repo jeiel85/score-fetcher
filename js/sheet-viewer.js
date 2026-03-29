@@ -142,31 +142,29 @@ function syncAfterDrag(container) {
 function enableCardDragDrop(container) {
     let dragging = null, ghost = null, placeholder = null, ghostOffsetY = 0;
 
-    function onMove(e) {
-        if (!dragging) return;
-        e.preventDefault();
-        const y = e.touches[0].clientY;
-        ghost.style.top = (y - ghostOffsetY) + 'px';
-
-        // 플레이스홀더 숨기고 아래 요소 탐지
+    function doDragMove(clientX, clientY) {
+        ghost.style.top = (clientY - ghostOffsetY) + 'px';
         placeholder.style.display = 'none';
-        const elBelow = document.elementFromPoint(e.touches[0].clientX, y);
+        const elBelow = document.elementFromPoint(clientX, clientY);
         placeholder.style.display = '';
-
         const over = elBelow && elBelow.closest('.sheet-music-card');
         if (over && over !== dragging) {
             const mid = over.getBoundingClientRect().top + over.getBoundingClientRect().height / 2;
-            if (y < mid) container.insertBefore(placeholder, over);
+            if (clientY < mid) container.insertBefore(placeholder, over);
             else over.after(placeholder);
         }
     }
 
-    function onEnd() {
-        if (!dragging) return;
-        document.removeEventListener('touchmove', onMove);
-        document.removeEventListener('touchend', onEnd);
-        document.removeEventListener('touchcancel', onEnd);
+    function onTouchMove(e) { if (!dragging) return; e.preventDefault(); doDragMove(e.touches[0].clientX, e.touches[0].clientY); }
+    function onMouseMove(e) { if (!dragging) return; e.preventDefault(); doDragMove(e.clientX, e.clientY); }
 
+    function endDrag() {
+        if (!dragging) return;
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', endDrag);
+        document.removeEventListener('touchcancel', endDrag);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', endDrag);
         placeholder.replaceWith(dragging);
         dragging.classList.remove('card-dragging');
         ghost.remove();
@@ -174,35 +172,47 @@ function enableCardDragDrop(container) {
         dragging = null; ghost = null; placeholder = null;
     }
 
-    container.addEventListener('touchstart', e => {
-        const handle = e.target.closest('.drag-handle');
-        if (!handle) return;
-        e.preventDefault();
-        const card = handle.closest('.sheet-music-card');
-        if (!card) return;
+    function startDrag(clientX, clientY, card) {
         const rect = card.getBoundingClientRect();
-        ghostOffsetY = e.touches[0].clientY - rect.top;
-
-        // 고스트 생성
+        ghostOffsetY = clientY - rect.top;
         ghost = card.cloneNode(true);
         ghost.classList.add('drag-ghost');
         ghost.style.cssText = `position:fixed;z-index:1000;pointer-events:none;opacity:0.88;
             width:${rect.width}px;left:${rect.left}px;top:${rect.top}px;
             box-shadow:0 12px 40px rgba(0,0,0,0.35);border-radius:16px;`;
         document.body.appendChild(ghost);
-
-        // 플레이스홀더
         placeholder = document.createElement('div');
         placeholder.className = 'drag-placeholder';
         placeholder.style.height = rect.height + 'px';
         card.after(placeholder);
         dragging = card;
         card.classList.add('card-dragging');
+    }
 
-        document.addEventListener('touchmove', onMove, { passive: false });
-        document.addEventListener('touchend', onEnd, { passive: true });
-        document.addEventListener('touchcancel', onEnd, { passive: true });
+    // 터치 (#80: 기존 동작 유지)
+    container.addEventListener('touchstart', e => {
+        const handle = e.target.closest('.drag-handle');
+        if (!handle) return;
+        e.preventDefault();
+        const card = handle.closest('.sheet-music-card');
+        if (!card) return;
+        startDrag(e.touches[0].clientX, e.touches[0].clientY, card);
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend', endDrag, { passive: true });
+        document.addEventListener('touchcancel', endDrag, { passive: true });
     }, { passive: false });
+
+    // 마우스 (#80: 데스크탑 지원 추가)
+    container.addEventListener('mousedown', e => {
+        const handle = e.target.closest('.drag-handle');
+        if (!handle) return;
+        e.preventDefault();
+        const card = handle.closest('.sheet-music-card');
+        if (!card) return;
+        startDrag(e.clientX, e.clientY, card);
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', endDrag);
+    });
 }
 
 // ─── 전체화면 뷰어 ─────────────────────────────────────────────────────────────

@@ -305,6 +305,14 @@ function renderSongList(list) {
     if (!list) return;  // null 면 리렌더링 안함
     const container = document.getElementById('songListContainer');
     container.innerHTML = '';
+
+    // #79: 현재 입력창에 있는 곡 번호 집합 (중복 표시용)
+    const addedNums = new Set();
+    (document.getElementById('song-input')?.value || '').split('\n').forEach(line => {
+        const m = line.trim().match(/^(\d+)/);
+        if (m) addedNums.add(m[1].padStart(3, '0'));
+    });
+
     list.forEach(song => {
         const li = document.createElement('li');
         li.className = 'song-item';
@@ -319,11 +327,23 @@ function renderSongList(list) {
         else if (freq >= 3) li.classList.add('freq-med');
         else if (freq >= 1) li.classList.add('freq-low');
 
+        // #79: 이미 추가된 곡 표시
+        const isAdded = match && addedNums.has(numPadded);
+        if (isAdded) li.classList.add('song-already-added');
+
         const textSpan = document.createElement('span');
         textSpan.className = 'song-item-text';
         textSpan.innerHTML = match ? `<strong>${numRaw}</strong> ${title}` : song;
         textSpan.onclick = () => addSongToInput(song);
         li.appendChild(textSpan);
+
+        // #79: 이미 추가됨 배지
+        if (isAdded) {
+            const addedBadge = document.createElement('span');
+            addedBadge.className = 'added-badge';
+            addedBadge.textContent = '✓ 추가됨';
+            li.appendChild(addedBadge);
+        }
 
         if (freq > 0) {
             const badge = document.createElement('span');
