@@ -101,10 +101,12 @@ function normalizeContiText(rawText) {
     return allLines.join('\n');
 }
 // ─── 버전 관리 ────────────────────────────────────────────────────────────
-const APP_VERSION = "v1.5.9";
-const BUILD_DATE  = "2026.03.26";
+const APP_VERSION = "v1.6.0";
+const BUILD_DATE  = "2026.03.29";
 
 function initVersionDisplay() {
+    // 모든 .app-version-badge를 APP_VERSION으로 동적 갱신 (#82)
+    document.querySelectorAll('.app-version-badge').forEach(el => { el.textContent = APP_VERSION; });
     const footer = document.querySelector('footer');
     if (footer) {
         const verDiv = document.createElement('div');

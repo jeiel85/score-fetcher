@@ -252,12 +252,16 @@
     <script>
         // 🚀 강제 업데이트 로직 (버전 체크) 🚀
         (function forceUpdateCheck() {
-            const VERSION = '1.5.9';
+            const VERSION = '1.6.0';
             const savedVersion = localStorage.getItem('app_version');
             if (savedVersion !== VERSION) {
                 console.log(`Update Detect: ${savedVersion} -> ${VERSION}`);
+                // #85: 새로고침 전 입력 중 데이터 임시 보존
+                const _t = document.getElementById('setlist-title')?.value;
+                const _s = document.getElementById('song-input')?.value;
+                if (_t) sessionStorage.setItem('_pendingTitle', _t);
+                if (_s) sessionStorage.setItem('_pendingSongs', _s);
                 localStorage.setItem('app_version', VERSION);
-                // 중요: 강 제 로 새 로 고 침 (캐시 무시)
                 location.reload(true);
             }
         })();
@@ -421,6 +425,12 @@
 
         // ─── 앱 초기화 ─────────────────────────────────────────────────────────
         window.addEventListener('load', () => {
+            // #85: 강제 새로고침 후 입력 중이던 데이터 복원
+            const _pt = sessionStorage.getItem('_pendingTitle');
+            const _ps = sessionStorage.getItem('_pendingSongs');
+            if (_pt) { document.getElementById('setlist-title').value = _pt; sessionStorage.removeItem('_pendingTitle'); }
+            if (_ps) { document.getElementById('song-input').value = _ps; sessionStorage.removeItem('_pendingSongs'); }
+
             initSongList();
             initLyrics();
             initPushNotification();
