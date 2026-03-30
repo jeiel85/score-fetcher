@@ -247,7 +247,11 @@ function openFullscreen(index) {
 
     if (window._resetFullscreenZoom) window._resetFullscreenZoom();
     updateFullscreenTitle(index);
-    document.getElementById('fullscreenViewer').style.display = 'flex';
+    const viewer = document.getElementById('fullscreenViewer');
+    viewer.style.opacity = '0';
+    viewer.style.display = 'flex';
+    viewer.style.transition = 'opacity 0.2s ease';
+    requestAnimationFrame(() => { viewer.style.opacity = '1'; });
     updateNavBtns();
 }
 
@@ -271,7 +275,12 @@ function updateNavBtns() {
     document.querySelector('.nav-next').classList.toggle('hidden', !hasNext);
 }
 
-function closeFullscreen() { document.getElementById('fullscreenViewer').style.display = 'none'; }
+function closeFullscreen() {
+    const viewer = document.getElementById('fullscreenViewer');
+    viewer.style.transition = 'opacity 0.15s ease';
+    viewer.style.opacity = '0';
+    setTimeout(() => { viewer.style.display = 'none'; viewer.style.transition = ''; }, 150);
+}
 
 // ─── Landscape 뷰어 ────────────────────────────────────────────────────────────
 

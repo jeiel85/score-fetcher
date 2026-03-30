@@ -597,6 +597,7 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
         grid-template-rows: 1fr auto;
         gap: 10px;
         overflow: hidden;
+        transition: grid-template-columns 0.35s ease;
     }
     .panel-left {
         grid-column: 1; grid-row: 1 / 3;
