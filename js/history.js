@@ -48,6 +48,41 @@ async function saveConti() {
         alert('곡 목록을 입력해주세요!');
         return;
     }
+
+    // 중복 체크
+    try {
+        const idToken = await getIdToken();
+        const res = await fetch(`${FIREBASE_URL}?auth=${idToken}`);
+        const data = await res.json();
+        if (data) {
+            const entries = Object.entries(data);
+            // 완전 일치: 저장 차단
+            const exactDup = entries.find(([, item]) => item.title === title && item.text === normalizedText);
+            if (exactDup) {
+                showToast('⚠️ 동일한 콘티가 이미 저장되어 있습니다');
+                return;
+            }
+            // 제목만 일치: 업데이트 여부 확인
+            const titleDup = entries.find(([, item]) => item.title === title);
+            if (titleDup) {
+                const ok = confirm(`"${title}" 콘티가 이미 있습니다.\n내용을 업데이트할까요?\n(취소하면 새 콘티로 저장됩니다)`);
+                if (ok) {
+                    const [key] = titleDup;
+                    const now = new Date();
+                    const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                    await fetch(`${FIREBASE_URL}/${key}.json?auth=${idToken}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: normalizedText, date: dateStr, timestamp: Date.now() })
+                    });
+                    showToast('✅ 콘티가 업데이트됐습니다!');
+                    return;
+                }
+                // 취소 → 새 콘티로 저장
+            }
+        }
+    } catch(e) { /* 중복 체크 실패 시 그냥 저장 진행 */ }
+
     await saveToHistory();
     showToast('✅ 콘티가 저장되었습니다!'); // #78
 }
