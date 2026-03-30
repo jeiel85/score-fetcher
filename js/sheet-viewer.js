@@ -376,7 +376,7 @@ function closeLandscapeView() {
         if (scale <= 1 && e.changedTouches.length === 1) {
             const dx = e.changedTouches[0].clientX - touchStartX;
             const dy = e.changedTouches[0].clientY - touchStartY;
-            if (dy > 80 && Math.abs(dy) > Math.abs(dx)) { closeFullscreen(); }
+            if (Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) { closeFullscreen(); }
             else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { navigateSheet(dx < 0 ? 1 : -1); }
         }
     }, { passive: true });
@@ -440,7 +440,8 @@ function closeLandscapeView() {
         if (scale <= 1 && e.changedTouches.length === 1) {
             const dx = e.changedTouches[0].clientX - tsX;
             const dy = e.changedTouches[0].clientY - tsY;
-            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { navigateLandscapeSheet(dx < 0 ? 1 : -1); }
+            if (Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) { closeLandscapeView(); }
+            else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { navigateLandscapeSheet(dx < 0 ? 1 : -1); }
         }
     }, { passive: true });
 })();
