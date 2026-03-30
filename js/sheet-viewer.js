@@ -256,6 +256,11 @@ function navigateSheet(dir) {
     while (newIndex >= 0 && newIndex < sheetList.length && !sheetList[newIndex]) newIndex += dir;
     if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;
     openFullscreen(newIndex);
+    // 슬라이드 전환 애니메이션 (fullscreen-body에 적용 → zoom transform과 분리)
+    const body = document.getElementById('fullscreen-body');
+    body.classList.remove('slide-in-right', 'slide-in-left');
+    void body.offsetWidth; // reflow 강제
+    body.classList.add(dir > 0 ? 'slide-in-right' : 'slide-in-left');
 }
 
 function updateNavBtns() {

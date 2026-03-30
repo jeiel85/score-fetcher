@@ -821,3 +821,15 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     background: rgba(0, 0, 0, 0.03);
     border-radius: 0 0 var(--r-xl) var(--r-xl);
 }
+
+/* ─── 악보 전체화면 슬라이드 전환 애니메이션 (#99) ──────────────────────────── */
+@keyframes slideInFromRight {
+    from { transform: translateX(48px); opacity: 0.3; }
+    to   { transform: none; opacity: 1; }
+}
+@keyframes slideInFromLeft {
+    from { transform: translateX(-48px); opacity: 0.3; }
+    to   { transform: none; opacity: 1; }
+}
+.slide-in-right { animation: slideInFromRight 0.22s ease; }
+.slide-in-left  { animation: slideInFromLeft  0.22s ease; }
