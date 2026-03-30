@@ -804,9 +804,9 @@ let parsedEntries = [];
 let _selectedFiles = null;
 
 async function submitNewSong() {
-    const num = document.getElementById('reg-num').value.trim();
+    const num = String(parseInt(document.getElementById('reg-num').value.trim(), 10));
     const title = document.getElementById('reg-title').value.trim();
-    if(!num || !title) return alert('곡 번호와 제목을 모두 입력하세요.');
+    if(!num || num === 'NaN' || !title) return alert('곡 번호와 제목을 모두 입력하세요.');
     if(!confirm(`[${num} ${title}] 곡을 관리자 권한으로 실시간 배포합니다. 계속하시겠습니까?`)) return;
     
     try {
@@ -1649,7 +1649,7 @@ async function deleteSelectedHistory() {
 
 // ─── [TAB 2] 새 찬양 등록 로직 ──────────────────────────────────────
 async function submitNewSong() {
-    const num = document.getElementById('reg-num').value.trim();
+    const num = String(parseInt(document.getElementById('reg-num').value.trim(), 10));
     const title = document.getElementById('reg-title').value.trim();
     const lyrics = document.getElementById('reg-lyrics').value.trim();
 
@@ -1925,9 +1925,10 @@ let _currentEditReportKey = null;
 let _currentEditSongNum = null;
 
 async function openLyricEditor(songNum, reportKey) {
+    songNum = String(parseInt(songNum, 10)); // "001" → "1" (0-패딩 정규화)
     _currentEditReportKey = reportKey;
     _currentEditSongNum = songNum;
-    
+
     document.getElementById('edit-song-num').textContent = `${songNum}번 곡`;
     const textarea = document.getElementById('edit-lyrics-text');
     const titleInput = document.getElementById('edit-song-title');
@@ -2026,7 +2027,7 @@ async function saveEditedLyrics() {
         });
 
         // 2. 제목 업데이트
-        await fetch(`${FIREBASE_CONFIG.databaseURL}/songs/song_${_currentEditSongNum}.json?auth=${idToken}`, {
+        await fetch(`${FIREBASE_CONFIG.databaseURL}/songs/song_${pureNum}.json?auth=${idToken}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: newTitle, searchKey: newTitle.replace(/\s+/g, '') })
