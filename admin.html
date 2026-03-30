@@ -1722,7 +1722,7 @@ async function migrateSongs() {
         list.forEach(line => {
             const match = line.match(/^(\d+)\s*(.*)/);
             if(match) {
-                const num = match[1]; 
+                const num = String(parseInt(match[1], 10)); // 0-패딩 제거: "001" → "1"
                 const title = match[2].trim();
                 payload[`song_${num}`] = { num: parseInt(num, 10), title, searchKey: title.replace(/\s+/g,'') };
             }
@@ -2109,7 +2109,7 @@ async function loadStatistics() {
         // TOP 10 리스트 렌더링
         const maxCnt = sortedSongs[0][1];
         listEl.innerHTML = sortedSongs.map(([num, count], i) => {
-            const song = songsDict[`song_${num}`] || { title: `(${num}번 곡)` };
+            const song = songsDict[`song_${num}`] || songsDict[`song_${String(num).padStart(3,'0')}`] || { title: `(${num}번 곡)` };
             const percent = Math.round((count / maxCnt) * 100);
             return `
                 <div style="display:flex; flex-direction:column; gap:4px;">
@@ -2130,7 +2130,7 @@ async function loadStatistics() {
             .slice(0, 10);
         const maxBottomCnt = sortedSongs[0][1]; // 최대값 기준 비율 계산용
         bottomEl.innerHTML = bottomSongs.map(([num, count], i) => {
-            const song = songsDict[`song_${num}`] || { title: `(${num}번 곡)` };
+            const song = songsDict[`song_${num}`] || songsDict[`song_${String(num).padStart(3,'0')}`] || { title: `(${num}번 곡)` };
             const percent = Math.max(4, Math.round((count / maxBottomCnt) * 100));
             return `
                 <div style="display:flex; flex-direction:column; gap:4px;">
