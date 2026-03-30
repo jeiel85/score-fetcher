@@ -36,67 +36,36 @@ async function startSearch() {
 
     sheetList = new Array(allLines.length).fill(null);
 
-    if (isTabletLandscape()) {
-        // ── 가로/태블릿 모드: 분할 뷰어 ──
-        let firstSheetIndex = -1;
-        let songCounter = 0;
-        allLines.forEach((line, index) => {
-            const match = line.match(/^(\d+)/);
-            if (!match) return;
-            songCounter++;
-            const songNumber = match[1];
-            const numPadded  = songNumber.padStart(3, '0');
-            const songTitle  = line.substring(songNumber.length).trim();
-            const label = `${numPadded} ${songTitle}`;
-            if (firstSheetIndex < 0) firstSheetIndex = index;
-            const imgTag = document.createElement('img');
-            tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
-                sheetList[index] = { src: finalSrc, label };
-                updateLsNavBtns();
-            });
-        });
-        document.getElementById('app-layout').classList.add('ls-active');
-        if (firstSheetIndex >= 0) {
-            const _waitFirst = () => {
-                if (sheetList[firstSheetIndex]) { showLsSheet(firstSheetIndex); }
-                else { setTimeout(_waitFirst, 100); }
-            };
-            _waitFirst();
-        }
-        const canvas = await generateContiCanvas();
-        if (canvas) document.getElementById('ls-conti-img').src = canvas.toDataURL('image/png');
-    } else {
-        // ── 세로 모드 ──
-        const resultContainer = document.getElementById('result-container');
-        resultContainer.innerHTML = '';
-        let songCounter = 0;
-        allLines.forEach((line, index) => {
-            const match = line.match(/^(\d+)/);
-            if (!match) return;
-            songCounter++;
-            const songNumber = match[1];
-            const numPadded  = songNumber.padStart(3, '0');
-            const songTitle  = line.substring(songNumber.length).trim();
-            const label = `${numPadded} ${songTitle}`;
+    // ── 카드 그리드 (가로/세로 모드 공통) ──
+    const resultContainer = document.getElementById('result-container');
+    resultContainer.innerHTML = '';
+    let songCounter = 0;
+    allLines.forEach((line, index) => {
+        const match = line.match(/^(\d+)/);
+        if (!match) return;
+        songCounter++;
+        const songNumber = match[1];
+        const numPadded  = songNumber.padStart(3, '0');
+        const songTitle  = line.substring(songNumber.length).trim();
+        const label = `${numPadded} ${songTitle}`;
 
-            const card = document.createElement('div');
-            card.className = 'sheet-music-card';
-            card.dataset.lineIndex = String(index);
-            card.dataset.originalLine = line;
-            card.innerHTML = `<div class="sheet-title"><span class="drag-handle" title="길게 눌러 순서 변경">⠿</span>${label}</div>`;
-            const imgTag = document.createElement('img');
-            imgTag.alt = `${songNumber} 악보 찾는 중...`;
-            card.appendChild(imgTag);
-            resultContainer.appendChild(card);
-            tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
-                sheetList[index] = { src: finalSrc, label };
-                card.onclick = () => openFullscreen(index);
-            });
+        const card = document.createElement('div');
+        card.className = 'sheet-music-card';
+        card.dataset.lineIndex = String(index);
+        card.dataset.originalLine = line;
+        card.innerHTML = `<div class="sheet-title"><span class="drag-handle" title="길게 눌러 순서 변경">⠿</span>${label}</div>`;
+        const imgTag = document.createElement('img');
+        imgTag.alt = `${songNumber} 악보 찾는 중...`;
+        card.appendChild(imgTag);
+        resultContainer.appendChild(card);
+        tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
+            sheetList[index] = { src: finalSrc, label };
+            card.onclick = () => openFullscreen(index);
         });
-        enableCardDragDrop(resultContainer);
-        const btnGroup = document.querySelector('.btn-group');
-        if (btnGroup) btnGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    });
+    enableCardDragDrop(resultContainer);
+    const btnGroup = document.querySelector('.btn-group');
+    if (btnGroup) btnGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ─── 카드 드래그 앤 드롭 (세로 모드) ──────────────────────────────────────────
@@ -483,21 +452,8 @@ window.addEventListener('resize', () => {
         }
     }
     else if (isFS && isTabletLandscape()) {
-        // 2. 세로 모드(전체화면)였다가 가로 모드(태블릿 분할 뷰)로 변한 경우
-        const lastIdx = currentSheetIndex;
+        // 2. 세로 모드(전체화면)였다가 가로 모드로 전환된 경우 → 전체화면만 닫기
         closeFullscreen();
-        layout.classList.add('ls-active'); // 강제 활성화
-        startSearch();
-        if (lastIdx >= 0) {
-            setTimeout(() => showLsSheet(lastIdx), 150);
-        }
-    }
-    else if (!isLS && !isFS && sheetList.length > 0 && isTabletLandscape() && !_lsUserDismissed) {
-        // 3. 악보가 있는 세로 모드에서 가로 모드로 전환된 경우 → 분할 뷰 자동 전환
-        // (_lsUserDismissed=true면 사용자가 직접 닫은 것이므로 재활성화 안 함)
-        layout.classList.add('ls-active');
-        startSearch();
-        setTimeout(() => showLsSheet(currentSheetIndex >= 0 ? currentSheetIndex : 0), 150);
     }
 });
 
