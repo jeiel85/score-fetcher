@@ -143,6 +143,7 @@ async function generateContiCanvas() {
 
 let _shareFile = null, _shareCanvas = null, _shareTitle = '';
 let _shareUiTimer = null;
+let _shareDeepUrl = null; // 미리 생성해둔 딥링크
 
 async function shareConti() {
     const rawContent = document.getElementById('song-input').value.trim();
@@ -150,17 +151,40 @@ async function shareConti() {
     const canvas = await generateContiCanvas();
     if (!canvas) { alert('공유할 콘티가 없습니다!'); return; }
     const title = document.getElementById('setlist-title').value.trim();
-    canvas.toBlob((blob) => {
+    canvas.toBlob(async (blob) => {
         const fileName = `콘티_${title || '공유'}.png`;
         _shareFile   = new File([blob], fileName, { type: 'image/png' });
         _shareCanvas = canvas;
         _shareTitle  = title;
+        _shareDeepUrl = null;
+
+        // 딥링크 미리 생성 (Firebase 저장) → 미리보기 중에 칩으로 표시
+        try {
+            const key = await saveToHistory();
+            if (key) {
+                _shareDeepUrl = `${location.origin}/?conti=${key}`;
+                const chip = document.getElementById('shareDeeplinkChip');
+                document.getElementById('shareDeeplinkText').textContent = _shareDeepUrl;
+                chip.style.display = 'flex';
+            }
+        } catch(e) { /* 딥링크 없이 진행 */ }
+
         const dataUrl = canvas.toDataURL('image/png');
         document.getElementById('sharePreviewImg').src = dataUrl;
         document.getElementById('sharePreviewModal').style.display = 'flex';
         document.querySelector('.share-preview-footer').classList.add('ui-hidden');
         _showShareUI();
     }, 'image/png');
+}
+
+async function copyDeeplink() {
+    if (!_shareDeepUrl) return;
+    try {
+        await navigator.clipboard.writeText(_shareDeepUrl);
+        const copyLabel = document.querySelector('.share-deeplink-copy');
+        copyLabel.textContent = '✓ 복사됨!';
+        setTimeout(() => { copyLabel.textContent = '탭하여 복사'; }, 2000);
+    } catch(e) { showToast('클립보드 복사 실패'); }
 }
 
 function _showShareUI() {
@@ -176,41 +200,39 @@ function _showShareUI() {
 function closeSharePreview() {
     clearTimeout(_shareUiTimer);
     document.getElementById('sharePreviewModal').style.display = 'none';
-    _shareFile = null; _shareCanvas = null;
+    _shareFile = null; _shareCanvas = null; _shareDeepUrl = null;
+    document.getElementById('shareDeeplinkChip').style.display = 'none';
+    document.querySelector('.share-deeplink-copy').textContent = '탭하여 복사';
 }
 
 async function doShareConti() {
     if (!_shareFile || !_shareCanvas) return;
 
-    // 공유 전에 지역 변수에 먼저 저장 (closeSharePreview가 null로 초기화하기 때문)
+    // 지역 변수에 저장 (closeSharePreview가 null로 초기화하기 때문)
     const shareFile   = _shareFile;
     const shareCanvas = _shareCanvas;
     const shareTitle  = _shareTitle;
+    const deepUrl     = _shareDeepUrl; // 미리보기 열릴 때 이미 생성됨
 
-    // 딥링크 URL 생성을 위해 Firebase 저장 (조용히)
-    // 저장 실패 또는 오프라인이면 URL 없이 이미지만 공유
     let shareText = shareTitle || '콘티 공유';
-    try {
-        const key = await saveToHistory();
-        if (key) shareText += `\n${location.origin}/?conti=${key}`;
-    } catch(e) { /* URL 없이 이미지만 공유 진행 */ }
+    if (deepUrl) shareText += `\n${deepUrl}`;
 
     const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [shareFile] });
     if (canShareFiles) {
         // 카카오톡 등 일부 앱은 파일 공유 시 text를 버림
-        // → navigator.share() 호출 전(사용자 제스처 컨텍스트 내)에 미리 클립보드 복사
-        const deepUrl = shareText.includes('\n') ? shareText.split('\n')[1] : null;
+        // → 사용자 제스처 컨텍스트 내에서 미리 클립보드 복사
         if (deepUrl && navigator.clipboard) {
             await navigator.clipboard.writeText(deepUrl).catch(() => {});
         }
         try {
             await navigator.share({ title: shareTitle || '콘티 공유', text: shareText, files: [shareFile] });
-            if (deepUrl) showToast('🔗 딥링크를 클립보드에 복사했어요! 카카오톡 채팅에 붙여넣기 하세요');
+            if (deepUrl) {
+                showToast('📤 이미지 공유 완료!\n🔗 링크도 클립보드에 있어요 — 카톡 채팅창에 붙여넣기 하세요', 4000);
+            }
             closeSharePreview();
             return;
         } catch (e) {
             if (e.name === 'AbortError') return; // 사용자가 공유 취소
-            // 공유 실패 시 다운로드로 폴백
         }
     }
     // 웹 공유 API 미지원 또는 실패 시 다운로드

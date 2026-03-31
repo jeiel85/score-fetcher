@@ -209,6 +209,11 @@
                 <img id="sharePreviewImg" src="" alt="콘티 미리보기">
             </div>
             <div class="share-preview-footer">
+                <div class="share-deeplink-chip" id="shareDeeplinkChip" style="display:none" onclick="copyDeeplink()">
+                    <span class="share-deeplink-icon">🔗</span>
+                    <span class="share-deeplink-text" id="shareDeeplinkText"></span>
+                    <span class="share-deeplink-copy">탭하여 복사</span>
+                </div>
                 <p class="share-save-notice">💾 공유하면 콘티함에도 자동 저장됩니다</p>
                 <div class="share-footer-row">
                     <button class="btn-share-close" onclick="closeSharePreview()">닫기 ✕</button>

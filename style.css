@@ -384,6 +384,22 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
     border-top: 1px solid rgba(192, 196, 234, 0.1);
     transition: opacity 0.35s ease, transform 0.35s ease;
 }
+.share-deeplink-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(84,101,255,0.15); border: 1px solid rgba(84,101,255,0.35);
+    border-radius: var(--r-full); padding: 8px 14px; cursor: pointer;
+    transition: background 0.2s;
+}
+.share-deeplink-chip:active { background: rgba(84,101,255,0.3); }
+.share-deeplink-icon { font-size: 14px; flex-shrink: 0; }
+.share-deeplink-text {
+    flex: 1; font-size: 11px; color: rgba(255,255,255,0.7);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.share-deeplink-copy {
+    flex-shrink: 0; font-size: 11px; font-weight: 700;
+    color: #818cf8; white-space: nowrap;
+}
 .share-save-notice { margin: 0; font-size: 11px; color: rgba(255,255,255,0.4); text-align: center; }
 .share-footer-row { display: flex; gap: 10px; width: 100%; }
 .share-preview-footer.ui-hidden { opacity: 0; transform: translateY(100%); pointer-events: none; }
