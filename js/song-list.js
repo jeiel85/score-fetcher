@@ -374,10 +374,16 @@ function renderSongList(list) {
             const scoreBtn = document.createElement('button');
             scoreBtn.className = 'btn-score';
             scoreBtn.textContent = '악보';
+            scoreBtn.dataset.numPadded = numPadded;
+            scoreBtn.dataset.title = title;
             scoreBtn.onclick = (e) => {
                 e.stopPropagation();
+                // 현재 렌더링된 목록 전체 수집 (좌우 탐색용)
+                const allItems = Array.from(document.querySelectorAll('#songListContainer .btn-score'))
+                    .map(btn => ({ numPadded: btn.dataset.numPadded, title: btn.dataset.title }));
+                const listIdx = allItems.findIndex(item => item.numPadded === numPadded);
                 closeSongModal();
-                openScorePreview(numPadded, `${numPadded} ${title}`);
+                openScorePreview(numPadded, `${numPadded} ${title}`, allItems, listIdx >= 0 ? listIdx : 0);
             };
             li.appendChild(scoreBtn);
         }

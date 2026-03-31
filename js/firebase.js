@@ -33,4 +33,4 @@ let wakeLock   = null;
 
 // 전체화면 뷰어용 악보 목록
 let sheetList = [];          // { src, label } | null
-let currentSheetIndex = 0;
+let currentSheetIndex = -1; // -1: 아직 아무 악보도 직접 선택 안 함

@@ -254,6 +254,11 @@ function openFullscreen(index) {
 }
 
 function navigateSheet(dir) {
+    // 찬양목록 미리보기 모드일 경우 별도 탐색 사용
+    if (_scorePreviewFromModal && _scorePreviewList.length > 0) {
+        navigateScorePreview(dir);
+        return;
+    }
     let newIndex = currentSheetIndex + dir;
     while (newIndex >= 0 && newIndex < sheetList.length && !sheetList[newIndex]) newIndex += dir;
     if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;
@@ -277,22 +282,46 @@ function closeFullscreen() {
     const viewer = document.getElementById('fullscreenViewer');
     viewer.style.transition = 'opacity 0.15s ease';
     viewer.style.opacity = '0';
-    setTimeout(() => { viewer.style.display = 'none'; viewer.style.transition = ''; }, 150);
+    setTimeout(() => {
+        viewer.style.display = 'none';
+        viewer.style.transition = '';
+        // 찬양 목록 악보 미리보기에서 열린 경우 → 모달 복귀 (#110)
+        if (_scorePreviewFromModal) {
+            _scorePreviewFromModal = false;
+            openSongModal();
+        }
+    }, 150);
 }
 
-// 찬양 목록에서 단일 악보 미리보기 (#100)
-function openScorePreview(numRaw, displayTitle) {
+// ─── 찬양 목록 악보 미리보기 (#100, #110) ────────────────────────────────────────
+// 현재 미리보기 중인 목록과 인덱스 (찬양목록 내 좌우 탐색용)
+let _scorePreviewList = [];   // [{ numPadded, title }, ...]
+let _scorePreviewIdx  = 0;
+let _scorePreviewFromModal = false;
+
+function openScorePreview(numPadded, displayTitle, previewList, listIdx) {
+    // previewList: 찬양목록 현재 표시 목록 전체 (선택적). 없으면 단일 곡 모드.
+    _scorePreviewList = previewList || [];
+    _scorePreviewIdx  = (listIdx !== undefined) ? listIdx : 0;
+    _scorePreviewFromModal = true;
+    _showScorePreviewAt(_scorePreviewIdx, numPadded, displayTitle);
+}
+
+function _showScorePreviewAt(idx, numPadded, displayTitle) {
     let extIdx = 0;
     function tryNext() {
         if (extIdx >= EXTENSIONS.length) { showToast('악보 이미지를 찾을 수 없습니다'); return; }
-        const src = `images/${numRaw}${EXTENSIONS[extIdx]}`;
+        const src = `images/${numPadded}${EXTENSIONS[extIdx]}`;
         const t = new Image();
         t.onload = () => {
             document.getElementById('fullscreen-img').src = src;
             document.getElementById('fullscreen-title').textContent = displayTitle;
             if (window._resetFullscreenZoom) window._resetFullscreenZoom();
-            document.querySelector('.nav-prev').classList.add('hidden');
-            document.querySelector('.nav-next').classList.add('hidden');
+            // 네비 버튼: 목록이 있을 때만 활성화
+            const hasPrev = _scorePreviewList.length > 0 && idx > 0;
+            const hasNext = _scorePreviewList.length > 0 && idx < _scorePreviewList.length - 1;
+            document.querySelector('.nav-prev').classList.toggle('hidden', !hasPrev);
+            document.querySelector('.nav-next').classList.toggle('hidden', !hasNext);
             const viewer = document.getElementById('fullscreenViewer');
             viewer.style.opacity = '0';
             viewer.style.display = 'flex';
@@ -303,6 +332,14 @@ function openScorePreview(numRaw, displayTitle) {
         t.src = src;
     }
     tryNext();
+}
+
+function navigateScorePreview(dir) {
+    const newIdx = _scorePreviewIdx + dir;
+    if (newIdx < 0 || newIdx >= _scorePreviewList.length) return;
+    _scorePreviewIdx = newIdx;
+    const item = _scorePreviewList[newIdx];
+    _showScorePreviewAt(newIdx, item.numPadded, `${item.numPadded} ${item.title}`);
 }
 
 // ─── Landscape 뷰어 ────────────────────────────────────────────────────────────
@@ -491,19 +528,11 @@ window.addEventListener('resize', () => {
     const isFS = fsViewer.style.display === 'flex';
 
     if (isLS && !isTabletLandscape()) {
-        // 1. 가로 모드(분할 뷰)였다가 세로 모드(모바일 뷰)로 변한 경우
-        const lastIdx = currentSheetIndex;
+        // 1. 가로 모드(분할 뷰)였다가 세로 모드로 변한 경우 → 카드 그리드만 표시
+        // ⚠️ 전체화면 자동 오픈 금지: 세로모드 전체화면은 카드 직접 클릭 시에만 열림
         layout.classList.remove('ls-active');
-        _lsUserDismissed = false; // 실제 회전이므로 플래그 초기화
+        _lsUserDismissed = false;
         startSearch();
-        if (lastIdx >= 0) {
-            // 이미지 로드 완료 대기 후 전체화면 오픈 (#68)
-            const _waitAndOpen = () => {
-                if (sheetList[lastIdx]) openFullscreen(lastIdx);
-                else setTimeout(_waitAndOpen, 80);
-            };
-            setTimeout(_waitAndOpen, 80);
-        }
     }
     else if (isFS && isTabletLandscape()) {
         // 2. 세로 모드(전체화면)였다가 가로 모드로 전환된 경우 → 전체화면 닫고 ls-active 활성화
