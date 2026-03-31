@@ -21,7 +21,9 @@ function tryLoadImage(imgElement, songNum, extIndex, onDone) {
 }
 
 async function startSearch() {
-    _lsUserDismissed = false; // 악보 만들기 실행 시 플래그 초기화
+    _lsUserDismissed = false;
+    // 분할뷰 해제 → 카드 그리드 표시 (가로/세로 공통)
+    document.getElementById('app-layout').classList.remove('ls-active');
     const rawText = document.getElementById('song-input').value;
 
     // 공통 정규화: 곡번호 3자리 + 제목 자동 치환
@@ -61,21 +63,13 @@ async function startSearch() {
         tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
             sheetList[index] = { src: finalSrc, label };
             card.onclick = () => openFullscreen(index);
-            // 가로 모드: ls-active 중 첫 번째 이미지 로드 시 자동 표시
-            if (isTabletLandscape() && document.getElementById('app-layout').classList.contains('ls-active')) {
-                if (!sheetList.some((s, i) => s !== null && i !== index)) showLsSheet(index);
-            }
         });
     });
     enableCardDragDrop(resultContainer);
 
-    if (isTabletLandscape()) {
-        // 가로 모드: ls-active 분할 뷰 즉시 활성화
-        activateLsView();
-    } else {
-        const btnGroup = document.querySelector('.btn-group');
-        if (btnGroup) btnGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    // 가로/세로 모두 동일하게 버튼 영역으로 스크롤 (카드 그리드 표시)
+    const btnGroup = document.querySelector('.btn-group');
+    if (btnGroup) btnGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function activateLsView() {
@@ -528,20 +522,16 @@ window.addEventListener('resize', () => {
     const isFS = fsViewer.style.display === 'flex';
 
     if (isLS && !isTabletLandscape()) {
-        // 1. 가로 모드(분할 뷰)였다가 세로 모드로 변한 경우 → 카드 그리드만 표시
+        // 1. ls-active(분할뷰)였다가 세로 모드로 변한 경우 → ls-active 해제 + 카드 그리드 재생성
         // ⚠️ 전체화면 자동 오픈 금지: 세로모드 전체화면은 카드 직접 클릭 시에만 열림
         layout.classList.remove('ls-active');
         _lsUserDismissed = false;
         startSearch();
     }
-    else if (isFS && isTabletLandscape()) {
-        // 2. 세로 모드(전체화면)였다가 가로 모드로 전환된 경우 → 전체화면 닫고 ls-active 활성화
+    else if (isFS && !isTabletLandscape()) {
+        // 2. 전체화면 뷰어가 열린 상태에서 세로→가로 이동 → 그냥 전체화면 닫기 (카드 그리드 유지)
         closeFullscreen();
-        if (!_lsUserDismissed && sheetList.some(s => s !== null)) activateLsView();
     }
-    else if (!isLS && !isFS && isTabletLandscape() && !_lsUserDismissed && sheetList.some(s => s !== null)) {
-        // 3. 세로 모드(카드 그리드)였다가 가로 모드로 전환된 경우 → ls-active 활성화
-        activateLsView();
-    }
+    // ⚠️ 세로→가로 회전 시 ls-active 자동 활성화 없음 — 카드 클릭 시에만 분할뷰 진입
 });
 
