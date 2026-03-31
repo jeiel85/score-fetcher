@@ -683,6 +683,11 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     body:has(.app-layout.ls-active) #result-container { display: none !important; }
 }
 
+/* ─── 가로 모드 대형 태블릿 (1024px+) — 6열 그리드 ─── */
+@media (min-width: 1024px) and (orientation: landscape) {
+    #result-container { grid-template-columns: repeat(6, 1fr); }
+}
+
 /* ─── 태블릿 세로 모드 (768px+) — 버튼·아이콘 크기 확대 (#59) ─── */
 @media (min-width: 768px) and (orientation: portrait) {
     .header-settings-btn { width: 44px; height: 44px; font-size: 22px; }
