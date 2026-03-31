@@ -377,7 +377,7 @@ function renderSongList(list) {
             scoreBtn.onclick = (e) => {
                 e.stopPropagation();
                 closeSongModal();
-                openScorePreview(numRaw, `${numRaw} ${title}`);
+                openScorePreview(numPadded, `${numPadded} ${title}`);
             };
             li.appendChild(scoreBtn);
         }
