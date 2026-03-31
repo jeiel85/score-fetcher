@@ -214,13 +214,13 @@ async function doShareConti() {
     const shareTitle  = _shareTitle;
     const deepUrl     = _shareDeepUrl; // 미리보기 열릴 때 이미 생성됨
 
-    let shareText = shareTitle || '콘티 공유';
-    if (deepUrl) shareText += `\n${deepUrl}`;
+    // text에 URL을 포함하면 Android가 URL을 별도 추출해 카카오톡에서 URL이 2개 표시되는 문제 발생
+    // → text는 제목만, URL은 클립보드 전용으로 처리
+    const shareText = shareTitle || '콘티 공유';
 
     const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [shareFile] });
     if (canShareFiles) {
-        // 카카오톡 등 일부 앱은 파일 공유 시 text를 버림
-        // → 사용자 제스처 컨텍스트 내에서 미리 클립보드 복사
+        // 사용자 제스처 컨텍스트 내에서 미리 클립보드 복사
         if (deepUrl && navigator.clipboard) {
             await navigator.clipboard.writeText(deepUrl).catch(() => {});
         }
