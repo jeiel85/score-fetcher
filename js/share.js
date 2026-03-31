@@ -197,14 +197,15 @@ async function doShareConti() {
 
     const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [shareFile] });
     if (canShareFiles) {
+        // 카카오톡 등 일부 앱은 파일 공유 시 text를 버림
+        // → navigator.share() 호출 전(사용자 제스처 컨텍스트 내)에 미리 클립보드 복사
+        const deepUrl = shareText.includes('\n') ? shareText.split('\n')[1] : null;
+        if (deepUrl && navigator.clipboard) {
+            await navigator.clipboard.writeText(deepUrl).catch(() => {});
+        }
         try {
             await navigator.share({ title: shareTitle || '콘티 공유', text: shareText, files: [shareFile] });
-            // 카카오톡 등 일부 앱은 파일 공유 시 text를 버림 → 딥링크 클립보드에 별도 복사
-            const deepUrl = shareText.includes('\n') ? shareText.split('\n')[1] : null;
-            if (deepUrl && navigator.clipboard) {
-                navigator.clipboard.writeText(deepUrl).catch(() => {});
-                showToast('🔗 딥링크도 클립보드에 복사했어요! 카카오톡 채팅에 붙여넣기 하세요');
-            }
+            if (deepUrl) showToast('🔗 딥링크를 클립보드에 복사했어요! 카카오톡 채팅에 붙여넣기 하세요');
             closeSharePreview();
             return;
         } catch (e) {
