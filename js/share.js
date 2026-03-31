@@ -226,8 +226,10 @@ async function doShareConti() {
         }
         try {
             const sharePayload = { title: shareTitle || '콘티 공유', text: shareText, files: [shareFile] };
-            if (deepUrl) sharePayload.url = deepUrl; // text 대신 url 파라미터로 전달
+            if (deepUrl) sharePayload.url = deepUrl; // iOS: 이미지+링크 함께 공유 / Android: url 무시되나 클립보드로 전달
             await navigator.share(sharePayload);
+            // Android Chrome은 files+url 동시 지원 안 함 → 클립보드 복사 안내
+            if (deepUrl) showToast('📤 공유 완료! 링크는 클립보드에도 복사됐어요 📋', 4000);
             closeSharePreview();
             return;
         } catch (e) {
