@@ -214,10 +214,6 @@ async function doShareConti() {
     const shareTitle  = _shareTitle;
     const deepUrl     = _shareDeepUrl; // 미리보기 열릴 때 이미 생성됨
 
-    // text에 URL을 포함하면 Android가 URL을 별도 추출해 카카오톡에서 URL이 2개 표시되는 문제 발생
-    // → text는 제목만, URL은 클립보드 전용으로 처리
-    const shareText = shareTitle || '콘티 공유';
-
     const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [shareFile] });
     if (canShareFiles) {
         // 사용자 제스처 컨텍스트 내에서 미리 클립보드 복사
@@ -225,7 +221,8 @@ async function doShareConti() {
             await navigator.clipboard.writeText(deepUrl).catch(() => {});
         }
         try {
-            const sharePayload = { title: shareTitle || '콘티 공유', text: shareText, files: [shareFile] };
+            // text 제거: title+text 중복 시 iOS KakaoTalk에서 빈 줄 발생
+            const sharePayload = { title: shareTitle || '콘티 공유', files: [shareFile] };
             if (deepUrl) sharePayload.url = deepUrl; // iOS: 이미지+링크 함께 공유 / Android: url 무시되나 클립보드로 전달
             await navigator.share(sharePayload);
             // Android Chrome은 files+url 동시 지원 안 함 → 클립보드 복사 안내
