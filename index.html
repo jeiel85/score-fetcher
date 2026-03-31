@@ -70,8 +70,6 @@
                 <div class="ls-conti-area" id="ls-conti-area">
                     <img id="ls-conti-img" src="" alt="콘티 이미지">
                 </div>
-                <!-- 악보 카드 그리드 (세로: main 하단 / 가로: panel-left 내 스크롤) -->
-                <div id="result-container" class="result-area"></div>
             </div>
             <!-- 오른쪽 상단: 상단 버튼 (세로: order 1 | 가로: 우측 상단) -->
             <div class="panel-right">
@@ -124,6 +122,8 @@
                 </div>
             </div>
         </div>
+        <!-- 악보 카드 그리드 (세로 모드 전용 — 가로 모드에서는 CSS로 숨김) -->
+        <div id="result-container" class="result-area"></div>
     </main>
 
     <footer>
@@ -255,7 +255,7 @@
     <script>
         // 🚀 강제 업데이트 로직 (버전 체크) 🚀
         (function forceUpdateCheck() {
-            const VERSION = '1.6.1';
+            const VERSION = '1.6.2';
             const savedVersion = localStorage.getItem('app_version');
             if (savedVersion !== VERSION) {
                 console.log(`Update Detect: ${savedVersion} -> ${VERSION}`);

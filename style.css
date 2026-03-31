@@ -629,10 +629,8 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
 
     .controls-card { flex-shrink: 0; }
 
-    /* 가로 모드: result-container는 panel-left 내에서 스크롤 (panel-left의 overflow-y:auto 이용) */
-    #result-container { grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
-    #result-container:empty { display: none; }
-    #result-container:not(:empty) { display: grid; }
+    /* 가로 모드: 카드 그리드 숨김 (ls-active 분할 뷰로 대체) */
+    #result-container { display: none !important; }
 
     /* panel-left 스크롤: min-height:0 필수 (grid child) */
     .panel-left { min-height: 0; }

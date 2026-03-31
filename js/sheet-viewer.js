@@ -61,11 +61,33 @@ async function startSearch() {
         tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
             sheetList[index] = { src: finalSrc, label };
             card.onclick = () => openFullscreen(index);
+            // 가로 모드: ls-active 중 첫 번째 이미지 로드 시 자동 표시
+            if (isTabletLandscape() && document.getElementById('app-layout').classList.contains('ls-active')) {
+                if (!sheetList.some((s, i) => s !== null && i !== index)) showLsSheet(index);
+            }
         });
     });
     enableCardDragDrop(resultContainer);
-    const btnGroup = document.querySelector('.btn-group');
-    if (btnGroup) btnGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    if (isTabletLandscape()) {
+        // 가로 모드: ls-active 분할 뷰 즉시 활성화
+        activateLsView();
+    } else {
+        const btnGroup = document.querySelector('.btn-group');
+        if (btnGroup) btnGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function activateLsView() {
+    const layout = document.getElementById('app-layout');
+    layout.classList.add('ls-active');
+    _lsUserDismissed = false;
+    generateContiCanvas().then(canvas => {
+        if (canvas) document.getElementById('ls-conti-img').src = canvas.toDataURL('image/png');
+    });
+    // 이미 로드된 첫 번째 악보가 있으면 즉시 표시
+    const firstIdx = sheetList.findIndex(s => s !== null);
+    if (firstIdx >= 0) showLsSheet(firstIdx);
 }
 
 // ─── 카드 드래그 앤 드롭 (세로 모드) ──────────────────────────────────────────
@@ -205,17 +227,9 @@ function openFullscreen(index) {
     const sheet = sheetList[index];
     if (!sheet) return;
 
-    // 가로 모드: 기존 분할 뷰어(ls-active)로 전환 (#107)
+    // 가로 모드: 분할 뷰어(ls-active)로 전환
     if (isTabletLandscape()) {
-        const layout = document.getElementById('app-layout');
-        if (!layout.classList.contains('ls-active')) {
-            layout.classList.add('ls-active');
-            _lsUserDismissed = false;
-            // 콘티 이미지 비동기 생성
-            generateContiCanvas().then(canvas => {
-                if (canvas) document.getElementById('ls-conti-img').src = canvas.toDataURL('image/png');
-            });
-        }
+        if (!document.getElementById('app-layout').classList.contains('ls-active')) activateLsView();
         showLsSheet(index);
         return;
     }
@@ -492,8 +506,13 @@ window.addEventListener('resize', () => {
         }
     }
     else if (isFS && isTabletLandscape()) {
-        // 2. 세로 모드(전체화면)였다가 가로 모드로 전환된 경우 → 전체화면만 닫기
+        // 2. 세로 모드(전체화면)였다가 가로 모드로 전환된 경우 → 전체화면 닫고 ls-active 활성화
         closeFullscreen();
+        if (!_lsUserDismissed && sheetList.some(s => s !== null)) activateLsView();
+    }
+    else if (!isLS && !isFS && isTabletLandscape() && !_lsUserDismissed && sheetList.some(s => s !== null)) {
+        // 3. 세로 모드(카드 그리드)였다가 가로 모드로 전환된 경우 → ls-active 활성화
+        activateLsView();
     }
 });
 
