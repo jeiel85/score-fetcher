@@ -225,10 +225,9 @@ async function doShareConti() {
             await navigator.clipboard.writeText(deepUrl).catch(() => {});
         }
         try {
-            await navigator.share({ title: shareTitle || '콘티 공유', text: shareText, files: [shareFile] });
-            if (deepUrl) {
-                showToast('📤 이미지 공유 완료!\n🔗 링크도 클립보드에 있어요 — 카톡 채팅창에 붙여넣기 하세요', 4000);
-            }
+            const sharePayload = { title: shareTitle || '콘티 공유', text: shareText, files: [shareFile] };
+            if (deepUrl) sharePayload.url = deepUrl; // text 대신 url 파라미터로 전달
+            await navigator.share(sharePayload);
             closeSharePreview();
             return;
         } catch (e) {
