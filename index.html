@@ -65,6 +65,10 @@
                     <input type="text" id="setlist-title" class="title-input" placeholder="예: 2026-03-15 수요예배">
                     <label class="field-label">찬양 목록 입력</label>
                     <textarea id="song-input" placeholder="276 햇살보다 밝게 빛나는 주의&#13;&#10;123 당신은 지금 어디로&#13;&#10;168 하나님은 너를 만드신 분" oninput="handleInputPrefetch(this.value)"></textarea>
+                    <div class="input-action-row">
+                        <button class="btn-input-action btn-input-reset" onclick="resetAll()">🔄 초기화</button>
+                        <button class="btn-input-action btn-input-divider" onclick="addDivider()">— 구분선 추가</button>
+                    </div>
                 </div>
                 <!-- 가로 모드: 악보 만들기 후 콘티 공유 이미지 -->
                 <div class="ls-conti-area" id="ls-conti-area">
@@ -75,10 +79,9 @@
             <div class="panel-right">
                 <div class="controls-card" id="controls-section">
                     <div class="top-btn-group">
-                        <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 콘티함</button>
                         <div class="top-btn-row">
                             <button class="top-btn btn-show-list" onclick="openSongModal()">📖 찬양 목록</button>
-                            <button class="top-btn btn-reset" onclick="resetAll()">🔄 초기화</button>
+                            <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 콘티함</button>
                         </div>
                     </div>
                 </div>

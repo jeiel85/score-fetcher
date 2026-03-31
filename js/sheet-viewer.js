@@ -301,7 +301,17 @@ function openScorePreview(numPadded, displayTitle, previewList, listIdx) {
     _showScorePreviewAt(_scorePreviewIdx, numPadded, displayTitle);
 }
 
-function _showScorePreviewAt(idx, numPadded, displayTitle) {
+function _showScorePreviewAt(idx, numPadded, displayTitle, slideDir) {
+    // 인접 곡 프리페칭 (스와이프 딜레이 최소화)
+    if (_scorePreviewList.length > 0) {
+        [-2, -1, 1, 2].forEach(offset => {
+            const adjIdx = idx + offset;
+            if (adjIdx >= 0 && adjIdx < _scorePreviewList.length) {
+                prefetchImage(_scorePreviewList[adjIdx].numPadded);
+            }
+        });
+    }
+
     let extIdx = 0;
     function tryNext() {
         if (extIdx >= EXTENSIONS.length) { showToast('악보 이미지를 찾을 수 없습니다'); return; }
@@ -311,6 +321,13 @@ function _showScorePreviewAt(idx, numPadded, displayTitle) {
             document.getElementById('fullscreen-img').src = src;
             document.getElementById('fullscreen-title').textContent = displayTitle;
             if (window._resetFullscreenZoom) window._resetFullscreenZoom();
+            // 슬라이드 애니메이션 (탐색 방향이 있을 때만)
+            if (slideDir) {
+                const body = document.getElementById('fullscreen-body');
+                body.classList.remove('slide-in-right', 'slide-in-left');
+                void body.offsetWidth;
+                body.classList.add(slideDir > 0 ? 'slide-in-right' : 'slide-in-left');
+            }
             // 네비 버튼: 목록이 있을 때만 활성화
             const hasPrev = _scorePreviewList.length > 0 && idx > 0;
             const hasNext = _scorePreviewList.length > 0 && idx < _scorePreviewList.length - 1;
@@ -333,7 +350,7 @@ function navigateScorePreview(dir) {
     if (newIdx < 0 || newIdx >= _scorePreviewList.length) return;
     _scorePreviewIdx = newIdx;
     const item = _scorePreviewList[newIdx];
-    _showScorePreviewAt(newIdx, item.numPadded, `${item.numPadded} ${item.title}`);
+    _showScorePreviewAt(newIdx, item.numPadded, `${item.numPadded} ${item.title}`, dir);
 }
 
 // ─── Landscape 뷰어 ────────────────────────────────────────────────────────────

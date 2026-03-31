@@ -120,6 +120,14 @@ function initVersionDisplay() {
 const EXTENSIONS = ['.png', '.jpg', '.gif', '.jfif', '.PNG', '.JPG', '.GIF', '.JFIF'];
 const _prefetchedSet = new Set();
 
+function addDivider() {
+    const textarea = document.getElementById('song-input');
+    let currentText = textarea.value;
+    if (currentText.length > 0 && !currentText.endsWith('\n')) currentText += '\n';
+    textarea.value = currentText + '──────────────────';
+    handleInputPrefetch(textarea.value);
+}
+
 async function prefetchImage(num) {
     if (!num || _prefetchedSet.has(num)) return;
     const numPadded = String(num).padStart(3, '0');
