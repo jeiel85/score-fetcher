@@ -205,6 +205,21 @@ function openFullscreen(index) {
     const sheet = sheetList[index];
     if (!sheet) return;
 
+    // 가로 모드: 기존 분할 뷰어(ls-active)로 전환 (#107)
+    if (isTabletLandscape()) {
+        const layout = document.getElementById('app-layout');
+        if (!layout.classList.contains('ls-active')) {
+            layout.classList.add('ls-active');
+            _lsUserDismissed = false;
+            // 콘티 이미지 비동기 생성
+            generateContiCanvas().then(canvas => {
+                if (canvas) document.getElementById('ls-conti-img').src = canvas.toDataURL('image/png');
+            });
+        }
+        showLsSheet(index);
+        return;
+    }
+
     const imgEl = document.getElementById('fullscreen-img');
     if (sheet.src) {
         imgEl.src = sheet.src;
@@ -249,6 +264,31 @@ function closeFullscreen() {
     viewer.style.transition = 'opacity 0.15s ease';
     viewer.style.opacity = '0';
     setTimeout(() => { viewer.style.display = 'none'; viewer.style.transition = ''; }, 150);
+}
+
+// 찬양 목록에서 단일 악보 미리보기 (#100)
+function openScorePreview(numRaw, displayTitle) {
+    let extIdx = 0;
+    function tryNext() {
+        if (extIdx >= EXTENSIONS.length) { showToast('악보 이미지를 찾을 수 없습니다'); return; }
+        const src = `images/${numRaw}${EXTENSIONS[extIdx]}`;
+        const t = new Image();
+        t.onload = () => {
+            document.getElementById('fullscreen-img').src = src;
+            document.getElementById('fullscreen-title').textContent = displayTitle;
+            if (window._resetFullscreenZoom) window._resetFullscreenZoom();
+            document.querySelector('.nav-prev').classList.add('hidden');
+            document.querySelector('.nav-next').classList.add('hidden');
+            const viewer = document.getElementById('fullscreenViewer');
+            viewer.style.opacity = '0';
+            viewer.style.display = 'flex';
+            viewer.style.transition = 'opacity 0.2s ease';
+            requestAnimationFrame(() => { viewer.style.opacity = '1'; });
+        };
+        t.onerror = () => { extIdx++; tryNext(); };
+        t.src = src;
+    }
+    tryNext();
 }
 
 // ─── Landscape 뷰어 ────────────────────────────────────────────────────────────

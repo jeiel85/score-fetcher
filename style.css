@@ -469,6 +469,15 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     font-family: 'Inter', -apple-system, sans-serif;
     font-size: 12px; font-weight: 600; cursor: pointer;
 }
+.btn-score {
+    flex-shrink: 0; padding: 5px 10px;
+    background: rgba(99, 102, 241, 0.08);
+    color: #5465FF;
+    border: 1px solid rgba(84, 101, 255, 0.25);
+    border-radius: var(--r-full);
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+}
 .tag-chip {
     display: inline-block; padding: 3px 12px;
     background: rgba(196, 204, 255, 0.25); color: var(--primary);
@@ -620,7 +629,8 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
 
     .controls-card { flex-shrink: 0; }
 
-    /* 가로 모드: result-container는 카드가 있을 때만 표시 */
+    /* 가로 모드: result-container는 panel-left 내에서 스크롤 (panel-left의 overflow-y:auto 이용) */
+    #result-container { grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
     #result-container:empty { display: none; }
     #result-container:not(:empty) { display: grid; }
 
@@ -646,6 +656,7 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     }
     .app-layout.ls-active .panel-bottom { display: none; }
     .app-layout.ls-active .input-card   { display: none; }
+    .app-layout.ls-active #result-container { display: none; }
     .app-layout.ls-active .panel-right .controls-card { display: none; }
 
     .app-layout.ls-active .ls-conti-area {

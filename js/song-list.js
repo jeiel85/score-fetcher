@@ -370,6 +370,17 @@ function renderSongList(list) {
             btn.onclick = (e) => { e.stopPropagation(); showLyrics(numPadded, `${numRaw} ${title}`); };
             li.appendChild(btn);
         }
+        if (match) {
+            const scoreBtn = document.createElement('button');
+            scoreBtn.className = 'btn-score';
+            scoreBtn.textContent = '악보';
+            scoreBtn.onclick = (e) => {
+                e.stopPropagation();
+                closeSongModal();
+                openScorePreview(numRaw, `${numRaw} ${title}`);
+            };
+            li.appendChild(scoreBtn);
+        }
         container.appendChild(li);
 
         // 이미지 프리페칭을 위한 관찰 대상 등록
