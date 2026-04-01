@@ -380,6 +380,12 @@ function navigateLandscapeSheet(dir) {
     while (newIndex >= 0 && newIndex < sheetList.length && !sheetList[newIndex]) newIndex += dir;
     if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;
     showLsSheet(newIndex);
+    const body = document.querySelector('.ls-sheet-body');
+    if (body) {
+        body.classList.remove('slide-in-right', 'slide-in-left');
+        void body.offsetWidth;
+        body.classList.add(dir > 0 ? 'slide-in-right' : 'slide-in-left');
+    }
 }
 
 function updateLsNavBtns() {
