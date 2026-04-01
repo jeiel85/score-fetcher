@@ -79,9 +79,11 @@ function activateLsView() {
     generateContiCanvas().then(canvas => {
         if (canvas) document.getElementById('ls-conti-img').src = canvas.toDataURL('image/png');
     });
-    // 이미 로드된 첫 번째 악보가 있으면 즉시 표시
-    const firstIdx = sheetList.findIndex(s => s !== null);
-    if (firstIdx >= 0) showLsSheet(firstIdx);
+    // 현재 보던 악보 우선, 없으면 첫 번째
+    const resumeIdx = (currentSheetIndex >= 0 && sheetList[currentSheetIndex])
+        ? currentSheetIndex
+        : sheetList.findIndex(s => s !== null);
+    if (resumeIdx >= 0) showLsSheet(resumeIdx);
 }
 
 // ─── 카드 드래그 앤 드롭 (세로 모드) ──────────────────────────────────────────
@@ -575,10 +577,14 @@ window.addEventListener('resize', () => {
         _lsUserDismissed = false;
         startSearch();
     }
+    else if (isFS && isTabletLandscape()) {
+        // 2. 전체화면 뷰어가 열린 상태에서 세로→가로 회전 → 분할뷰(ls-active)로 전환
+        closeFullscreen();
+        if (!_lsUserDismissed) activateLsView();
+    }
     else if (isFS && !isTabletLandscape()) {
-        // 2. 전체화면 뷰어가 열린 상태에서 세로→가로 이동 → 그냥 전체화면 닫기 (카드 그리드 유지)
+        // 3. 전체화면 뷰어가 열린 상태에서 가로→세로 이동 → 전체화면 닫기 (카드 그리드 유지)
         closeFullscreen();
     }
-    // ⚠️ 세로→가로 회전 시 ls-active 자동 활성화 없음 — 카드 클릭 시에만 분할뷰 진입
 });
 
