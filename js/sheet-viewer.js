@@ -209,6 +209,20 @@ function visibleSheetRank(index) {
     return rank;
 }
 
+// ─── 전체화면 UI 오버레이 자동 숨김 ───────────────────────────────────────────
+let _fsUITimer = null;
+
+function showFsUI() {
+    document.querySelector('.fullscreen-header').classList.remove('fs-ui-hidden');
+    document.querySelector('.fullscreen-footer').classList.remove('fs-ui-hidden');
+    clearTimeout(_fsUITimer);
+    _fsUITimer = setTimeout(hideFsUI, 3000);
+}
+function hideFsUI() {
+    document.querySelector('.fullscreen-header').classList.add('fs-ui-hidden');
+    document.querySelector('.fullscreen-footer').classList.add('fs-ui-hidden');
+}
+
 function updateFullscreenTitle(index) {
     const sheet = sheetList[index];
     const rank  = visibleSheetRank(index);
@@ -245,6 +259,7 @@ function openFullscreen(index) {
     viewer.style.transition = 'opacity 0.2s ease';
     requestAnimationFrame(() => { viewer.style.opacity = '1'; });
     updateNavBtns();
+    showFsUI();
 }
 
 function navigateSheet(dir) {
@@ -262,6 +277,7 @@ function navigateSheet(dir) {
     body.classList.remove('slide-in-right', 'slide-in-left');
     void body.offsetWidth; // reflow 강제
     body.classList.add(dir > 0 ? 'slide-in-right' : 'slide-in-left');
+    showFsUI();
 }
 
 function updateNavBtns() {
@@ -273,6 +289,7 @@ function updateNavBtns() {
 }
 
 function closeFullscreen() {
+    clearTimeout(_fsUITimer);
     const viewer = document.getElementById('fullscreenViewer');
     viewer.style.transition = 'opacity 0.15s ease';
     viewer.style.opacity = '0';
@@ -338,6 +355,7 @@ function _showScorePreviewAt(idx, numPadded, displayTitle, slideDir) {
             viewer.style.display = 'flex';
             viewer.style.transition = 'opacity 0.2s ease';
             requestAnimationFrame(() => { viewer.style.opacity = '1'; });
+            showFsUI();
         };
         t.onerror = () => { extIdx++; tryNext(); };
         t.src = src;
@@ -414,7 +432,7 @@ function closeLandscapeView() {
     let touchStartX = 0, touchStartY = 0;
     let panStartX = 0, panStartY = 0, panStartTX = 0, panStartTY = 0;
     let isPinching = false, pinchStartDist = 0, pinchStartScale = 1;
-    let lastTapTime = 0;
+    let lastTapTime = 0, doubleTapFired = false;
 
     function applyTransform() {
         imgEl.style.transform = `scale(${scale}) translate(${tx}px, ${ty}px)`;
@@ -436,7 +454,7 @@ function closeLandscapeView() {
         } else if (e.touches.length === 1) {
             isPinching = false;
             const now = Date.now();
-            if (now - lastTapTime < 280) { resetZoom(); lastTapTime = 0; e.preventDefault(); return; }
+            if (now - lastTapTime < 280) { resetZoom(); lastTapTime = 0; doubleTapFired = true; e.preventDefault(); return; }
             lastTapTime = now;
             touchStartX = panStartX = e.touches[0].clientX;
             touchStartY = panStartY = e.touches[0].clientY;
@@ -469,7 +487,13 @@ function closeLandscapeView() {
             const dy = e.changedTouches[0].clientY - touchStartY;
             if (Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) { closeFullscreen(); }
             else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { navigateSheet(dx < 0 ? 1 : -1); }
+            else if (Math.abs(dx) < 15 && Math.abs(dy) < 15 && !doubleTapFired && !e.target.closest('button')) {
+                const header = document.querySelector('.fullscreen-header');
+                if (header && header.classList.contains('fs-ui-hidden')) showFsUI();
+                else { clearTimeout(_fsUITimer); hideFsUI(); }
+            }
         }
+        doubleTapFired = false;
     }, { passive: true });
 })();
 
