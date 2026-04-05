@@ -217,12 +217,12 @@ let _fsUITimer = null;
 // ─── 가로 뷰어 좌/우 버튼 자동 숨김 ──────────────────────────────────────────
 let _lsNavTimer = null;
 function showLsNav() {
-    document.querySelectorAll('.ls-nav-prev, .ls-nav-next').forEach(el => el.classList.remove('fs-ui-hidden'));
+    document.querySelector('.ls-sheet-footer').classList.remove('ls-nav-hidden');
     clearTimeout(_lsNavTimer);
     _lsNavTimer = setTimeout(hideLsNav, 3000);
 }
 function hideLsNav() {
-    document.querySelectorAll('.ls-nav-prev, .ls-nav-next').forEach(el => el.classList.add('fs-ui-hidden'));
+    document.querySelector('.ls-sheet-footer').classList.add('ls-nav-hidden');
 }
 
 function showFsUI() {
@@ -572,8 +572,8 @@ function closeLandscapeView() {
             if (Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) { closeLandscapeView(); }
             else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { navigateLandscapeSheet(dx < 0 ? 1 : -1); }
             else if (Math.abs(dx) < 15 && Math.abs(dy) < 15 && !e.target.closest('button')) {
-                const prev = document.querySelector('.ls-nav-prev');
-                if (prev && prev.classList.contains('fs-ui-hidden')) showLsNav();
+                const footer = document.querySelector('.ls-sheet-footer');
+                if (footer && footer.classList.contains('ls-nav-hidden')) showLsNav();
                 else { clearTimeout(_lsNavTimer); hideLsNav(); }
             }
         }

@@ -605,6 +605,12 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     background: rgba(24, 29, 58, 0.88);
     border-top: 1px solid rgba(255,255,255,0.1);
     padding: 8px 12px; flex-shrink: 0; gap: 8px;
+    overflow: hidden;
+    transition: opacity 0.3s ease, padding 0.3s ease, height 0.3s ease, border 0.3s ease;
+}
+.ls-sheet-footer.ls-nav-hidden {
+    opacity: 0; pointer-events: none;
+    height: 0; padding: 0; border-top: none;
 }
 .ls-sheet-footer .fullscreen-nav { font-size: 28px; padding: 10px 0; border-radius: 12px; }
 #ls-sheet-title { font-size: 17px; font-weight: 800; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
