@@ -5,8 +5,8 @@
 
 [![배포](https://img.shields.io/badge/배포-score--fetcher.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
 [![관리자](https://img.shields.io/badge/관리자-admin.html-indigo?style=flat-square&logo=google-cloud&logoColor=white)](https://score-fetcher.vercel.app/admin.html)
-![Version](https://img.shields.io/badge/version-v1.5.9-blue?style=flat-square)
-![Build](https://img.shields.io/badge/build-2026.03.27-indigo?style=flat-square)
+![Version](https://img.shields.io/badge/version-v1.7.2-blue?style=flat-square)
+![Build](https://img.shields.io/badge/build-2026.04.06-indigo?style=flat-square)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
@@ -181,6 +181,13 @@ npx vercel --prod
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| **v1.7.2** | **2026.04.06** | **가로 모드 제목/돌아가기 헤더도 자동 숨김 (#118)** |
+| v1.7.1 | 2026.04.05 | 가로 뷰어 좌/우 버튼 3초 후 자동 숨김 + 탭 토글 (#117) |
+| v1.7.0 | 2026.04.02 | 세로 전체화면→가로 회전 시 분할뷰 자동 전환, 전체화면 헤더/푸터 오버레이 자동 숨김, 가로모드 슬라이드 애니메이션 복원 |
+| v1.6.4 | 2026.03.31 | 공유 딥링크 플랫폼별 동작 분기 (iOS/Android), 카카오톡 URL 중복 표시 수정 |
+| v1.6.3 | 2026.03.31 | 세로모드 전체화면 자동 오픈 버그 근본 수정, currentSheetIndex -1, 찬양목록 악보 미리보기 좌우 탐색 |
+| v1.6.1 | 2026.03.31 | 가로모드 분할뷰 복원, 악보 미리보기 추가, 카드 그리드 4열/6열 반응형 |
+| v1.6.0 | 2026.03.28 | 드래그 앤 드롭 순서 변경, 핀치 줌, 카드 3열 그리드, 공유 딥링크 자동 포함 |
 | **v1.5.9** | **2026.03.27** | **가로 모드 관리자 링크 추가, 가로/세로 버튼 크기 최적화, 악보 있을 때 가로 전환 자동 분할뷰 (#40/#41/#42/#43)** |
 | v1.5.8 | 2026.03.27 | 관리자 통계 BOTTOM 10 추가, 찬양 목록 빈도 정렬 버튼 추가, 전체 소스 문법 검수 |
 | v1.5.7 | 2026.03.27 | 관리자 Google 로그인 버그 수정, 메인 푸터에 관리자 페이지 링크 추가 |

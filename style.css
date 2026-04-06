@@ -609,6 +609,7 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     padding: 8px 12px; gap: 8px;
     transition: opacity 0.3s ease;
 }
+.ls-sheet-header.ls-nav-hidden,
 .ls-sheet-footer.ls-nav-hidden {
     opacity: 0; pointer-events: none;
 }

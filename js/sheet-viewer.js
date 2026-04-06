@@ -214,14 +214,16 @@ function visibleSheetRank(index) {
 // ─── 전체화면 UI 오버레이 자동 숨김 ───────────────────────────────────────────
 let _fsUITimer = null;
 
-// ─── 가로 뷰어 좌/우 버튼 자동 숨김 ──────────────────────────────────────────
+// ─── 가로 뷰어 헤더/푸터 자동 숨김 ──────────────────────────────────────────
 let _lsNavTimer = null;
 function showLsNav() {
+    document.querySelector('.ls-sheet-header').classList.remove('ls-nav-hidden');
     document.querySelector('.ls-sheet-footer').classList.remove('ls-nav-hidden');
     clearTimeout(_lsNavTimer);
     _lsNavTimer = setTimeout(hideLsNav, 3000);
 }
 function hideLsNav() {
+    document.querySelector('.ls-sheet-header').classList.add('ls-nav-hidden');
     document.querySelector('.ls-sheet-footer').classList.add('ls-nav-hidden');
 }
 
@@ -572,8 +574,8 @@ function closeLandscapeView() {
             if (Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) { closeLandscapeView(); }
             else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { navigateLandscapeSheet(dx < 0 ? 1 : -1); }
             else if (Math.abs(dx) < 15 && Math.abs(dy) < 15 && !e.target.closest('button')) {
-                const footer = document.querySelector('.ls-sheet-footer');
-                if (footer && footer.classList.contains('ls-nav-hidden')) showLsNav();
+                const header = document.querySelector('.ls-sheet-header');
+                if (header && header.classList.contains('ls-nav-hidden')) showLsNav();
                 else { clearTimeout(_lsNavTimer); hideLsNav(); }
             }
         }
