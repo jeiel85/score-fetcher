@@ -161,6 +161,51 @@ score-fetcher/
 - Firebase REST API 직접 호출 (SDK DB 미사용, FCM만 SDK 사용)
 - 모바일 터치 우선 UX
 
+---
+
+## 🔖 버전 관리 규칙 (반드시 준수)
+
+> 버전이 파일마다 달라지는 혼란을 방지하기 위한 규칙. 코드 변경 시 아래 4곳을 **동시에** 업데이트할 것.
+
+### 버전 번호 체계 (Semantic Versioning)
+```
+v[MAJOR].[MINOR].[PATCH]
+```
+| 구분 | 조건 | 예시 |
+|------|------|------|
+| PATCH | 버그 수정, 텍스트/스타일 소폭 수정 | v1.7.1 → v1.7.2 |
+| MINOR | 새 기능 추가, UX 구조 변경 | v1.7.x → v1.8.0 |
+| MAJOR | 전체 리팩토링, 구조적 대개편 | v1.x.x → v2.0.0 |
+
+### 버전 기재 위치 (4곳 동시 수정)
+
+| 파일 | 위치 | 형식 |
+|------|------|------|
+| `index.html` | JS `const VERSION = '...'` | `'1.7.2'` (숫자만) |
+| `index.html` | `<span class="app-version-badge">` (2곳) | `v1.7.2` |
+| `README.md` | 상단 배지 `version-vX.X.X` | `v1.7.2` |
+| `README.md` | 상단 배지 `build-YYYY.MM.DD` | `2026.04.06` |
+
+### 버전 업 시 체크리스트
+```
+[ ] index.html — const VERSION = '새버전'
+[ ] index.html — app-version-badge 텍스트 (2곳, replace_all 사용)
+[ ] README.md  — 배지 version-v새버전, build-날짜
+[ ] README.md  — 🔄 변경이력 테이블 맨 위에 새 행 추가 (bold 강조)
+[ ] CLAUDE.md  — 현재 상태 테이블 날짜·버전·최신 커밋 업데이트
+[ ] CLAUDE.md  — 변경 이력 섹션 맨 위에 새 항목 추가
+[ ] git commit — "fix/feat: #이슈번호 설명" 형식
+[ ] git push   — origin main
+```
+
+### 규칙 위반 패턴 (금지)
+- ❌ 한 파일만 버전 업 후 커밋 (나머지 파일과 불일치 발생)
+- ❌ `VERSION` 상수는 올리고 배지는 그대로 두거나 그 반대
+- ❌ README 변경이력에 새 버전 추가 없이 배지만 변경
+- ❌ CLAUDE.md 현재 상태 테이블을 업데이트하지 않음
+
+---
+
 ## ⚠️ 세로/가로 모드 UX 불변 원칙 (반드시 준수)
 
 > 이 원칙을 위반하면 매번 같은 버그가 반복됨. 수정 시 반드시 확인할 것.
