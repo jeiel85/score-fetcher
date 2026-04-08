@@ -177,28 +177,34 @@ v[MAJOR].[MINOR].[PATCH]
 | MINOR | 새 기능 추가, UX 구조 변경 | v1.7.x → v1.8.0 |
 | MAJOR | 전체 리팩토링, 구조적 대개편 | v1.x.x → v2.0.0 |
 
-### 버전 기재 위치 (4곳 동시 수정)
+### 버전 기재 위치 (5곳 동시 수정)
+
+> ⚠️ `js/utils.js`의 `APP_VERSION`이 런타임에 모든 `.app-version-badge`를 덮어씀.
+> `index.html` 배지 HTML 텍스트는 초기 렌더에만 잠깐 보이며, 실제 화면 표시 버전은 `utils.js`가 기준.
 
 | 파일 | 위치 | 형식 |
 |------|------|------|
-| `index.html` | JS `const VERSION = '...'` | `'1.7.2'` (숫자만) |
-| `index.html` | `<span class="app-version-badge">` (2곳) | `v1.7.2` |
-| `README.md` | 상단 배지 `version-vX.X.X` | `v1.7.2` |
-| `README.md` | 상단 배지 `build-YYYY.MM.DD` | `2026.04.06` |
+| `js/utils.js` | `APP_VERSION` / `BUILD_DATE` 상수 | `"v1.8.0"` / `"2026.04.08"` |
+| `index.html` | JS `const VERSION = '...'` | `'1.8.0'` (숫자만, 강제 새로고침 판별용) |
+| `index.html` | `<span class="app-version-badge">` (2곳) | `v1.8.0` (HTML 초기값) |
+| `README.md` | 상단 배지 `version-vX.X.X` | `v1.8.0` |
+| `README.md` | 상단 배지 `build-YYYY.MM.DD` | `2026.04.08` |
 
 ### 버전 업 시 체크리스트
 ```
-[ ] index.html — const VERSION = '새버전'
-[ ] index.html — app-version-badge 텍스트 (2곳, replace_all 사용)
-[ ] README.md  — 배지 version-v새버전, build-날짜
-[ ] README.md  — 🔄 변경이력 테이블 맨 위에 새 행 추가 (bold 강조)
-[ ] CLAUDE.md  — 현재 상태 테이블 날짜·버전·최신 커밋 업데이트
-[ ] CLAUDE.md  — 변경 이력 섹션 맨 위에 새 항목 추가
-[ ] git commit — "fix/feat: #이슈번호 설명" 형식
-[ ] git push   — origin main
+[ ] js/utils.js — APP_VERSION = "v새버전", BUILD_DATE = "날짜"  ← 실제 화면 표시 버전
+[ ] index.html  — const VERSION = '새버전'                      ← 강제 새로고침 판별
+[ ] index.html  — app-version-badge 텍스트 (2곳, replace_all)   ← HTML 초기값
+[ ] README.md   — 배지 version-v새버전, build-날짜
+[ ] README.md   — 🔄 변경이력 테이블 맨 위에 새 행 추가 (bold 강조)
+[ ] CLAUDE.md   — 현재 상태 테이블 날짜·버전·최신 커밋 업데이트
+[ ] CLAUDE.md   — 변경 이력 섹션 맨 위에 새 항목 추가
+[ ] git commit  — "fix/feat: #이슈번호 설명" 형식
+[ ] git push    — origin main
 ```
 
 ### 규칙 위반 패턴 (금지)
+- ❌ `js/utils.js` 미수정 — 화면에 구버전이 표시됨 (가장 흔한 누락)
 - ❌ 한 파일만 버전 업 후 커밋 (나머지 파일과 불일치 발생)
 - ❌ `VERSION` 상수는 올리고 배지는 그대로 두거나 그 반대
 - ❌ README 변경이력에 새 버전 추가 없이 배지만 변경
@@ -253,17 +259,22 @@ v[MAJOR].[MINOR].[PATCH]
 | 콘티함에 저장 💾 | 에메랄드 그린 `#059669` | Firebase에 현재 콘티 저장 |
 | 콘티 공유하기 🖼️ | 앰버 `#F59E0B` | 콘티 이미지 생성 후 공유 |
 
-## 현재 상태 (2026-04-06 기준)
+## 현재 상태 (2026-04-08 기준)
 
 | 항목 | 상태 |
 |------|------|
-| main 브랜치 | ✅ 최신 (v1.7.2) |
+| main 브랜치 | ✅ 최신 (v1.8.0) |
 | `origin/main` 동기화 | ✅ 완료 |
-| 최신 커밋 | `fix: #118 가로 뷰어 헤더(제목/돌아가기)도 자동 숨김` |
+| 최신 커밋 | `feat: 알림센터 추가 (헤더 벨 아이콘, 미읽음 배지, 전체 읽기)` |
 | 서비스 주소 | [score-fetcher.vercel.app](https://score-fetcher.vercel.app/) |
 | 오픈 이슈 | 없음 |
 
 ---
+
+## 변경 이력 (2026-04-08) — v1.8.0
+| 커밋 | 이슈 | 내용 |
+|------|------|------|
+| (pending) | - | 알림센터 추가 — js/notifications.js 신규, 헤더 🔔 버튼 + 미읽음 배지, 알림 타입 4종(공지/신규곡/가사신고/콘티수정), localStorage 읽음 상태, 전체 읽기 버튼 |
 
 ## 변경 이력 (2026-04-06) — v1.7.2
 | 커밋 | 이슈 | 내용 |

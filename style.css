@@ -66,6 +66,64 @@ header {
     transition: background 0.15s;
 }
 .header-settings-btn:active { background: rgba(255,255,255,0.25); }
+.header-notif-btn {
+    position: absolute; right: 60px;
+    background: rgba(255,255,255,0.12); border: none;
+    color: #ffffff; font-size: 20px;
+    width: 38px; height: 38px; border-radius: 50%;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+}
+.header-notif-btn:active { background: rgba(255,255,255,0.25); }
+.notif-badge {
+    position: absolute; top: -2px; right: -2px;
+    min-width: 16px; height: 16px; padding: 0 4px;
+    background: #ef4444; color: #fff;
+    font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700;
+    border-radius: 99px; border: 2px solid rgba(24,29,58,0.96);
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+}
+
+/* ─── 알림센터 모달 ─── */
+.btn-mark-all-read {
+    background: rgba(192,196,234,0.18); border: 1px solid rgba(192,196,234,0.35);
+    color: var(--accent); font-size: 12px; font-weight: 600;
+    padding: 5px 10px; border-radius: var(--r-full);
+    cursor: pointer; display: inline-flex; align-items: center;
+    transition: background 0.15s;
+}
+.btn-mark-all-read:active { background: rgba(192,196,234,0.3); }
+.notif-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 16px; border-bottom: 1px solid rgba(199,197,206,0.15);
+    cursor: pointer; transition: background 0.12s; list-style: none;
+    position: relative;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:active { background: rgba(192,196,234,0.1); }
+.notif-read { opacity: 0.45; }
+.notif-type-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.notif-content { flex: 1; min-width: 0; }
+.notif-meta { display: flex; gap: 6px; align-items: center; margin-bottom: 3px; }
+.notif-type-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--on-surface-variant); background: var(--surface-container);
+    padding: 1px 6px; border-radius: var(--r-full);
+}
+.notif-date { font-size: 11px; color: var(--on-surface-variant); margin-left: auto; }
+.notif-title { font-size: 14px; font-weight: 600; color: var(--on-surface); line-height: 1.4; }
+.notif-body { font-size: 13px; color: var(--on-surface-variant); margin-top: 3px; line-height: 1.45; }
+.notif-dot {
+    position: absolute; top: 14px; right: 14px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #3b82f6; flex-shrink: 0;
+}
+.notif-empty {
+    list-style: none; text-align: center;
+    padding: 40px 16px; color: var(--on-surface-variant);
+    font-size: 14px;
+}
 
 main { flex: 1; overflow-y: auto; padding: clamp(8px, 3vw, 14px); padding-bottom: 20px; }
 

@@ -5,8 +5,8 @@
 
 [![배포](https://img.shields.io/badge/배포-score--fetcher.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
 [![관리자](https://img.shields.io/badge/관리자-admin.html-indigo?style=flat-square&logo=google-cloud&logoColor=white)](https://score-fetcher.vercel.app/admin.html)
-![Version](https://img.shields.io/badge/version-v1.7.2-blue?style=flat-square)
-![Build](https://img.shields.io/badge/build-2026.04.06-indigo?style=flat-square)
+![Version](https://img.shields.io/badge/version-v1.8.0-blue?style=flat-square)
+![Build](https://img.shields.io/badge/build-2026.04.08-indigo?style=flat-square)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
@@ -181,7 +181,8 @@ npx vercel --prod
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
-| **v1.7.2** | **2026.04.06** | **가로 모드 제목/돌아가기 헤더도 자동 숨김 (#118)** |
+| **v1.8.0** | **2026.04.08** | **알림센터 추가 — 공지/신규곡/가사신고/콘티수정 알림, 미읽음 배지, 전체 읽기** |
+| v1.7.2 | 2026.04.06 | 가로 모드 제목/돌아가기 헤더도 자동 숨김 (#118) |
 | v1.7.1 | 2026.04.05 | 가로 뷰어 좌/우 버튼 3초 후 자동 숨김 + 탭 토글 (#117) |
 | v1.7.0 | 2026.04.02 | 세로 전체화면→가로 회전 시 분할뷰 자동 전환, 전체화면 헤더/푸터 오버레이 자동 숨김, 가로모드 슬라이드 애니메이션 복원 |
 | v1.6.4 | 2026.03.31 | 공유 딥링크 플랫폼별 동작 분기 (iOS/Android), 카카오톡 URL 중복 표시 수정 |
