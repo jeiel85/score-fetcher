@@ -184,10 +184,10 @@ v[MAJOR].[MINOR].[PATCH]
 
 | 파일 | 위치 | 형식 |
 |------|------|------|
-| `js/utils.js` | `APP_VERSION` / `BUILD_DATE` 상수 | `"v1.8.0"` / `"2026.04.08"` |
-| `index.html` | JS `const VERSION = '...'` | `'1.8.0'` (숫자만, 강제 새로고침 판별용) |
-| `index.html` | `<span class="app-version-badge">` (2곳) | `v1.8.0` (HTML 초기값) |
-| `README.md` | 상단 배지 `version-vX.X.X` | `v1.8.0` |
+| `js/utils.js` | `APP_VERSION` / `BUILD_DATE` 상수 | `"v1.8.1"` / `"2026.04.08"` |
+| `index.html` | JS `const VERSION = '...'` | `'1.8.1'` (숫자만, 강제 새로고침 판별용) |
+| `index.html` | `<span class="app-version-badge">` (2곳) | `v1.8.1` (HTML 초기값) |
+| `README.md` | 상단 배지 `version-vX.X.X` | `v1.8.1` |
 | `README.md` | 상단 배지 `build-YYYY.MM.DD` | `2026.04.08` |
 
 ### 버전 업 시 체크리스트
@@ -263,18 +263,25 @@ v[MAJOR].[MINOR].[PATCH]
 
 | 항목 | 상태 |
 |------|------|
-| main 브랜치 | ✅ 최신 (v1.8.0) |
+| main 브랜치 | ✅ 최신 (v1.8.1) |
 | `origin/main` 동기화 | ✅ 완료 |
-| 최신 커밋 | `feat: 알림센터 추가 (헤더 벨 아이콘, 미읽음 배지, 전체 읽기)` |
+| 최신 커밋 | `feat: 악보 덮어쓰기 확인 모달 풀스크린으로 개선` |
 | 서비스 주소 | [score-fetcher.vercel.app](https://score-fetcher.vercel.app/) |
 | 오픈 이슈 | 없음 |
 
 ---
 
+## 변경 이력 (2026-04-08) — v1.8.1
+| 커밋 | 이슈 | 내용 |
+|------|------|------|
+| `b269484` | #119 | 악보 덮어쓰기 모달 풀스크린 전/후 비교로 개선 |
+| `19c2add` | #119 | 악보 업로드 확장자 충돌 자동 처리, .jpeg→.jpg 정규화, 성공 후 폼 초기화 |
+| `41d7b8b` | #119 | 알림센터 new_conti 타입 추가, Cloud Function /notifications 기록, 알림 클릭 시 콘티 자동 로드 |
+
 ## 변경 이력 (2026-04-08) — v1.8.0
 | 커밋 | 이슈 | 내용 |
 |------|------|------|
-| (pending) | - | 알림센터 추가 — js/notifications.js 신규, 헤더 🔔 버튼 + 미읽음 배지, 알림 타입 4종(공지/신규곡/가사신고/콘티수정), localStorage 읽음 상태, 전체 읽기 버튼 |
+| `5fc72e7` | - | 알림센터 추가 — js/notifications.js 신규, 헤더 🔔 버튼 + 미읽음 배지, 알림 타입 4종(공지/신규곡/가사신고/콘티수정), localStorage 읽음 상태, 전체 읽기 버튼 |
 
 ## 변경 이력 (2026-04-06) — v1.7.2
 | 커밋 | 이슈 | 내용 |
