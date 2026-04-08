@@ -566,6 +566,25 @@
     </div>
 </div>
 
+<!-- 기존 악보 덮어쓰기 확인 모달 -->
+<div id="overwrite-confirm-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#1e293b; border:1px solid rgba(239,68,68,0.5); border-radius:16px; max-width:420px; width:100%; padding:24px; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <span style="font-size:24px;">⚠️</span>
+            <h3 style="margin:0; color:#fca5a5; font-size:17px;">이미 등록된 악보가 있습니다</h3>
+        </div>
+        <p style="color:#cbd5e1; font-size:13px; margin:0 0 14px;">아래 악보가 새 이미지로 <strong style="color:#f87171;">변경됩니다.</strong></p>
+        <div style="background:#0f172a; border-radius:10px; padding:10px; margin-bottom:18px; text-align:center;">
+            <img id="overwrite-existing-img" src="" alt="기존 악보" style="max-width:100%; max-height:260px; border-radius:6px; object-fit:contain;">
+            <div id="overwrite-filename" style="font-size:11px; color:#64748b; margin-top:6px;"></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="cancelOverwrite()" style="flex:1; padding:12px; background:rgba(255,255,255,0.08); color:#cbd5e1; border:1px solid rgba(255,255,255,0.15); border-radius:8px; font-size:14px; font-weight:700; cursor:pointer;">취소</button>
+            <button onclick="confirmOverwrite()" style="flex:1; padding:12px; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer;">덮어쓰기</button>
+        </div>
+    </div>
+</div>
+
 <!-- TAB 5: 가사 신고 관리 -->
 <div id="tab-reports" class="tab-content">
     <div class="card" style="border-color: #f43f5e; background: rgba(244,63,94,0.05);">
@@ -948,6 +967,9 @@ function clearImgSelection() {
     document.getElementById('btn-push-img').disabled = true;
 }
 
+// 덮어쓰기 모달 상태
+let _pendingPushData = null;
+
 async function pushImageToGithub() {
     const num = document.getElementById('reg-num').value.trim();
     const file = document.getElementById('reg-img').files[0];
@@ -957,49 +979,105 @@ async function pushImageToGithub() {
     if(!file) return alert('이미지 파일을 선택해주세요.');
     if(!token) return alert('Github 토큰을 먼저 설정해주세요.');
 
-    if(!confirm(`${num}번 악보 이미지를 Github 저장소로 직접 전송하시겠습니까?\n전송 후 Vercel 배포 완료(약 1~2분) 뒤에 앱에 반영됩니다.`)) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    // .jpeg → .jpg 정규화 (앱의 EXTENSIONS 목록에 .jpeg 없음)
+    const safeExt = ext === 'jpeg' ? 'jpg' : (['jpg','png','gif'].includes(ext) ? ext : 'png');
+    const path = `images/${num}.${safeExt}`;
 
-    try {
-        const btn = document.getElementById('btn-push-img');
-        const originalText = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = '⏳ Github으로 전송 중...';
+    // Base64 변환
+    const base64Content = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.readAsDataURL(file);
+    });
 
-        // 1. 파일을 Base64로 변환
-        const base64Content = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.readAsDataURL(file);
-        });
+    // 모든 확장자로 기존 파일 탐색 (다른 확장자로 등록된 경우 포함)
+    const ALL_EXTS = ['png', 'jpg', 'gif', 'jfif'];
+    let sha = null;
+    let existingImgUrl = null;
+    let existingPath = null;
+    let conflictPaths = []; // 새 확장자와 다른 기존 파일들
 
-        // 2. 확장자 결정 (기존 확장자 유지하되 png 선호)
-        const ext = file.name.split('.').pop().toLowerCase();
-        const safeExt = ['jpg','jpeg','png','gif'].includes(ext) ? ext : 'png';
-        const path = `images/${num}.${safeExt}`;
-
-        // 3. 기존 파일 있는지 확인 (Overwrite 시 SHA 필요)
-        let sha = null;
+    for (const e of ALL_EXTS) {
+        const checkPath = `images/${num}.${e}`;
         try {
-            const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+            const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${checkPath}`, {
                 headers: { 'Authorization': `token ${token}` }
             });
-            if(res.ok) {
+            if (res.ok) {
                 const existing = await res.json();
-                sha = existing.sha;
+                if (checkPath === path) {
+                    sha = existing.sha;
+                    existingImgUrl = existing.download_url;
+                    existingPath = checkPath;
+                } else {
+                    conflictPaths.push({ path: checkPath, sha: existing.sha, url: existing.download_url });
+                }
             }
         } catch(e) {}
+    }
 
-        // 4. PUT 요청 (파일 생성/업데이트)
+    // 기존 악보가 있으면 확인 모달 표시 (같은 확장자 덮어쓰기 or 다른 확장자 충돌)
+    const existingFound = sha || conflictPaths.length > 0;
+    if (existingFound) {
+        const previewUrl = existingImgUrl || conflictPaths[0].url;
+        const previewPath = existingPath || conflictPaths[0].path;
+        _pendingPushData = { num, path, base64Content, sha, token, conflictPaths };
+        document.getElementById('overwrite-existing-img').src = previewUrl;
+        document.getElementById('overwrite-filename').textContent = conflictPaths.length > 0
+            ? `기존: ${previewPath} → 새로운: ${path}`
+            : path;
+        document.getElementById('overwrite-confirm-modal').style.display = 'flex';
+        return;
+    }
+
+    // 신규 등록이면 바로 전송
+    await doPushToGithub({ num, path, base64Content, sha: null, token, conflictPaths: [] });
+}
+
+function cancelOverwrite() {
+    document.getElementById('overwrite-confirm-modal').style.display = 'none';
+    _pendingPushData = null;
+}
+
+async function confirmOverwrite() {
+    document.getElementById('overwrite-confirm-modal').style.display = 'none';
+    if(!_pendingPushData) return;
+    await doPushToGithub(_pendingPushData);
+    _pendingPushData = null;
+}
+
+async function doPushToGithub({ num, path, base64Content, sha, token, conflictPaths = [] }) {
+    const btn = document.getElementById('btn-push-img');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Github으로 전송 중...';
+
+    try {
+        // 다른 확장자로 등록된 기존 파일 먼저 삭제
+        for (const conflict of conflictPaths) {
+            const delRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${conflict.path}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: `fix: ${num}번 구버전 ${conflict.path} 삭제 (${path}로 교체)`,
+                    sha: conflict.sha
+                })
+            });
+            if (!delRes.ok) {
+                const errData = await delRes.json();
+                throw new Error(`구버전 삭제 실패 (${conflict.path}): ${errData.message}`);
+            }
+        }
+
+        // 새 파일 업로드
         const putRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
             method: 'PUT',
-            headers: {
-                'Authorization': `token ${token}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: `feat: ${num}번 악보 이미지 업로드 (Admin Dashboard)`,
                 content: base64Content,
-                sha: sha // 없으면 신규 생성, 있으면 업데이트
+                ...(sha ? { sha } : {})
             })
         });
 
@@ -1008,17 +1086,17 @@ async function pushImageToGithub() {
             throw new Error(errData.message || 'Github 전송 실패');
         }
 
-        alert(`✅ ${num}번 악보 이미지가 성공적으로 전송되었습니다!\n\n현재 Vercel 배포가 시작되었습니다. 잠시 후 앱에서 확인하실 수 있습니다.`);
+        const deletedNote = conflictPaths.length > 0
+            ? `\n구버전 파일 ${conflictPaths.map(c => c.path).join(', ')} 자동 삭제됨.` : '';
+        alert(`✅ ${num}번 악보 이미지가 성공적으로 전송되었습니다!${deletedNote}\n\nVercel 배포 후(약 1~2분) 앱에 반영됩니다.`);
         btn.textContent = originalText;
         btn.disabled = false;
-        
-        // 업로드 성공 후 진단기 최신화 시도
         checkOrphanImages();
-        
+
     } catch(err) {
         alert('Github 전송 오류: ' + err.message);
-        document.getElementById('btn-push-img').disabled = false;
-        document.getElementById('btn-push-img').textContent = '🚀 Github 저장소로 바로 쏘기 (Push)';
+        btn.disabled = false;
+        btn.textContent = '🚀 Github 저장소로 바로 쏘기 (Push)';
     }
 }
 

@@ -79,6 +79,17 @@ exports.notifyNewConti = onValueCreated(
             tokens
         };
 
+        // 알림센터에 기록 (FCM 발송 여부와 무관하게 항상 저장)
+        const contiKey = event.params.id;
+        await admin.database().ref("/notifications").push({
+            type: "new_conti",
+            title: contiTitle || "새 콘티가 등록되었습니다",
+            body: summary || "",
+            conti_key: contiKey,
+            created_at: Date.now()
+        });
+        console.log("알림센터 기록 완료:", contiKey);
+
         try {
             const response = await admin.messaging().sendEachForMulticast(message);
             console.log(`성공: ${response.successCount}개 / 실패: ${response.failureCount}개`);

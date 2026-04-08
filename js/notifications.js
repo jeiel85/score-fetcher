@@ -44,10 +44,10 @@ async function fetchNotifications() {
 
 // ─── 타입별 아이콘 / 레이블 ─────────────────────────────────────────────────
 function _notifIcon(type) {
-    return { new_song: '🎵', lyrics_report: '🛠️', admin_conti: '📋', announcement: '📢' }[type] || '🔔';
+    return { new_conti: '🎶', new_song: '🎵', lyrics_report: '🛠️', admin_conti: '📋', announcement: '📢' }[type] || '🔔';
 }
 function _notifLabel(type) {
-    return { new_song: '신규 곡 등록', lyrics_report: '가사 신고 처리', admin_conti: '콘티 수정', announcement: '공지' }[type] || '알림';
+    return { new_conti: '새 콘티 등록', new_song: '신규 곡 등록', lyrics_report: '가사 신고 처리', admin_conti: '콘티 수정', announcement: '공지' }[type] || '알림';
 }
 function _esc(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -120,6 +120,13 @@ function onNotifItemClick(id) {
         const readIds = _getReadIds();
         const hasUnread = _cachedNotifs.some(n => !readIds.has(n.id));
         markAllBtn.style.display = hasUnread ? 'inline-flex' : 'none';
+    }
+
+    // 새 콘티 알림 클릭 시 해당 콘티 자동 로드
+    const notif = _cachedNotifs.find(n => n.id === id);
+    if (notif?.type === 'new_conti' && notif?.conti_key) {
+        closeNotifModal();
+        loadContiByKey(notif.conti_key);
     }
 }
 
