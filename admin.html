@@ -566,18 +566,27 @@
     </div>
 </div>
 
-<!-- 기존 악보 덮어쓰기 확인 모달 -->
-<div id="overwrite-confirm-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px;">
-    <div style="background:#1e293b; border:1px solid rgba(239,68,68,0.5); border-radius:16px; max-width:420px; width:100%; padding:24px; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+<!-- 기존 악보 덮어쓰기 확인 모달 (전/후 비교) -->
+<div id="overwrite-confirm-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; padding:16px; overflow-y:auto;">
+    <div style="background:#1e293b; border:1px solid rgba(239,68,68,0.5); border-radius:16px; max-width:600px; width:100%; padding:24px; box-shadow:0 25px 50px rgba(0,0,0,0.5); margin:auto;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
             <span style="font-size:24px;">⚠️</span>
             <h3 style="margin:0; color:#fca5a5; font-size:17px;">이미 등록된 악보가 있습니다</h3>
         </div>
-        <p style="color:#cbd5e1; font-size:13px; margin:0 0 14px;">아래 악보가 새 이미지로 <strong style="color:#f87171;">변경됩니다.</strong></p>
-        <div style="background:#0f172a; border-radius:10px; padding:10px; margin-bottom:18px; text-align:center;">
-            <img id="overwrite-existing-img" src="" alt="기존 악보" style="max-width:100%; max-height:260px; border-radius:6px; object-fit:contain;">
-            <div id="overwrite-filename" style="font-size:11px; color:#64748b; margin-top:6px;"></div>
+        <p style="color:#94a3b8; font-size:12px; margin:0 0 16px;" id="overwrite-filename"></p>
+
+        <!-- 전/후 비교 -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
+            <div style="background:#0f172a; border-radius:10px; padding:10px; text-align:center;">
+                <div style="font-size:11px; color:#f87171; font-weight:700; margin-bottom:8px;">현재 (변경 전)</div>
+                <img id="overwrite-existing-img" src="" alt="기존 악보" style="max-width:100%; max-height:220px; border-radius:6px; object-fit:contain;">
+            </div>
+            <div style="background:#0f172a; border-radius:10px; padding:10px; text-align:center;">
+                <div style="font-size:11px; color:#34d399; font-weight:700; margin-bottom:8px;">새 악보 (변경 후)</div>
+                <img id="overwrite-new-img" src="" alt="새 악보" style="max-width:100%; max-height:220px; border-radius:6px; object-fit:contain;">
+            </div>
         </div>
+
         <div style="display:flex; gap:10px;">
             <button onclick="cancelOverwrite()" style="flex:1; padding:12px; background:rgba(255,255,255,0.08); color:#cbd5e1; border:1px solid rgba(255,255,255,0.15); border-radius:8px; font-size:14px; font-weight:700; cursor:pointer;">취소</button>
             <button onclick="confirmOverwrite()" style="flex:1; padding:12px; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer;">덮어쓰기</button>
@@ -1024,6 +1033,7 @@ async function pushImageToGithub() {
         const previewPath = existingPath || conflictPaths[0].path;
         _pendingPushData = { num, path, base64Content, sha, token, conflictPaths };
         document.getElementById('overwrite-existing-img').src = previewUrl;
+        document.getElementById('overwrite-new-img').src = `data:image/*;base64,${base64Content}`;
         document.getElementById('overwrite-filename').textContent = conflictPaths.length > 0
             ? `기존: ${previewPath} → 새로운: ${path}`
             : path;
@@ -1091,6 +1101,9 @@ async function doPushToGithub({ num, path, base64Content, sha, token, conflictPa
         alert(`✅ ${num}번 악보 이미지가 성공적으로 전송되었습니다!${deletedNote}\n\nVercel 배포 후(약 1~2분) 앱에 반영됩니다.`);
         btn.textContent = originalText;
         btn.disabled = false;
+
+        // 업로드 성공 후 입력 폼 초기화
+        clearImgSelection();
         checkOrphanImages();
 
     } catch(err) {
