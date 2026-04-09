@@ -84,11 +84,24 @@ function normalizeContiText(rawText) {
     let allLines = rawText.split('\n').map(line => {
         const trimmed = line.trim();
         if (!trimmed) return '';
+
+        // 찬송가 줄: 찬NNN 또는 찬NN 형식
+        const hymnMatch = trimmed.match(/^찬(\d+)[\.\s]*(.*)/);
+        if (hymnMatch) {
+            const formattedNum = String(hymnMatch[1]).padStart(3, '0');
+            let titlePart = hymnMatch[2].trim();
+            if (hymnArray.length > 0) {
+                const found = hymnArray.find(s => s.startsWith(formattedNum + ' '));
+                if (found) titlePart = found.substring(formattedNum.length + 1).trim();
+            }
+            return `찬${formattedNum} ${titlePart}`;
+        }
+
+        // CCM 찬양 줄
         const match = trimmed.match(/^(\d+)[\.\s]*(.*)/);
         if (match) {
             const formattedNum = String(match[1]).padStart(3, '0');
             let titlePart = match[2].trim();
-            // 찬양 목록에서 제목 자동 조회 (songArray는 firebase.js에서 전역)
             if (songArray.length > 0) {
                 const found = songArray.find(s => s.startsWith(formattedNum + ' '));
                 if (found) titlePart = found.substring(formattedNum.length + 1).trim();
@@ -101,8 +114,8 @@ function normalizeContiText(rawText) {
     return allLines.join('\n');
 }
 // ─── 버전 관리 ────────────────────────────────────────────────────────────
-const APP_VERSION = "v1.8.1";
-const BUILD_DATE  = "2026.04.08";
+const APP_VERSION = "v1.9.0";
+const BUILD_DATE  = "2026.04.09";
 
 function initVersionDisplay() {
     // 모든 .app-version-badge를 APP_VERSION으로 동적 갱신 (#82)
@@ -130,18 +143,17 @@ function addDivider() {
 
 async function prefetchImage(num) {
     if (!num || _prefetchedSet.has(num)) return;
-    const numPadded = String(num).padStart(3, '0');
-    
-    // 이미 캐시되어 있는지 확인 (Browser Cache 활용)
+    const isHymn   = String(num).startsWith('찬');
+    const rawNum   = isHymn ? String(num).slice(1) : String(num);
+    const numPadded = rawNum.padStart(3, '0');
+    const basePath  = isHymn ? 'images/hymn/' : 'images/';
+    _prefetchedSet.add(num);
+
     for (const ext of EXTENSIONS) {
-        const url = `images/${numPadded}${ext}`;
+        const url = `${basePath}${numPadded}${ext}`;
         try {
             const img = new Image();
             img.src = url;
-            _prefetchedSet.add(num);
-            // 한 번이라도 성공하면 중단
-            img.onload = () => { return; };
-            img.onerror = () => { /* 다음 확장자 시도 */ };
         } catch(e) {}
     }
 }

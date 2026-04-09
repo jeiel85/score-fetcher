@@ -28,6 +28,7 @@ async function getIdToken() {
 
 
 let songArray  = [];
+let hymnArray  = [];   // 새찬송가 목록: "001 만복의 근원 하나님 (통1)" 형식
 let lyricsData = {};
 let wakeLock   = null;
 

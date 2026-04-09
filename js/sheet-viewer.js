@@ -1,19 +1,22 @@
 // ─── 악보 찾기 & 뷰어 ────────────────────────────────────────────────────────
 
 function tryLoadImage(imgElement, songNum, extIndex, onDone) {
+    const isHymn  = String(songNum).startsWith('찬');
+    const num      = isHymn ? String(songNum).slice(1) : String(songNum);
+    const basePath = isHymn ? 'images/hymn/' : 'images/';
+
     if (extIndex >= EXTENSIONS.length) {
         imgElement.style.display = 'none';
-        // 부모에 에러 메시지가 중복되지 않도록 확인 후 추가
         if (!imgElement.parentElement.querySelector('.error-msg')) {
             const errP = document.createElement('p');
             errP.className = 'error-msg';
-            errP.textContent = `⚠️ 악보 미등록 (${songNum}번)`;
+            errP.textContent = `⚠️ 악보 미등록 (${isHymn ? '찬송가 ' : ''}${num}번)`;
             imgElement.parentElement.appendChild(errP);
         }
         onDone(null);
         return;
     }
-    const trySrc = `images/${songNum}${EXTENSIONS[extIndex]}`;
+    const trySrc = `${basePath}${num}${EXTENSIONS[extIndex]}`;
     const tempImg = new Image();
     tempImg.onload = () => { imgElement.src = trySrc; onDone(trySrc); };
     tempImg.onerror = () => { tryLoadImage(imgElement, songNum, extIndex + 1, onDone); };
@@ -33,7 +36,7 @@ async function startSearch() {
     const allLines = normalized.split('\n');
 
 
-    const songLines = allLines.filter(l => /^\d+/.test(l));
+    const songLines = allLines.filter(l => /^\d+/.test(l) || /^찬\d+/.test(l));
     if (songLines.length === 0) return alert('곡 리스트를 입력해주세요!');
 
     sheetList = new Array(allLines.length).fill(null);
@@ -43,13 +46,16 @@ async function startSearch() {
     resultContainer.innerHTML = '';
     let songCounter = 0;
     allLines.forEach((line, index) => {
-        const match = line.match(/^(\d+)/);
+        const hymnMatch = line.match(/^찬(\d+)(.*)/);
+        const ccmMatch  = !hymnMatch && line.match(/^(\d+)(.*)/);
+        const match     = hymnMatch || ccmMatch;
         if (!match) return;
         songCounter++;
-        const songNumber = match[1];
-        const numPadded  = songNumber.padStart(3, '0');
-        const songTitle  = line.substring(songNumber.length).trim();
-        const label = `${numPadded} ${songTitle}`;
+        const isHymn    = !!hymnMatch;
+        const numPadded = match[1].padStart(3, '0');
+        const songTitle = match[2].trim();
+        const label     = isHymn ? `찬${numPadded} ${songTitle}` : `${numPadded} ${songTitle}`;
+        const imgKey    = isHymn ? `찬${numPadded}` : numPadded;
 
         const card = document.createElement('div');
         card.className = 'sheet-music-card';
@@ -57,10 +63,10 @@ async function startSearch() {
         card.dataset.originalLine = line;
         card.innerHTML = `<div class="sheet-title"><span class="drag-handle" title="길게 눌러 순서 변경">⠿</span>${label}</div>`;
         const imgTag = document.createElement('img');
-        imgTag.alt = `${songNumber} 악보 찾는 중...`;
+        imgTag.alt = `${isHymn ? '찬송가 ' : ''}${numPadded} 악보 찾는 중...`;
         card.appendChild(imgTag);
         resultContainer.appendChild(card);
-        tryLoadImage(imgTag, songNumber, 0, (finalSrc) => {
+        tryLoadImage(imgTag, imgKey, 0, (finalSrc) => {
             sheetList[index] = { src: finalSrc, label };
             card.onclick = () => openFullscreen(index);
         });
@@ -92,9 +98,9 @@ function syncAfterDrag(container) {
     const textarea = document.getElementById('song-input');
     const allLines = textarea.value.split('\n');
 
-    // 원래 textarea에서 곡번호 줄의 위치(슬롯) 수집
+    // 원래 textarea에서 곡번호 줄의 위치(슬롯) 수집 (CCM + 찬송가 모두)
     const songSlots = allLines.reduce((acc, l, i) => {
-        if (/^\d+/.test(l.trim())) acc.push(i);
+        if (/^\d+/.test(l.trim()) || /^찬\d+/.test(l.trim())) acc.push(i);
         return acc;
     }, []);
 
@@ -344,10 +350,13 @@ function _showScorePreviewAt(idx, numPadded, displayTitle, slideDir) {
         });
     }
 
+    const _isHymnPreview  = String(numPadded).startsWith('찬');
+    const _previewNum     = _isHymnPreview ? String(numPadded).slice(1) : String(numPadded);
+    const _previewBase    = _isHymnPreview ? 'images/hymn/' : 'images/';
     let extIdx = 0;
     function tryNext() {
         if (extIdx >= EXTENSIONS.length) { showToast('악보 이미지를 찾을 수 없습니다'); return; }
-        const src = `images/${numPadded}${EXTENSIONS[extIdx]}`;
+        const src = `${_previewBase}${_previewNum}${EXTENSIONS[extIdx]}`;
         const t = new Image();
         t.onload = () => {
             document.getElementById('fullscreen-img').src = src;

@@ -4,6 +4,9 @@ let _prefetchObserver = null;
 let _songFreqData = {};  // { '001': 5, '276': 3, ... } 이력 집계 결과
 let _sortMode = 'num';  // 'num' | 'freq-desc' | 'freq-asc'
 
+// ─── 탭 상태 ─────────────────────────────────────────────────────────────────
+let _activeTab = 'ccm';  // 'ccm' | 'hymn'
+
 // ─── 즐겨찾기 ─────────────────────────────────────────────────────────────────
 let _favorites = new Set(JSON.parse(localStorage.getItem('songFavorites') || '[]'));
 let _favFilterOn = false;
@@ -142,26 +145,28 @@ async function openSongModal() {
     const favBtn = document.getElementById('btn-fav-filter');
     if (favBtn) { favBtn.classList.remove('fav-filter-on'); favBtn.textContent = '⭐'; }
 
-    if (songArray.length === 0) {
-        // 첫 진입: 전체 초기화 (캐시 우선 + Firebase 동기화)
-        await initSongList();
-    } else {
-        // 이미 로드된 적 있으면 캐시로 즉시 렌더링 후,
-        // 백그라운드에서 Firebase 최신 데이터 재동기화 (새로 등록된 곡 반영)
-        renderSongList(songArray);
-        initSongList();  // await 없이 백그라운드 실행 → 변경사항 있으면 자동 재렌더링
+    // 탭 상태 반영 (CCM 탭 툴바 표시/숨김)
+    _applyTabUI();
+
+    if (_activeTab === 'hymn') {
+        await initHymnList();
+        return;
     }
 
-    // 이력 기반 사용빈도: 캐시 우선 로드, Firebase에서 백그라운드 로드 후 재렌더링
+    if (songArray.length === 0) {
+        await initSongList();
+    } else {
+        renderSongList(songArray);
+        initSongList();
+    }
+
     const cachedHistory = localStorage.getItem('cachedHistory');
     if (cachedHistory) {
         try {
             _songFreqData = buildSongFrequency(JSON.parse(cachedHistory));
-            // 검색창이 비어있으면 전체 목록을, 아니면 필터링된 목록을 다시 렌더링
             renderSongList(searchInput.value ? null : songArray);
         } catch(e) {}
     }
-    // Firebase에서 신선한 이력 데이터 비동기 로드
     _loadFreqFromFirebase();
 }
 
@@ -557,3 +562,127 @@ document.addEventListener('click', () => { if (wakeLock === null) initWakeLock()
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && wakeLock === null) initWakeLock();
 });
+
+// ─── 탭 전환 ─────────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+    if (_activeTab === tab) return;
+    _activeTab = tab;
+    document.getElementById('searchInput').value = '';
+    document.getElementById('songListContainer').scrollTop = 0;
+    _applyTabUI();
+    if (tab === 'ccm') {
+        renderSongList(songArray);
+        _loadFreqFromFirebase();
+    } else {
+        initHymnList();
+    }
+}
+
+function _applyTabUI() {
+    const tabCcm  = document.getElementById('tab-ccm');
+    const tabHymn = document.getElementById('tab-hymn');
+    if (tabCcm)  tabCcm.classList.toggle('tab-active',  _activeTab === 'ccm');
+    if (tabHymn) tabHymn.classList.toggle('tab-active', _activeTab === 'hymn');
+
+    // CCM 전용 툴바(정렬/즐겨찾기) 탭에 따라 표시/숨김
+    const ccmToolbar = document.getElementById('ccm-toolbar');
+    if (ccmToolbar) ccmToolbar.style.display = _activeTab === 'ccm' ? '' : 'none';
+}
+
+// ─── 새찬송가 목록 ────────────────────────────────────────────────────────────
+
+let _hymnLoaded = false;
+
+async function initHymnList() {
+    const container = document.getElementById('songListContainer');
+    if (hymnArray.length === 0) {
+        container.innerHTML = "<li class='song-item' style='text-align:center;'>찬송가 목록 로딩 중... ⏳</li>";
+        try {
+            const res = await fetch('hymn_list.json');
+            if (!res.ok) throw new Error('fetch failed');
+            const data = await res.json();
+            hymnArray = data.songs.map(s => `${s.number} ${s.title}`);
+            _hymnLoaded = true;
+        } catch(e) {
+            container.innerHTML = "<li class='song-item' style='color:#fca5a5;text-align:center;'>⚠️ 찬송가 목록을 불러올 수 없습니다</li>";
+            return;
+        }
+    }
+    const kw = document.getElementById('searchInput').value.trim();
+    renderHymnList(kw ? hymnArray.filter(s => s.toLowerCase().includes(kw.toLowerCase())) : hymnArray);
+}
+
+function filterHymns() {
+    if (_activeTab !== 'hymn') { filterSongs(); return; }
+    const kw = document.getElementById('searchInput').value.toLowerCase().trim();
+    renderHymnList(kw ? hymnArray.filter(s => s.toLowerCase().includes(kw)) : hymnArray);
+}
+
+function renderHymnList(list) {
+    if (!list) return;
+    const container = document.getElementById('songListContainer');
+    container.innerHTML = '';
+
+    // 현재 입력창에 이미 추가된 찬송가 번호
+    const addedNums = new Set();
+    (document.getElementById('song-input')?.value || '').split('\n').forEach(line => {
+        const m = line.trim().match(/^찬(\d+)/);
+        if (m) addedNums.add(m[1].padStart(3, '0'));
+    });
+
+    list.forEach(song => {
+        const match = song.match(/^(\d+)(.*)/);
+        if (!match) return;
+        const numPadded = match[1].padStart(3, '0');
+        const title     = match[2].trim();
+        const isAdded   = addedNums.has(numPadded);
+
+        const li = document.createElement('li');
+        li.className = 'song-item hymn-item' + (isAdded ? ' song-already-added' : '');
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'song-item-text';
+        textSpan.innerHTML = `<strong>찬${match[1]}</strong> ${title}`;
+        textSpan.onclick = () => addHymnToInput(numPadded, title);
+        li.appendChild(textSpan);
+
+        if (isAdded) {
+            const badge = document.createElement('span');
+            badge.className = 'added-badge';
+            badge.textContent = '✓ 추가됨';
+            li.appendChild(badge);
+        }
+
+        // 악보 버튼 (images/hymn/ 경로 미리보기)
+        const scoreBtn = document.createElement('button');
+        scoreBtn.className = 'btn-score';
+        scoreBtn.textContent = '악보';
+        scoreBtn.dataset.numPadded = `찬${numPadded}`;
+        scoreBtn.dataset.title = title;
+        scoreBtn.onclick = (e) => {
+            e.stopPropagation();
+            const allItems = Array.from(document.querySelectorAll('#songListContainer .btn-score[data-num-padded^="찬"]'))
+                .map(btn => ({ numPadded: btn.dataset.numPadded, title: btn.dataset.title }));
+            const listIdx = allItems.findIndex(item => item.numPadded === `찬${numPadded}`);
+            closeSongModal();
+            openScorePreview(`찬${numPadded}`, `찬${numPadded} ${title}`, allItems, listIdx >= 0 ? listIdx : 0);
+        };
+        li.appendChild(scoreBtn);
+
+        container.appendChild(li);
+    });
+
+    if (list.length === 0) {
+        container.innerHTML = "<li class='song-item' style='text-align:center;color:var(--on-surface-variant)'>검색 결과가 없습니다</li>";
+    }
+}
+
+function addHymnToInput(numPadded, title) {
+    const textarea = document.getElementById('song-input');
+    let currentText = textarea.value;
+    if (currentText.includes('아래 예시처럼 붙여넣어 주세요')) currentText = '';
+    else if (currentText.length > 0 && !currentText.endsWith('\n')) currentText += '\n';
+    textarea.value = currentText + `찬${numPadded} ${title}`;
+    showToast('✅ 추가됨 — 계속 선택하거나 ✕를 눌러 닫아주세요', 1800);
+}
