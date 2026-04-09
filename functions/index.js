@@ -40,6 +40,17 @@ exports.notifyNewConti = onValueCreated(
             ? `[${contiTitle}] ${songSummary}`
             : songSummary;
 
+        // 알림센터에 기록 (FCM 발송 여부와 무관하게 항상 저장 — 토큰 체크 이전에 실행)
+        const contiKey = event.params.id;
+        await admin.database().ref("/notifications").push({
+            type: "new_conti",
+            title: contiTitle || "새 콘티가 등록되었습니다",
+            body: summary || "",
+            conti_key: contiKey,
+            created_at: Date.now()
+        });
+        console.log("알림센터 기록 완료:", contiKey);
+
         // 저장된 FCM 토큰 전체 가져오기
         const tokensSnapshot = await admin.database().ref("/fcm_tokens").once("value");
         if (!tokensSnapshot.exists()) {
@@ -75,17 +86,6 @@ exports.notifyNewConti = onValueCreated(
             },
             tokens
         };
-
-        // 알림센터에 기록 (FCM 발송 여부와 무관하게 항상 저장)
-        const contiKey = event.params.id;
-        await admin.database().ref("/notifications").push({
-            type: "new_conti",
-            title: contiTitle || "새 콘티가 등록되었습니다",
-            body: summary || "",
-            conti_key: contiKey,
-            created_at: Date.now()
-        });
-        console.log("알림센터 기록 완료:", contiKey);
 
         try {
             const response = await admin.messaging().sendEachForMulticast(message);
