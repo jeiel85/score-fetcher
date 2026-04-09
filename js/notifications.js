@@ -28,7 +28,7 @@ async function fetchNotifications() {
         const idToken = await getIdToken();
         if (!idToken) return [];
         const res = await fetch(
-            `${FIREBASE_CONFIG.databaseURL}/notifications.json?auth=${idToken}&limitToLast=50`
+            `${FIREBASE_CONFIG.databaseURL}/notifications.json?auth=${idToken}&orderBy="$key"&limitToLast=50`
         );
         if (!res.ok) return [];
         const data = await res.json();
