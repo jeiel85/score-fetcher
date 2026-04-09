@@ -302,6 +302,10 @@
                 const _s = document.getElementById('song-input')?.value;
                 if (_t) sessionStorage.setItem('_pendingTitle', _t);
                 if (_s) sessionStorage.setItem('_pendingSongs', _s);
+                // 기존 버전이 있을 때만 업데이트 알림 예약 (첫 설치 제외)
+                if (savedVersion) {
+                    localStorage.setItem('_pendingUpdateNotif', JSON.stringify({ from: savedVersion, to: VERSION }));
+                }
                 localStorage.setItem('app_version', VERSION);
                 location.reload(true);
             }

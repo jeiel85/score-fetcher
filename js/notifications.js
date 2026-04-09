@@ -44,10 +44,10 @@ async function fetchNotifications() {
 
 // ─── 타입별 아이콘 / 레이블 ─────────────────────────────────────────────────
 function _notifIcon(type) {
-    return { new_conti: '🎶', new_song: '🎵', lyrics_report: '🛠️', admin_conti: '📋', announcement: '📢' }[type] || '🔔';
+    return { new_conti: '🎶', new_song: '🎵', lyrics_report: '🛠️', admin_conti: '📋', announcement: '📢', app_update: '🆕' }[type] || '🔔';
 }
 function _notifLabel(type) {
-    return { new_conti: '새 콘티 등록', new_song: '신규 곡 등록', lyrics_report: '가사 신고 처리', admin_conti: '콘티 수정', announcement: '공지' }[type] || '알림';
+    return { new_conti: '새 콘티 등록', new_song: '신규 곡 등록', lyrics_report: '가사 신고 처리', admin_conti: '콘티 수정', announcement: '공지', app_update: '앱 업데이트' }[type] || '알림';
 }
 function _esc(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -169,6 +169,16 @@ async function writeNotification(type, title, body, extraData = {}) {
 // ─── 초기화 (앱 로드 시 배지 표시) ─────────────────────────────────────────
 async function initNotifications() {
     try {
+        // 업데이트 알림 예약 처리
+        const pending = localStorage.getItem('_pendingUpdateNotif');
+        if (pending) {
+            try {
+                const { from, to } = JSON.parse(pending);
+                await writeNotification('app_update', `앱이 v${to}로 업데이트되었습니다`, `이전 버전: v${from}`);
+            } catch(e) {}
+            localStorage.removeItem('_pendingUpdateNotif');
+        }
+
         const notifs = await fetchNotifications();
         _cachedNotifs = notifs;
         updateNotifBadge(notifs);

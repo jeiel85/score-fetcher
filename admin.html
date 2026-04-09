@@ -1705,9 +1705,11 @@ function renderHistoryTable() {
                 </div>
             </td>
             <td style="white-space:nowrap; vertical-align:top; padding-top:16px;"><span class="badge ${sc>0 ? 'badge-count' : ''}" style="${sc===0 ? 'background:rgba(244,63,94,0.2); color:#fca5a5;' : ''}">${sc}곡</span></td>
-            <td style="white-space:nowrap; text-align:right; vertical-align:top; padding-top:16px; display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
-                <button class="action-btn hist-edit-btn" style="white-space:nowrap; background:rgba(99,102,241,0.15); border-color:rgba(99,102,241,0.4); color:#a5b4fc;" onclick="startHistoryEdit(this)">수정</button>
-                <button class="action-btn" style="white-space:nowrap;" onclick="deleteSingleHistory('${item.key}', this)">삭제</button>
+            <td style="white-space:nowrap; text-align:right; vertical-align:top; padding-top:16px;">
+                <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+                    <button class="action-btn hist-edit-btn" style="white-space:nowrap; background:rgba(99,102,241,0.15); border-color:rgba(99,102,241,0.4); color:#a5b4fc;" onclick="startHistoryEdit(this)">수정</button>
+                    <button class="action-btn" style="white-space:nowrap;" onclick="deleteSingleHistory('${item.key}', this)">삭제</button>
+                </div>
             </td>
         </tr>`;
     }).join('');
