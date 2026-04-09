@@ -593,21 +593,38 @@ function _applyTabUI() {
 // ─── 새찬송가 목록 ────────────────────────────────────────────────────────────
 
 let _hymnLoaded = false;
+let _hymnLyrics = {};  // { '001': '가사 전문', ... }
+
+async function _loadHymnLyrics() {
+    if (Object.keys(_hymnLyrics).length > 0) return;
+    try {
+        const res = await fetch('hymn_lyrics.json');
+        if (!res.ok) throw new Error('fetch failed');
+        _hymnLyrics = await res.json();
+    } catch(e) {
+        console.warn('찬송가 가사 로드 실패:', e);
+    }
+}
 
 async function initHymnList() {
     const container = document.getElementById('songListContainer');
     if (hymnArray.length === 0) {
         container.innerHTML = "<li class='song-item' style='text-align:center;'>찬송가 목록 로딩 중... ⏳</li>";
         try {
-            const res = await fetch('hymn_list.json');
-            if (!res.ok) throw new Error('fetch failed');
-            const data = await res.json();
+            const [listRes] = await Promise.all([
+                fetch('hymn_list.json'),
+                _loadHymnLyrics()
+            ]);
+            if (!listRes.ok) throw new Error('fetch failed');
+            const data = await listRes.json();
             hymnArray = data.songs.map(s => `${s.number} ${s.title}`);
             _hymnLoaded = true;
         } catch(e) {
             container.innerHTML = "<li class='song-item' style='color:#fca5a5;text-align:center;'>⚠️ 찬송가 목록을 불러올 수 없습니다</li>";
             return;
         }
+    } else {
+        _loadHymnLyrics();
     }
     const kw = document.getElementById('searchInput').value.trim();
     renderHymnList(kw ? hymnArray.filter(s => s.toLowerCase().includes(kw.toLowerCase())) : hymnArray);
@@ -658,6 +675,18 @@ function renderHymnList(list) {
             li.appendChild(badge);
         }
 
+        // 가사 버튼 (찬송가)
+        if (_hymnLyrics[numPadded]) {
+            const lyricsBtn = document.createElement('button');
+            lyricsBtn.className = 'btn-lyrics';
+            lyricsBtn.textContent = '가사';
+            lyricsBtn.onclick = (e) => {
+                e.stopPropagation();
+                showHymnLyrics(numPadded, title);
+            };
+            li.appendChild(lyricsBtn);
+        }
+
         // 악보 버튼 (images/hymn/ 경로 미리보기)
         const scoreBtn = document.createElement('button');
         scoreBtn.className = 'btn-score';
@@ -689,4 +718,17 @@ function addHymnToInput(numPadded, title) {
     else if (currentText.length > 0 && !currentText.endsWith('\n')) currentText += '\n';
     textarea.value = currentText + `찬${numPadded} ${title}`;
     showToast('✅ 추가됨 — 계속 선택하거나 ✕를 눌러 닫아주세요', 1800);
+}
+
+function showHymnLyrics(numPadded, title) {
+    _lastLyricsNum = `찬${numPadded}`;
+    const lyricsText = _hymnLyrics[numPadded] || null;
+    document.getElementById('lyrics-title').textContent = `🎵 찬${numPadded} ${title}`;
+    const tagsEl = document.getElementById('lyrics-tags');
+    tagsEl.style.display = 'none';
+    tagsEl.innerHTML = '';
+    document.getElementById('lyrics-content').textContent = lyricsText || '가사 데이터가 없습니다.';
+    const reportBtn = document.getElementById('btn-report-lyrics');
+    if (reportBtn) { reportBtn.disabled = false; reportBtn.textContent = '🛠️ 가사 오류 신고'; }
+    document.getElementById('lyricsModal').style.display = 'flex';
 }
