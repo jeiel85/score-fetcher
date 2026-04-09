@@ -242,6 +242,10 @@ async function handleLyricReport() {
         if (typeof authReady !== 'undefined') await authReady;
         await firebase.database().ref('reports').push(payload);
 
+        // 알림센터에 가사 신고 기록
+        const reportTitle = document.getElementById('lyrics-title')?.textContent || _lastLyricsNum;
+        writeNotification('lyrics_report', `가사 오류 신고: ${reportTitle}`, `${_lastLyricsNum}번 곡 가사 오류가 신고되었습니다.`, { song_num: _lastLyricsNum });
+
         // 2. 카운트 증가 및 저장
         reportHistory.count++;
         localStorage.setItem('lyricReports', JSON.stringify(reportHistory));

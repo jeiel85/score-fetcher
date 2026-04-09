@@ -16,6 +16,7 @@ function resetAll() {
     document.getElementById('result-container').innerHTML = '';
     sheetList = [];
     document.getElementById('app-layout').classList.remove('ls-active');
+    if (typeof clearLoadedConti === 'function') clearLoadedConti();
 }
 
 function isTabletLandscape() {

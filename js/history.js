@@ -1,5 +1,27 @@
 // ─── 이력 관리 (Firebase) ─────────────────────────────────────────────────────
 
+// 불러온 콘티의 key 기억 (수정 모드용)
+let _loadedContiKey = null;
+let _loadedContiTitle = null;
+
+function _setLoadedConti(key, title) {
+    _loadedContiKey = key;
+    _loadedContiTitle = title;
+    const indicator = document.getElementById('loaded-conti-indicator');
+    if (indicator) {
+        if (key) {
+            indicator.style.display = 'flex';
+            indicator.querySelector('.loaded-conti-name').textContent = title || '콘티';
+        } else {
+            indicator.style.display = 'none';
+        }
+    }
+}
+
+function clearLoadedConti() {
+    _setLoadedConti(null, null);
+}
+
 async function saveToHistory() {
     if (!FIREBASE_URL) return null;
     const titleText = document.getElementById('setlist-title').value.trim() || '제목 없는 콘티';
@@ -49,20 +71,39 @@ async function saveConti() {
         return;
     }
 
-    // 중복 체크
+    const idToken = await getIdToken();
+
+    // ── 수정 모드: 불러온 콘티가 있으면 수정/새 콘티 선택 ──────────────────
+    if (_loadedContiKey) {
+        const choice = confirm(`"${_loadedContiTitle}" 콘티를 수정할까요?\n\n[확인] 기존 콘티 수정\n[취소] 새 콘티로 저장`);
+        if (choice) {
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            await fetch(`${FIREBASE_CONFIG.databaseURL}/history/${_loadedContiKey}.json?auth=${idToken}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, text: normalizedText, date: dateStr, timestamp: Date.now() })
+            });
+            writeNotification('admin_conti', `콘티 수정: ${title}`, normalizedText.split('\n').filter(l => /^(찬\d+|\d+)/.test(l.trim())).slice(0, 4).join(' · '), { conti_key: _loadedContiKey });
+            showToast('✅ 콘티가 수정되었습니다!');
+            _setLoadedConti(_loadedContiKey, title); // 제목이 바뀌었을 수 있으니 갱신
+            return;
+        }
+        // 취소 → 새 콘티로 저장 (아래 계속)
+        _setLoadedConti(null, null);
+    }
+
+    // ── 새 콘티 저장: 중복 체크 ─────────────────────────────────────────────
     try {
-        const idToken = await getIdToken();
         const res = await fetch(`${FIREBASE_URL}?auth=${idToken}`);
         const data = await res.json();
         if (data) {
             const entries = Object.entries(data);
-            // 완전 일치: 저장 차단
             const exactDup = entries.find(([, item]) => item.title === title && item.text === normalizedText);
             if (exactDup) {
                 showToast('⚠️ 동일한 콘티가 이미 저장되어 있습니다');
                 return;
             }
-            // 제목만 일치: 업데이트 여부 확인
             const titleDup = entries.find(([, item]) => item.title === title);
             if (titleDup) {
                 const ok = confirm(`"${title}" 콘티가 이미 있습니다.\n내용을 업데이트할까요?\n(취소하면 새 콘티로 저장됩니다)`);
@@ -78,7 +119,6 @@ async function saveConti() {
                     showToast('✅ 콘티가 업데이트됐습니다!');
                     return;
                 }
-                // 취소 → 새 콘티로 저장
             }
         }
     } catch(e) { /* 중복 체크 실패 시 그냥 저장 진행 */ }
@@ -178,6 +218,7 @@ function renderHistoryList(entries) {
             document.getElementById('song-input').value = item.text || '';
             document.getElementById('result-container').innerHTML = '';
             sheetList = [];
+            _setLoadedConti(key, item.title || '');
             closeHistoryModal();
             startSearch(); // 불러오기 후 악보 자동 실행 (#77)
         };
@@ -210,6 +251,7 @@ async function loadContiByKey(key) {
         document.getElementById('song-input').value = item.text || '';
         document.getElementById('result-container').innerHTML = '';
         sheetList = [];
+        _setLoadedConti(key, item.title || '');
         startSearch();
         showToast(`📌 "${item.title || '콘티'}" 불러왔습니다`);
     } catch(e) { console.warn('콘티 딥링크 로드 실패:', e); showToast('⚠️ 콘티 로드 중 오류가 발생했습니다'); }

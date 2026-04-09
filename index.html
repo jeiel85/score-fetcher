@@ -108,6 +108,11 @@
                 <div class="controls-card">
                     <div class="btn-group">
                         <button class="btn-search" onclick="startSearch()">악보 불러오기 🎵</button>
+                        <div id="loaded-conti-indicator" style="display:none; align-items:center; gap:8px; padding:8px 12px; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); border-radius:8px; font-size:13px; color:#a5b4fc;">
+                            <span>✏️ 수정 중:</span>
+                            <span class="loaded-conti-name" style="font-weight:700; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                            <button onclick="clearLoadedConti()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:16px; padding:0; line-height:1;">✕</button>
+                        </div>
                         <div class="btn-row">
                             <button class="btn-save" onclick="saveConti()">콘티함에 저장 💾</button>
                             <button class="btn-share" onclick="shareConti()">콘티 공유하기 📤</button>

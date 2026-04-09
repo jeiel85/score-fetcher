@@ -153,6 +153,19 @@ function closeNotifModal() {
     document.getElementById('notifModal').style.display = 'none';
 }
 
+// ─── 알림센터 쓰기 헬퍼 (클라이언트에서 직접 저장) ──────────────────────────
+async function writeNotification(type, title, body, extraData = {}) {
+    try {
+        const idToken = await getIdToken();
+        if (!idToken) return;
+        await fetch(`${FIREBASE_CONFIG.databaseURL}/notifications.json?auth=${idToken}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type, title, body, created_at: Date.now(), ...extraData })
+        });
+    } catch(e) { console.warn('알림센터 저장 실패:', e); }
+}
+
 // ─── 초기화 (앱 로드 시 배지 표시) ─────────────────────────────────────────
 async function initNotifications() {
     try {

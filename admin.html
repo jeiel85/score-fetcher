@@ -395,6 +395,7 @@
         <button class="tab-btn" onclick="switchTab('stats')" id="btn-tab-stats">📊 찬양 통계</button>
         <button class="tab-btn" onclick="switchTab('register')" id="btn-tab-register">🎵 새 곡 등록</button>
         <button class="tab-btn" onclick="switchTab('reports')" id="btn-tab-reports">🚨 가사 신고</button>
+        <button class="tab-btn" onclick="switchTab('announce')" id="btn-tab-announce">📢 공지</button>
         <button class="tab-btn" onclick="switchTab('import')" id="btn-tab-import">📥 임포트</button>
         <button class="tab-btn" onclick="switchTab('migration')" id="btn-tab-migration">📦 마이그레이션</button>
     </div>
@@ -596,6 +597,26 @@
             <button onclick="cancelOverwrite()" style="flex:1; padding:14px; background:rgba(255,255,255,0.08); color:#cbd5e1; border:1px solid rgba(255,255,255,0.15); border-radius:8px; font-size:15px; font-weight:700; cursor:pointer;">취소</button>
             <button onclick="confirmOverwrite()" style="flex:2; padding:14px; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer;">덮어쓰기</button>
         </div>
+    </div>
+</div>
+
+<!-- TAB: 공지 작성 -->
+<div id="tab-announce" class="tab-content">
+    <div class="card" style="border-color: #f59e0b; background: rgba(245,158,11,0.05);">
+        <h2 style="color: #fcd34d;">📢 공지 작성</h2>
+        <p style="font-size: 13px; color: #fde68a; margin-bottom: 16px;">모든 사용자의 알림센터에 공지를 등록합니다.</p>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <input type="text" id="announce-title" placeholder="공지 제목" style="padding:12px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; font-size:14px;">
+            <textarea id="announce-body" placeholder="공지 내용" rows="4" style="padding:12px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; font-size:14px; resize:vertical;"></textarea>
+            <button class="btn btn-primary" style="background:#f59e0b;" onclick="submitAnnouncement()">📢 공지 등록하기</button>
+        </div>
+        <div id="announce-log" style="margin-top:12px; font-size:13px; color:#fde68a;"></div>
+    </div>
+    <div class="card" style="border-color: rgba(245,158,11,0.3); margin-top:16px;">
+        <h2 style="color:#fcd34d; font-size:16px;">📋 최근 공지 목록</h2>
+        <ul id="announce-list" style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;">
+            <li style="color:#94a3b8; font-size:13px; text-align:center; padding:16px;">불러오는 중...</li>
+        </ul>
     </div>
 </div>
 
@@ -1788,6 +1809,15 @@ async function submitNewSong() {
 
         if (results.length > 0) {
             alert(`✅ ${num}번 곡의 [${results.join(', ')}] 정보가 성공적으로 업데이트되었습니다!`);
+            // 알림센터에 new_song 기록
+            if (title) {
+                const notifBody = `${num}번 ${title}${lyrics ? ' (가사 포함)' : ''}`;
+                await fetch(`${FIREBASE_CONFIG.databaseURL}/notifications.json?auth=${idToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'new_song', title: `신규 곡 등록: ${title}`, body: notifBody, created_at: Date.now(), song_num: num })
+                });
+            }
             // 입력창 초기화 (번호는 유지)
             document.getElementById('reg-title').value = '';
             document.getElementById('reg-lyrics').value = '';
@@ -1918,6 +1948,73 @@ function switchTab(id) {
     if (id === 'history' && allHistoryData.length === 0) loadHistoryPage();
     if (id === 'reports') loadReports();
     if (id === 'stats') loadStatistics();
+    if (id === 'announce') loadAnnouncements();
+}
+
+// ─── 공지 작성 ────────────────────────────────────────────────────────────────
+async function submitAnnouncement() {
+    const title = document.getElementById('announce-title').value.trim();
+    const body  = document.getElementById('announce-body').value.trim();
+    const log   = document.getElementById('announce-log');
+    if (!title) { log.textContent = '⚠️ 제목을 입력해주세요.'; return; }
+    log.textContent = '⏳ 등록 중...';
+    try {
+        const idToken = await getIdToken();
+        await fetch(`${FIREBASE_CONFIG.databaseURL}/notifications.json?auth=${idToken}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'announcement', title, body: body || '', created_at: Date.now() })
+        });
+        log.textContent = '✅ 공지가 등록되었습니다!';
+        document.getElementById('announce-title').value = '';
+        document.getElementById('announce-body').value = '';
+        loadAnnouncements();
+    } catch(e) {
+        log.textContent = '❌ 오류: ' + e.message;
+    }
+}
+
+async function loadAnnouncements() {
+    const list = document.getElementById('announce-list');
+    try {
+        const idToken = await getIdToken();
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/notifications.json?auth=${idToken}&orderBy="$key"&limitToLast=20`);
+        const data = await res.json();
+        if (!data) { list.innerHTML = '<li style="color:#94a3b8; font-size:13px; text-align:center; padding:16px;">등록된 공지가 없습니다.</li>'; return; }
+        const items = Object.entries(data)
+            .map(([key, val]) => ({ key, ...val }))
+            .filter(n => n.type === 'announcement')
+            .sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+        if (items.length === 0) { list.innerHTML = '<li style="color:#94a3b8; font-size:13px; text-align:center; padding:16px;">등록된 공지가 없습니다.</li>'; return; }
+        list.innerHTML = items.map(n => {
+            const ts = new Date(n.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            return `<li style="padding:12px; background:rgba(255,255,255,0.04); border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                    <div>
+                        <div style="font-weight:700; color:#fcd34d; margin-bottom:4px;">📢 ${escHtml(n.title)}</div>
+                        ${n.body ? `<div style="font-size:13px; color:#cbd5e1;">${escHtml(n.body)}</div>` : ''}
+                        <div style="font-size:11px; color:#64748b; margin-top:4px;">${ts}</div>
+                    </div>
+                    <button onclick="deleteNotification('${n.key}', this)" style="background:none; border:1px solid rgba(244,63,94,0.4); color:#fca5a5; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer; flex-shrink:0;">삭제</button>
+                </div>
+            </li>`;
+        }).join('');
+    } catch(e) {
+        list.innerHTML = `<li style="color:#fca5a5; font-size:13px; text-align:center; padding:16px;">⚠️ 불러오기 실패: ${e.message}</li>`;
+    }
+}
+
+async function deleteNotification(key, btn) {
+    if (!confirm('이 공지를 삭제할까요?')) return;
+    btn.disabled = true;
+    try {
+        const idToken = await getIdToken();
+        await fetch(`${FIREBASE_CONFIG.databaseURL}/notifications/${key}.json?auth=${idToken}`, { method: 'DELETE' });
+        btn.closest('li').remove();
+    } catch(e) {
+        alert('삭제 실패: ' + e.message);
+        btn.disabled = false;
+    }
 }
 
 // ─── 유틸 ────────────────────────────────────────────────────────
