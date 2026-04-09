@@ -26,6 +26,10 @@
     "settings": {
       ".read": "auth.token.email == 'jeiel85@gmail.com'",
       ".write": "auth.token.email == 'jeiel85@gmail.com'"
+    },
+    "notifications": {
+      ".read": "auth != null",
+      ".write": false
     }
   }
 }
