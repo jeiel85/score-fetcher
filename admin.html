@@ -1689,15 +1689,24 @@ function renderHistoryTable() {
             ? songLines.join('<br>')
             : '<span style="color:#ef4444; font-size:12px;">(곡 없음 - 검사 권장)</span>';
 
-        return `<tr>
+        return `<tr data-key="${item.key}">
             <td style="vertical-align:top; padding-top:16px;"><input type="checkbox" class="hist-check" value="${item.key}"></td>
             <td style="color:#94a3b8; white-space:nowrap; vertical-align:top; padding-top:16px;">${d}</td>
             <td style="color:#a5b4fc; font-weight:600; vertical-align:top; padding-top:16px;">
-                ${escHtml(item.title || '제목없음')}
-                <div style="font-size:13px; color:#cbd5e1; margin-top:8px; font-weight:400; line-height:1.6;">${songSummary}</div>
+                <span class="hist-view-title">${escHtml(item.title || '제목없음')}</span>
+                <div class="hist-view-body" style="font-size:13px; color:#cbd5e1; margin-top:8px; font-weight:400; line-height:1.6;">${songSummary}</div>
+                <div class="hist-edit-form" style="display:none; margin-top:8px; display:none;">
+                    <input class="hist-edit-title" type="text" value="${escHtml(item.title || '')}" style="width:100%; padding:8px 10px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(99,102,241,0.5); border-radius:6px; font-size:14px; margin-bottom:8px; box-sizing:border-box;">
+                    <textarea class="hist-edit-text" rows="6" style="width:100%; padding:8px 10px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(99,102,241,0.5); border-radius:6px; font-size:13px; line-height:1.6; resize:vertical; box-sizing:border-box;">${escHtml(item.text || '')}</textarea>
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button onclick="saveHistoryEdit('${item.key}', this)" style="flex:1; padding:8px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer;">저장</button>
+                        <button onclick="cancelHistoryEdit(this)" style="flex:1; padding:8px; background:rgba(255,255,255,0.08); color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:6px; font-size:13px; cursor:pointer;">취소</button>
+                    </div>
+                </div>
             </td>
             <td style="white-space:nowrap; vertical-align:top; padding-top:16px;"><span class="badge ${sc>0 ? 'badge-count' : ''}" style="${sc===0 ? 'background:rgba(244,63,94,0.2); color:#fca5a5;' : ''}">${sc}곡</span></td>
-            <td style="white-space:nowrap; text-align:right; vertical-align:top; padding-top:16px;">
+            <td style="white-space:nowrap; text-align:right; vertical-align:top; padding-top:16px; display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+                <button class="action-btn hist-edit-btn" style="white-space:nowrap; background:rgba(99,102,241,0.15); border-color:rgba(99,102,241,0.4); color:#a5b4fc;" onclick="startHistoryEdit(this)">수정</button>
                 <button class="action-btn" style="white-space:nowrap;" onclick="deleteSingleHistory('${item.key}', this)">삭제</button>
             </td>
         </tr>`;
@@ -1713,6 +1722,54 @@ function renderHistoryTable() {
     }
     // 🐞 버그 원인: /.../는 임의의 문자 3개를 의미해서 HTML 전체를 삭제하고 있었습니다. 점 3개 문자로 수정!
     pagination.innerHTML = pages.replace(/(\.\.\.\s*)+/g, '...');
+}
+
+function startHistoryEdit(btn) {
+    const tr = btn.closest('tr');
+    tr.querySelector('.hist-view-title').style.display = 'none';
+    tr.querySelector('.hist-view-body').style.display = 'none';
+    tr.querySelector('.hist-edit-form').style.display = 'block';
+    btn.style.display = 'none';
+}
+
+function cancelHistoryEdit(btn) {
+    const tr = btn.closest('tr');
+    tr.querySelector('.hist-view-title').style.display = '';
+    tr.querySelector('.hist-view-body').style.display = '';
+    tr.querySelector('.hist-edit-form').style.display = 'none';
+    tr.querySelector('.hist-edit-btn').style.display = '';
+}
+
+async function saveHistoryEdit(key, btn) {
+    const tr = btn.closest('tr');
+    const newTitle = tr.querySelector('.hist-edit-title').value.trim();
+    const newText  = tr.querySelector('.hist-edit-text').value.trim();
+    if (!newTitle) { alert('제목을 입력해주세요.'); return; }
+
+    const origText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '저장 중...';
+    try {
+        const idToken = await getIdToken();
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        await fetch(`${FIREBASE_CONFIG.databaseURL}/history/${key}.json?auth=${idToken}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: newTitle, text: newText, date: dateStr, timestamp: Date.now() })
+        });
+        // 로컬 데이터 갱신
+        const entry = allHistoryData.find(e => e.key === key);
+        if (entry) { entry.title = newTitle; entry.text = newText; entry.date = dateStr; }
+        const fEntry = filteredHistory.find(e => e.key === key);
+        if (fEntry) { fEntry.title = newTitle; fEntry.text = newText; fEntry.date = dateStr; }
+
+        renderHistoryTable();
+    } catch(e) {
+        alert('저장 실패: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = origText;
+    }
 }
 
 async function deleteSingleHistory(key, btn) {
