@@ -27,9 +27,10 @@ firebase.initializeApp(self.FIREBASE_CONFIG);
 const messaging = firebase.messaging();
 
 // 앱이 백그라운드(또는 닫힌 상태)일 때 푸시 알림 표시
+// data-only 메시지를 사용하므로 payload.data 에서 내용을 읽음
 messaging.onBackgroundMessage((payload) => {
-    const title = payload.notification?.title || '새로운 콘티 🎶';
-    const body  = payload.notification?.body  || '새 콘티가 등록되었습니다. 확인해보세요!';
+    const title = payload.data?.title || payload.notification?.title || '새로운 콘티 🎶';
+    const body  = payload.data?.body  || payload.notification?.body  || '새 콘티가 등록되었습니다. 확인해보세요!';
 
     self.registration.showNotification(title, {
         body,

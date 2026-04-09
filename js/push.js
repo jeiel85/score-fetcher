@@ -57,8 +57,8 @@ async function enablePush() {
         if (!_messagingInited) {
             _messagingInited = true;
             messaging.onMessage((payload) => {
-                const title = payload.notification?.title || '새 콘티가 등록되었습니다 ♬';
-                const body  = payload.notification?.body  || '새 콘티가 등록되었습니다. 지금 확인해보세요!';
+                const title = payload.data?.title || payload.notification?.title || '새 콘티가 등록되었습니다 ♬';
+                const body  = payload.data?.body  || payload.notification?.body  || '새 콘티가 등록되었습니다. 지금 확인해보세요!';
                 registration.showNotification(title, {
                     body, icon: '/icon.png', badge: '/badge.png',
                     tag: `new-conti-${Date.now()}`, renotify: false, data: { url: location.origin }

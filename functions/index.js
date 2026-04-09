@@ -31,7 +31,7 @@ exports.notifyNewConti = onValueCreated(
         }
         const songLines = rawText.split('\n')
             .map(l => l.trim())
-            .filter(l => /^\d+/.test(l))
+            .filter(l => /^(찬\d+|\d+)/.test(l))
             .slice(0, 4);
         const songSummary = songLines.length > 0
             ? songLines.join(' · ')
@@ -63,18 +63,15 @@ exports.notifyNewConti = onValueCreated(
         }
 
         const message = {
-            notification: {
+            // notification 필드를 쓰면 FCM이 자동 표시 + onBackgroundMessage 양쪽에서
+            // showNotification()이 호출되어 알림이 2개 뜨는 버그 발생.
+            // data-only 메시지로 보내고 표시는 SW onBackgroundMessage 에서만 담당.
+            data: {
                 title: "새 콘티가 등록되었습니다 ♬",
                 body:  summary || "새 콘티가 등록되었습니다. 지금 확인해보세요!"
             },
             webpush: {
-                notification: {
-                    icon:  "/icon.png",
-                    badge: "/badge.png",
-                    tag:   `new-conti-${Date.now()}`,
-                    renotify: false
-                },
-                fcmOptions: { link: "/?autoload=1" }
+                headers: { Urgency: "high" }
             },
             tokens
         };
