@@ -623,6 +623,10 @@ function renderHymnList(list) {
     if (!list) return;
     const container = document.getElementById('songListContainer');
     container.innerHTML = '';
+    // CCM 퀵 인덱스 nav 숨김 (찬송가 탭에서는 불필요)
+    const nav = document.getElementById('quickIndexNav');
+    if (nav) { nav.style.display = 'none'; nav.innerHTML = ''; }
+    container.classList.remove('has-quick-nav');
 
     // 현재 입력창에 이미 추가된 찬송가 번호
     const addedNums = new Set();
