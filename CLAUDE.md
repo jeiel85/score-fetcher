@@ -263,18 +263,25 @@ v[MAJOR].[MINOR].[PATCH]
 
 | 항목 | 상태 |
 |------|------|
-| main 브랜치 | ✅ 최신 (v1.9.0) |
+| main 브랜치 | ✅ 최신 (v1.10.0) |
 | `origin/main` 동기화 | ✅ 완료 |
-| 최신 커밋 | `feat: 새찬송가 탭 추가 — 찬양 목록 모달 탭 분리, 찬NNN 프리픽스` |
+| 최신 커밋 | `feat: 알림센터 전체 타입 구현 + 콘티 수정 기능` |
 | 서비스 주소 | [score-fetcher.vercel.app](https://score-fetcher.vercel.app/) |
 | 오픈 이슈 | 없음 |
 
 ---
 
+## 변경 이력 (2026-04-09) — v1.10.0
+| 커밋 | 이슈 | 내용 |
+|------|------|------|
+| `159bccb` | - | 알림센터 전체 타입 구현 — writeNotification() 헬퍼, lyrics_report·new_song·admin_conti·announcement 연동, 공지 작성 탭(admin) |
+| `c8f7992` | - | admin 콘티 이력 인라인 수정 기능 — 수정/저장/취소, Firebase PATCH, 로컬 캐시 즉시 반영 |
+| `159bccb` | - | 콘티 수정 모드 — _loadedContiKey 추적, "✏️ 수정 중" 배너, 저장 시 수정/새 콘티 선택 |
+
 ## 변경 이력 (2026-04-09) — v1.9.0
 | 커밋 | 이슈 | 내용 |
 |------|------|------|
-| (pending) | - | 새찬송가 탭 추가 — 찬양 목록 모달에 [찬양/찬송가] 탭, hymn_list.json 645곡, 찬NNN 프리픽스로 CCM·찬송가 혼합 콘티 지원 |
+| `956a392` | - | 새찬송가 탭 추가 — 찬양 목록 모달에 [찬양/찬송가] 탭, hymn_list.json 645곡, 찬NNN 프리픽스로 CCM·찬송가 혼합 콘티 지원 |
 
 ---
 
