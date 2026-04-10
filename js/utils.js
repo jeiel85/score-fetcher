@@ -86,7 +86,19 @@ function normalizeContiText(rawText) {
         const trimmed = line.trim();
         if (!trimmed) return '';
 
-        // 찬송가 줄: 찬NNN 또는 찬NN 형식
+        // 통일찬송가 줄: 통NNN 또는 통NN 형식
+        const tongilMatch = trimmed.match(/^통(\d+)[\.\s]*(.*)/);
+        if (tongilMatch) {
+            const formattedNum = String(tongilMatch[1]).padStart(3, '0');
+            let titlePart = tongilMatch[2].trim();
+            if (typeof tongilArray !== 'undefined' && tongilArray.length > 0) {
+                const found = tongilArray.find(s => s.startsWith(formattedNum + ' '));
+                if (found) titlePart = found.substring(formattedNum.length + 1).trim();
+            }
+            return `통${formattedNum} ${titlePart}`;
+        }
+
+        // 새찬송가 줄: 찬NNN 또는 찬NN 형식
         const hymnMatch = trimmed.match(/^찬(\d+)[\.\s]*(.*)/);
         if (hymnMatch) {
             const formattedNum = String(hymnMatch[1]).padStart(3, '0');
@@ -115,8 +127,8 @@ function normalizeContiText(rawText) {
     return allLines.join('\n');
 }
 // ─── 버전 관리 ────────────────────────────────────────────────────────────
-const APP_VERSION = "v1.10.0";
-const BUILD_DATE  = "2026.04.09";
+const APP_VERSION = "v1.11.0";
+const BUILD_DATE  = "2026.04.11";
 
 function initVersionDisplay() {
     // 모든 .app-version-badge를 APP_VERSION으로 동적 갱신 (#82)
@@ -144,10 +156,12 @@ function addDivider() {
 
 async function prefetchImage(num) {
     if (!num || _prefetchedSet.has(num)) return;
-    const isHymn   = String(num).startsWith('찬');
-    const rawNum   = isHymn ? String(num).slice(1) : String(num);
+    const s        = String(num);
+    const isHymn   = s.startsWith('찬');
+    const isTongil = s.startsWith('통');
+    const rawNum   = (isHymn || isTongil) ? s.slice(1) : s;
     const numPadded = rawNum.padStart(3, '0');
-    const basePath  = isHymn ? 'images/hymn/' : 'images/';
+    const basePath  = isHymn ? 'images/hymn/' : isTongil ? 'images/tongil/' : 'images/';
     _prefetchedSet.add(num);
 
     for (const ext of EXTENSIONS) {

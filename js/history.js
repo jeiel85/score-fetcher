@@ -84,7 +84,7 @@ async function saveConti() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, text: normalizedText, date: dateStr, timestamp: Date.now() })
             });
-            writeNotification('admin_conti', `콘티 수정: ${title}`, normalizedText.split('\n').filter(l => /^(찬\d+|\d+)/.test(l.trim())).slice(0, 4).join(' · '), { conti_key: _loadedContiKey });
+            writeNotification('admin_conti', `콘티 수정: ${title}`, normalizedText.split('\n').filter(l => /^(찬\d+|통\d+|\d+)/.test(l.trim())).slice(0, 4).join(' · '), { conti_key: _loadedContiKey });
             showToast('✅ 콘티가 수정되었습니다!');
             _setLoadedConti(_loadedContiKey, title); // 제목이 바뀌었을 수 있으니 갱신
             return;

@@ -27,7 +27,7 @@ async function generateContiCanvas() {
         const t = l.trim();
         if (t === '') return 'empty';
         if (/^\|/.test(t) || /\|$/.test(t)) return 'header';
-        if (/^\d+/.test(t)) return 'song';
+        if (/^\d+/.test(t) || /^찬\d+/.test(t) || /^통\d+/.test(t)) return 'song';
         if (/^-/.test(t)) return 'comment';
         return 'text';
     };
@@ -115,7 +115,7 @@ async function generateContiCanvas() {
             y += h; return;
         }
         if (type === 'song') {
-            const m = t.match(/^(\d+)\s*(.*)/);
+            const m = t.match(/^(찬\d+|통\d+|\d+)\s*(.*)/);
             const num = m[1], songTitle = m[2];
             ctx.font = `bold ${BODY_SZ}px sans-serif`;
             ctx.fillStyle = AC;

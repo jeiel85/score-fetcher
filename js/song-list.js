@@ -5,7 +5,7 @@ let _songFreqData = {};  // { '001': 5, '276': 3, ... } 이력 집계 결과
 let _sortMode = 'num';  // 'num' | 'freq-desc' | 'freq-asc'
 
 // ─── 탭 상태 ─────────────────────────────────────────────────────────────────
-let _activeTab = 'ccm';  // 'ccm' | 'hymn'
+let _activeTab = 'ccm';  // 'ccm' | 'hymn' | 'tongil'
 
 // ─── 즐겨찾기 ─────────────────────────────────────────────────────────────────
 let _favorites = new Set(JSON.parse(localStorage.getItem('songFavorites') || '[]'));
@@ -578,16 +578,20 @@ function switchTab(tab) {
     if (tab === 'ccm') {
         renderSongList(songArray);
         _loadFreqFromFirebase();
-    } else {
+    } else if (tab === 'hymn') {
         initHymnList();
+    } else {
+        initTongilList();
     }
 }
 
 function _applyTabUI() {
-    const tabCcm  = document.getElementById('tab-ccm');
-    const tabHymn = document.getElementById('tab-hymn');
-    if (tabCcm)  tabCcm.classList.toggle('tab-active',  _activeTab === 'ccm');
-    if (tabHymn) tabHymn.classList.toggle('tab-active', _activeTab === 'hymn');
+    const tabCcm    = document.getElementById('tab-ccm');
+    const tabHymn   = document.getElementById('tab-hymn');
+    const tabTongil = document.getElementById('tab-tongil');
+    if (tabCcm)    tabCcm.classList.toggle('tab-active',    _activeTab === 'ccm');
+    if (tabHymn)   tabHymn.classList.toggle('tab-active',   _activeTab === 'hymn');
+    if (tabTongil) tabTongil.classList.toggle('tab-active', _activeTab === 'tongil');
 
     // CCM 전용 툴바(정렬/즐겨찾기) 탭에 따라 표시/숨김
     const ccmToolbar = document.getElementById('ccm-toolbar');
@@ -635,6 +639,7 @@ async function initHymnList() {
 }
 
 function filterHymns() {
+    if (_activeTab === 'tongil') { filterTongil(); return; }
     if (_activeTab !== 'hymn') { filterSongs(); return; }
     const kw = document.getElementById('searchInput').value.toLowerCase().trim();
     renderHymnList(kw ? hymnArray.filter(s => s.toLowerCase().includes(kw)) : hymnArray);
@@ -734,5 +739,144 @@ function showHymnLyrics(numPadded, title) {
     document.getElementById('lyrics-content').textContent = lyricsText || '가사 데이터가 없습니다.';
     const reportBtn = document.getElementById('btn-report-lyrics');
     if (reportBtn) { reportBtn.disabled = false; reportBtn.textContent = '🛠️ 가사 오류 신고'; }
+    document.getElementById('lyricsModal').style.display = 'flex';
+}
+
+// ─── 통일찬송가 목록 ──────────────────────────────────────────────────────────
+
+let _tongilLoaded = false;
+let _tongilLyrics = {};  // { '001': '가사 전문', ... }
+
+async function _loadTongilLyrics() {
+    if (Object.keys(_tongilLyrics).length > 0) return;
+    try {
+        const res = await fetch('tongil_lyrics.json');
+        if (!res.ok) throw new Error('fetch failed');
+        _tongilLyrics = await res.json();
+    } catch(e) {
+        console.warn('통일찬송가 가사 로드 실패:', e);
+    }
+}
+
+async function initTongilList() {
+    const container = document.getElementById('songListContainer');
+    if (tongilArray.length === 0) {
+        container.innerHTML = "<li class='song-item' style='text-align:center;'>통일찬송가 목록 로딩 중... ⏳</li>";
+        try {
+            const [listRes] = await Promise.all([
+                fetch('tongil_list.json'),
+                _loadTongilLyrics()
+            ]);
+            if (!listRes.ok) throw new Error('fetch failed');
+            const data = await listRes.json();
+            tongilArray = data.songs.map(s => `${s.number} ${s.title}`);
+            _tongilLoaded = true;
+        } catch(e) {
+            container.innerHTML = "<li class='song-item' style='color:#fca5a5;text-align:center;'>⚠️ 통일찬송가 목록을 불러올 수 없습니다</li>";
+            return;
+        }
+    } else {
+        _loadTongilLyrics();
+    }
+    const kw = document.getElementById('searchInput').value.trim();
+    renderTongilList(kw ? tongilArray.filter(s => s.toLowerCase().includes(kw.toLowerCase())) : tongilArray);
+}
+
+function filterTongil() {
+    if (_activeTab !== 'tongil') { filterSongs(); return; }
+    const kw = document.getElementById('searchInput').value.toLowerCase().trim();
+    renderTongilList(kw ? tongilArray.filter(s => s.toLowerCase().includes(kw)) : tongilArray);
+}
+
+function renderTongilList(list) {
+    if (!list) return;
+    const container = document.getElementById('songListContainer');
+    container.innerHTML = '';
+    const nav = document.getElementById('quickIndexNav');
+    if (nav) { nav.style.display = 'none'; nav.innerHTML = ''; }
+    container.classList.remove('has-quick-nav');
+
+    const addedNums = new Set();
+    (document.getElementById('song-input')?.value || '').split('\n').forEach(line => {
+        const m = line.trim().match(/^통(\d+)/);
+        if (m) addedNums.add(m[1].padStart(3, '0'));
+    });
+
+    list.forEach(song => {
+        const match = song.match(/^(\d+)(.*)/);
+        if (!match) return;
+        const numPadded = match[1].padStart(3, '0');
+        const title     = match[2].trim();
+        const isAdded   = addedNums.has(numPadded);
+
+        const li = document.createElement('li');
+        li.className = 'song-item hymn-item' + (isAdded ? ' song-already-added' : '');
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'song-item-text';
+        textSpan.innerHTML = `<strong>통${match[1]}</strong> ${title}`;
+        textSpan.onclick = () => addTongilToInput(numPadded, title);
+        li.appendChild(textSpan);
+
+        if (isAdded) {
+            const badge = document.createElement('span');
+            badge.className = 'added-badge';
+            badge.textContent = '✓ 추가됨';
+            li.appendChild(badge);
+        }
+
+        if (_tongilLyrics[numPadded]) {
+            const lyricsBtn = document.createElement('button');
+            lyricsBtn.className = 'btn-lyrics';
+            lyricsBtn.textContent = '가사';
+            lyricsBtn.onclick = (e) => {
+                e.stopPropagation();
+                showTongilLyrics(numPadded, title);
+            };
+            li.appendChild(lyricsBtn);
+        }
+
+        const scoreBtn = document.createElement('button');
+        scoreBtn.className = 'btn-score';
+        scoreBtn.textContent = '악보';
+        scoreBtn.dataset.numPadded = `통${numPadded}`;
+        scoreBtn.dataset.title = title;
+        scoreBtn.onclick = (e) => {
+            e.stopPropagation();
+            const allItems = Array.from(document.querySelectorAll('#songListContainer .btn-score[data-num-padded^="통"]'))
+                .map(btn => ({ numPadded: btn.dataset.numPadded, title: btn.dataset.title }));
+            const listIdx = allItems.findIndex(item => item.numPadded === `통${numPadded}`);
+            closeSongModal();
+            openScorePreview(`통${numPadded}`, `통${numPadded} ${title}`, allItems, listIdx >= 0 ? listIdx : 0);
+        };
+        li.appendChild(scoreBtn);
+
+        container.appendChild(li);
+    });
+
+    if (list.length === 0) {
+        container.innerHTML = "<li class='song-item' style='text-align:center;color:var(--on-surface-variant)'>검색 결과가 없습니다</li>";
+    }
+}
+
+function addTongilToInput(numPadded, title) {
+    const textarea = document.getElementById('song-input');
+    let currentText = textarea.value;
+    if (currentText.includes('아래 예시처럼 붙여넣어 주세요')) currentText = '';
+    else if (currentText.length > 0 && !currentText.endsWith('\n')) currentText += '\n';
+    textarea.value = currentText + `통${numPadded} ${title}`;
+    showToast('✅ 추가됨 — 계속 선택하거나 ✕를 눌러 닫아주세요', 1800);
+}
+
+function showTongilLyrics(numPadded, title) {
+    _lastLyricsNum = `통${numPadded}`;
+    const lyricsText = _tongilLyrics[numPadded] || null;
+    document.getElementById('lyrics-title').textContent = `🎵 통${numPadded} ${title}`;
+    const tagsEl = document.getElementById('lyrics-tags');
+    tagsEl.style.display = 'none';
+    tagsEl.innerHTML = '';
+    document.getElementById('lyrics-content').textContent = lyricsText || '가사 데이터가 없습니다.';
+    const reportBtn = document.getElementById('btn-report-lyrics');
+    if (reportBtn) { reportBtn.disabled = true; reportBtn.textContent = '가사 신고 불가'; }
     document.getElementById('lyricsModal').style.display = 'flex';
 }

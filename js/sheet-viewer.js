@@ -1,16 +1,19 @@
 // ─── 악보 찾기 & 뷰어 ────────────────────────────────────────────────────────
 
 function tryLoadImage(imgElement, songNum, extIndex, onDone) {
-    const isHymn  = String(songNum).startsWith('찬');
-    const num      = isHymn ? String(songNum).slice(1) : String(songNum);
-    const basePath = isHymn ? 'images/hymn/' : 'images/';
+    const s = String(songNum);
+    const isHymn   = s.startsWith('찬');
+    const isTongil = s.startsWith('통');
+    const num      = (isHymn || isTongil) ? s.slice(1) : s;
+    const basePath = isHymn ? 'images/hymn/' : isTongil ? 'images/tongil/' : 'images/';
+    const label    = isHymn ? '새찬송가 ' : isTongil ? '통일찬송가 ' : '';
 
     if (extIndex >= EXTENSIONS.length) {
         imgElement.style.display = 'none';
         if (!imgElement.parentElement.querySelector('.error-msg')) {
             const errP = document.createElement('p');
             errP.className = 'error-msg';
-            errP.textContent = `⚠️ 악보 미등록 (${isHymn ? '찬송가 ' : ''}${num}번)`;
+            errP.textContent = `⚠️ 악보 미등록 (${label}${num}번)`;
             imgElement.parentElement.appendChild(errP);
         }
         onDone(null);
@@ -36,7 +39,7 @@ async function startSearch() {
     const allLines = normalized.split('\n');
 
 
-    const songLines = allLines.filter(l => /^\d+/.test(l) || /^찬\d+/.test(l));
+    const songLines = allLines.filter(l => /^\d+/.test(l) || /^찬\d+/.test(l) || /^통\d+/.test(l));
     if (songLines.length === 0) return alert('곡 리스트를 입력해주세요!');
 
     sheetList = new Array(allLines.length).fill(null);
@@ -46,16 +49,18 @@ async function startSearch() {
     resultContainer.innerHTML = '';
     let songCounter = 0;
     allLines.forEach((line, index) => {
-        const hymnMatch = line.match(/^찬(\d+)(.*)/);
-        const ccmMatch  = !hymnMatch && line.match(/^(\d+)(.*)/);
-        const match     = hymnMatch || ccmMatch;
+        const tongilMatch = line.match(/^통(\d+)(.*)/);
+        const hymnMatch   = !tongilMatch && line.match(/^찬(\d+)(.*)/);
+        const ccmMatch    = !tongilMatch && !hymnMatch && line.match(/^(\d+)(.*)/);
+        const match       = tongilMatch || hymnMatch || ccmMatch;
         if (!match) return;
         songCounter++;
+        const isTongil  = !!tongilMatch;
         const isHymn    = !!hymnMatch;
         const numPadded = match[1].padStart(3, '0');
         const songTitle = match[2].trim();
-        const label     = isHymn ? `찬${numPadded} ${songTitle}` : `${numPadded} ${songTitle}`;
-        const imgKey    = isHymn ? `찬${numPadded}` : numPadded;
+        const label     = isTongil ? `통${numPadded} ${songTitle}` : isHymn ? `찬${numPadded} ${songTitle}` : `${numPadded} ${songTitle}`;
+        const imgKey    = isTongil ? `통${numPadded}` : isHymn ? `찬${numPadded}` : numPadded;
 
         const card = document.createElement('div');
         card.className = 'sheet-music-card';
@@ -63,7 +68,7 @@ async function startSearch() {
         card.dataset.originalLine = line;
         card.innerHTML = `<div class="sheet-title"><span class="drag-handle" title="길게 눌러 순서 변경">⠿</span>${label}</div>`;
         const imgTag = document.createElement('img');
-        imgTag.alt = `${isHymn ? '찬송가 ' : ''}${numPadded} 악보 찾는 중...`;
+        imgTag.alt = `${isTongil ? '통일찬송가 ' : isHymn ? '새찬송가 ' : ''}${numPadded} 악보 찾는 중...`;
         card.appendChild(imgTag);
         resultContainer.appendChild(card);
         tryLoadImage(imgTag, imgKey, 0, (finalSrc) => {
@@ -350,9 +355,10 @@ function _showScorePreviewAt(idx, numPadded, displayTitle, slideDir) {
         });
     }
 
-    const _isHymnPreview  = String(numPadded).startsWith('찬');
-    const _previewNum     = _isHymnPreview ? String(numPadded).slice(1) : String(numPadded);
-    const _previewBase    = _isHymnPreview ? 'images/hymn/' : 'images/';
+    const _isHymnPreview   = String(numPadded).startsWith('찬');
+    const _isTongilPreview = String(numPadded).startsWith('통');
+    const _previewNum      = (_isHymnPreview || _isTongilPreview) ? String(numPadded).slice(1) : String(numPadded);
+    const _previewBase     = _isHymnPreview ? 'images/hymn/' : _isTongilPreview ? 'images/tongil/' : 'images/';
     let extIdx = 0;
     function tryNext() {
         if (extIdx >= EXTENSIONS.length) { showToast('악보 이미지를 찾을 수 없습니다'); return; }

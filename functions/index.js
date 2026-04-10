@@ -31,7 +31,7 @@ exports.notifyNewConti = onValueCreated(
         }
         const songLines = rawText.split('\n')
             .map(l => l.trim())
-            .filter(l => /^(찬\d+|\d+)/.test(l))
+            .filter(l => /^(찬\d+|통\d+|\d+)/.test(l))
             .slice(0, 4);
         const songSummary = songLines.length > 0
             ? songLines.join(' · ')
