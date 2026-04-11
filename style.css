@@ -838,7 +838,7 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     .btn-save, .btn-share { padding: 16px 8px; font-size: 16px; }
 
     .song-item { font-size: 15px; padding: 13px 16px; }
-    .btn-lyrics { font-size: 13px; padding: 6px 14px; }
+    .btn-lyrics, .btn-score { font-size: 13px; padding: 6px 14px; }
     .field-label { font-size: 12px; }
 
     .fullscreen-nav { font-size: 48px; padding: 20px 0; }
@@ -861,7 +861,7 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
 
     /* 모달 */
     .song-item { font-size: 15px; padding: 13px 16px; }
-    .btn-lyrics { font-size: 13px; padding: 6px 14px; }
+    .btn-lyrics, .btn-score { font-size: 13px; padding: 6px 14px; }
 }
 
 /* ─── 모바일 가로 모드 전체화면 뷰어 버튼 축소 (#67) ─── */
