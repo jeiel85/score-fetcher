@@ -5,7 +5,7 @@
 
 [![배포](https://img.shields.io/badge/배포-score--fetcher.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
 [![관리자](https://img.shields.io/badge/관리자-admin.html-indigo?style=flat-square&logo=google-cloud&logoColor=white)](https://score-fetcher.vercel.app/admin.html)
-![Version](https://img.shields.io/badge/version-v1.11.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-v1.11.1-blue?style=flat-square)
 ![Build](https://img.shields.io/badge/build-2026.04.11-indigo?style=flat-square)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)

@@ -66,7 +66,13 @@ async function startSearch() {
         card.className = 'sheet-music-card';
         card.dataset.lineIndex = String(index);
         card.dataset.originalLine = line;
-        card.innerHTML = `<div class="sheet-title"><span class="drag-handle" title="길게 눌러 순서 변경">⠿</span>${label}</div>`;
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'card-remove-btn';
+        removeBtn.title = '콘티에서 제거';
+        removeBtn.textContent = '✕';
+        removeBtn.onclick = (e) => { e.stopPropagation(); removeCard(card); };
+        card.innerHTML = `<div class="sheet-title"><span class="drag-handle" title="길게 눌러 순서 변경">⠿</span><span class="sheet-title-text">${label}</span></div>`;
+        card.querySelector('.sheet-title').appendChild(removeBtn);
         const imgTag = document.createElement('img');
         imgTag.alt = `${isTongil ? '통일찬송가 ' : isHymn ? '새찬송가 ' : ''}${numPadded} 악보 찾는 중...`;
         card.appendChild(imgTag);
@@ -97,6 +103,40 @@ function activateLsView() {
     if (resumeIdx >= 0) showLsSheet(resumeIdx);
 }
 
+// ─── 카드 제거 (#122) ──────────────────────────────────────────────────────────
+
+function removeCard(card) {
+    const container = document.getElementById('result-container');
+    const textarea = document.getElementById('song-input');
+    const lineIndex = parseInt(card.dataset.lineIndex);
+
+    // textarea에서 해당 라인 제거
+    const lines = textarea.value.split('\n');
+    lines.splice(lineIndex, 1);
+    textarea.value = lines.join('\n');
+
+    // sheetList에서 해당 슬롯 제거
+    sheetList.splice(lineIndex, 1);
+
+    // 카드 DOM 제거
+    card.remove();
+
+    // 남은 카드들의 dataset.lineIndex 재인덱싱
+    const remaining = Array.from(container.querySelectorAll('.sheet-music-card'));
+    remaining.forEach(c => {
+        const idx = parseInt(c.dataset.lineIndex);
+        if (idx > lineIndex) {
+            c.dataset.lineIndex = String(idx - 1);
+            // onclick 재연결
+            const newIdx = idx - 1;
+            c.onclick = null;
+            if (sheetList[newIdx]) c.onclick = () => openFullscreen(newIdx);
+        }
+    });
+
+    showToast('✅ 콘티에서 제거됨', 1400);
+}
+
 // ─── 카드 드래그 앤 드롭 (세로 모드) ──────────────────────────────────────────
 
 function syncAfterDrag(container) {
@@ -105,7 +145,7 @@ function syncAfterDrag(container) {
 
     // 원래 textarea에서 곡번호 줄의 위치(슬롯) 수집 (CCM + 찬송가 모두)
     const songSlots = allLines.reduce((acc, l, i) => {
-        if (/^\d+/.test(l.trim()) || /^찬\d+/.test(l.trim())) acc.push(i);
+        if (/^\d+/.test(l.trim()) || /^찬\d+/.test(l.trim()) || /^통\d+/.test(l.trim())) acc.push(i);
         return acc;
     }, []);
 
@@ -322,10 +362,10 @@ function closeFullscreen() {
     setTimeout(() => {
         viewer.style.display = 'none';
         viewer.style.transition = '';
-        // 찬양 목록 악보 미리보기에서 열린 경우 → 모달 복귀 (#110)
+        // 찬양 목록 악보 미리보기에서 열린 경우 → 모달 복귀 (#110, #121)
         if (_scorePreviewFromModal) {
             _scorePreviewFromModal = false;
-            openSongModal();
+            _reopenSongModal();
         }
     }, 150);
 }

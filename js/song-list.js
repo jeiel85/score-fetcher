@@ -6,6 +6,7 @@ let _sortMode = 'num';  // 'num' | 'freq-desc' | 'freq-asc'
 
 // ─── 탭 상태 ─────────────────────────────────────────────────────────────────
 let _activeTab = 'ccm';  // 'ccm' | 'hymn' | 'tongil'
+let _hymnSortMode = 'num';  // 'num' | 'alpha' — 새찬송가/통일찬송가 정렬
 
 // ─── 즐겨찾기 ─────────────────────────────────────────────────────────────────
 let _favorites = new Set(JSON.parse(localStorage.getItem('songFavorites') || '[]'));
@@ -153,6 +154,11 @@ async function openSongModal() {
         return;
     }
 
+    if (_activeTab === 'tongil') {
+        await initTongilList();
+        return;
+    }
+
     if (songArray.length === 0) {
         await initSongList();
     } else {
@@ -260,7 +266,17 @@ async function handleLyricReport() {
 }
 
 
-function closeLyricsModal() { document.getElementById('lyricsModal').style.display = 'none'; }
+function closeLyricsModal() {
+    document.getElementById('lyricsModal').style.display = 'none';
+    // 통일찬송가 가사 모달에서 숨긴 신고 버튼 복원
+    const reportBtn = document.getElementById('btn-report-lyrics');
+    if (reportBtn) reportBtn.style.display = '';
+}
+
+// 악보 미리보기 닫기 후 모달 복귀 — 검색/스크롤 상태 유지 (#121)
+function _reopenSongModal() {
+    document.getElementById('songModal').style.display = 'flex';
+}
 
 function _applySortMode(list) {
     if (_sortMode === 'freq-desc') {
@@ -593,9 +609,36 @@ function _applyTabUI() {
     if (tabHymn)   tabHymn.classList.toggle('tab-active',   _activeTab === 'hymn');
     if (tabTongil) tabTongil.classList.toggle('tab-active', _activeTab === 'tongil');
 
-    // CCM 전용 툴바(정렬/즐겨찾기) 탭에 따라 표시/숨김
-    const ccmToolbar = document.getElementById('ccm-toolbar');
-    if (ccmToolbar) ccmToolbar.style.display = _activeTab === 'ccm' ? '' : 'none';
+    // 탭별 툴바 표시/숨김
+    const ccmToolbar  = document.getElementById('ccm-toolbar');
+    const hymnToolbar = document.getElementById('hymn-toolbar');
+    if (ccmToolbar)  ccmToolbar.style.display  = _activeTab === 'ccm' ? 'flex' : 'none';
+    if (hymnToolbar) hymnToolbar.style.display = (_activeTab === 'hymn' || _activeTab === 'tongil') ? 'flex' : 'none';
+}
+
+function cycleHymnSortMode() {
+    _hymnSortMode = _hymnSortMode === 'num' ? 'alpha' : 'num';
+    const btn = document.getElementById('btn-hymn-sort');
+    if (btn) btn.textContent = _hymnSortMode === 'num' ? '🔢 번호순' : '가나다순';
+    const kw = document.getElementById('searchInput').value.toLowerCase().trim();
+    if (_activeTab === 'hymn') {
+        const filtered = kw ? hymnArray.filter(s => s.toLowerCase().includes(kw)) : hymnArray;
+        renderHymnList(filtered);
+    } else {
+        const filtered = kw ? tongilArray.filter(s => s.toLowerCase().includes(kw)) : tongilArray;
+        renderTongilList(filtered);
+    }
+}
+
+function _applySortHymn(list) {
+    if (_hymnSortMode === 'alpha') {
+        return [...list].sort((a, b) => {
+            const titleA = a.replace(/^\d+\s*/, '');
+            const titleB = b.replace(/^\d+\s*/, '');
+            return titleA.localeCompare(titleB, 'ko');
+        });
+    }
+    return list;
 }
 
 // ─── 새찬송가 목록 ────────────────────────────────────────────────────────────
@@ -647,6 +690,7 @@ function filterHymns() {
 
 function renderHymnList(list) {
     if (!list) return;
+    list = _applySortHymn(list);
     const container = document.getElementById('songListContainer');
     container.innerHTML = '';
     // CCM 퀵 인덱스 nav 숨김 (찬송가 탭에서는 불필요)
@@ -790,6 +834,7 @@ function filterTongil() {
 
 function renderTongilList(list) {
     if (!list) return;
+    list = _applySortHymn(list);
     const container = document.getElementById('songListContainer');
     container.innerHTML = '';
     const nav = document.getElementById('quickIndexNav');
@@ -877,6 +922,6 @@ function showTongilLyrics(numPadded, title) {
     tagsEl.innerHTML = '';
     document.getElementById('lyrics-content').textContent = lyricsText || '가사 데이터가 없습니다.';
     const reportBtn = document.getElementById('btn-report-lyrics');
-    if (reportBtn) { reportBtn.disabled = true; reportBtn.textContent = '가사 신고 불가'; }
+    if (reportBtn) reportBtn.style.display = 'none';
     document.getElementById('lyricsModal').style.display = 'flex';
 }
