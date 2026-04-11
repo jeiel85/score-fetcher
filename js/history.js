@@ -123,7 +123,8 @@ async function saveConti() {
         }
     } catch(e) { /* 중복 체크 실패 시 그냥 저장 진행 */ }
 
-    await saveToHistory();
+    const savedKey = await saveToHistory();
+    if (savedKey) _setLoadedConti(savedKey, title); // #127: 저장 후 key 추적 → 공유 시 중복 저장 방지
     showToast('✅ 콘티가 저장되었습니다!'); // #78
 }
 

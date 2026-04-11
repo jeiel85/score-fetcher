@@ -263,13 +263,19 @@ v[MAJOR].[MINOR].[PATCH]
 
 | 항목 | 상태 |
 |------|------|
-| main 브랜치 | ✅ 최신 (v1.11.3) |
+| main 브랜치 | ✅ 최신 (v1.11.4) |
 | `origin/main` 동기화 | ✅ 완료 |
-| 최신 커밋 | `fix: GitHub/버전/관리자 링크 → 설정 모달 이동 + 가로 모드 높이 맞춤` |
+| 최신 커밋 | `fix: v1.11.4 — 악보 카드 가로 오버플로우 수정 + 저장 후 공유 시 중복 저장 방지` |
 | 서비스 주소 | [score-fetcher.vercel.app](https://score-fetcher.vercel.app/) |
 | 오픈 이슈 | 없음 |
 
 ---
+
+## 변경 이력 (2026-04-11) — v1.11.4
+| 커밋 | 이슈 | 내용 |
+|------|------|------|
+| (pending) | #126 | 악보 카드 그리드 가로 오버플로우 수정 — .sheet-music-card min-width:0, #result-container overflow-x:hidden |
+| (pending) | #127 | 저장 후 공유 시 콘티 중복 저장 방지 — saveConti() 후 _loadedContiKey 등록, shareConti() 기존 key 재사용 |
 
 ## 변경 이력 (2026-04-11) — v1.11.3
 | 커밋 | 이슈 | 내용 |

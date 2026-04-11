@@ -262,6 +262,7 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
+    overflow-x: hidden;
 }
 @media (max-width: 479px) {
     #result-container { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -272,6 +273,7 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
     box-shadow: 0 4px 20px var(--shadow);
     outline: 1px solid rgba(199, 197, 206, 0.15);
     cursor: pointer; transition: box-shadow 0.2s;
+    min-width: 0;
 }
 .sheet-music-card:active { box-shadow: 0 8px 28px rgba(24,29,58,0.15); }
 .sheet-music-card img { width: 100%; height: auto; border-radius: 8px; min-height: 100px; background: var(--surface-low); }

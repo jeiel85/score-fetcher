@@ -158,9 +158,13 @@ async function shareConti() {
         _shareTitle  = title;
         _shareDeepUrl = null;
 
-        // 딥링크 미리 생성 (Firebase 저장) → 미리보기 중에 칩으로 표시
+        // 딥링크 미리 생성 → 이미 저장된 콘티면 재저장 없이 key 재사용 (#127)
         try {
-            const key = await saveToHistory();
+            let key = (typeof _loadedContiKey !== 'undefined' && _loadedContiKey) ? _loadedContiKey : null;
+            if (!key) {
+                key = await saveToHistory();
+                if (key && typeof _setLoadedConti === 'function') _setLoadedConti(key, title);
+            }
             if (key) {
                 _shareDeepUrl = `${location.origin}/?conti=${key}`;
                 const chip = document.getElementById('shareDeeplinkChip');
