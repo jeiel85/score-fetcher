@@ -133,6 +133,7 @@ main { flex: 1; overflow-y: auto; padding: clamp(8px, 3vw, 14px); padding-bottom
     border-radius: var(--r-xl); padding: clamp(12px, 3.5vw, 16px) clamp(12px, 4vw, 18px);
     outline: 1px solid rgba(199, 197, 206, 0.2);
     box-shadow: 0 4px 20px var(--shadow);
+    flex: 1; display: flex; flex-direction: column;
 }
 
 /* ─── Field Label ─── */
@@ -160,7 +161,7 @@ main { flex: 1; overflow-y: auto; padding: clamp(8px, 3vw, 14px); padding-bottom
 
 /* ─── Textarea ─── */
 textarea {
-    width: 100%; height: 100px;
+    width: 100%; flex: 1; height: auto; min-height: 80px;
     border: none; border-bottom: 2px solid var(--outline-variant);
     border-radius: 0; outline: none;
     padding: 7px 0;
@@ -656,11 +657,11 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
 }
 
 /* ─── App Layout (세로/가로 공통) ─── */
-.app-layout { display: flex; flex-direction: column; gap: 10px; }
+.app-layout { display: flex; flex-direction: column; gap: 10px; min-height: 100%; }
 /* 세로 모드: 상단버튼(right) 위, 입력(left) 중간, 하단버튼(bottom) 아래 */
-.panel-right  { order: 1; }
-.panel-left   { order: 2; }
-.panel-bottom { order: 3; }
+.panel-right  { order: 1; flex-shrink: 0; }
+.panel-left   { order: 2; flex: 1; display: flex; flex-direction: column; }
+.panel-bottom { order: 3; flex-shrink: 0; }
 
 .controls-card {
     background: var(--surface-low);
@@ -734,6 +735,7 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     .app-layout {
         display: grid;
         flex: 1; /* main(flex col)을 꽉 채워 높이를 고정 */
+        min-height: auto; /* 세로모드 min-height: 100% 리셋 */
         grid-template-columns: 4fr 3fr;
         grid-template-rows: auto 1fr; /* row2(panel-bottom)가 남은 높이 채움 */
         gap: 10px;
@@ -770,9 +772,9 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     /* panel-left 스크롤: min-height:0 필수 (grid child) */
     .panel-left { min-height: 0; }
 
-    /* 입력 카드 가로 모드 */
-    .panel-left .input-card { margin-bottom: 0; flex-shrink: 0; }
-    .panel-left .input-card textarea { height: clamp(80px, 20vh, 180px); min-height: 80px; }
+    /* 입력 카드 가로 모드 — 세로모드 flex: 1 리셋 */
+    .panel-left .input-card { margin-bottom: 0; flex: none; }
+    .panel-left .input-card textarea { flex: none; height: clamp(80px, 20vh, 180px); min-height: 80px; }
 
     /* ── ls-active: 악보 만들기 후 분할 뷰어 ── */
     .app-layout.ls-active {
