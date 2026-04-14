@@ -322,10 +322,14 @@ function openFullscreen(index) {
     if (window._resetFullscreenZoom) window._resetFullscreenZoom();
     updateFullscreenTitle(index);
     const viewer = document.getElementById('fullscreenViewer');
-    viewer.style.opacity = '0';
-    viewer.style.display = 'flex';
-    viewer.style.transition = 'opacity 0.2s ease';
-    requestAnimationFrame(() => { viewer.style.opacity = '1'; });
+    if (_realtimeSwipeDone) {
+        viewer.style.display = 'flex';
+    } else {
+        viewer.style.opacity = '0';
+        viewer.style.display = 'flex';
+        viewer.style.transition = 'opacity 0.2s ease';
+        requestAnimationFrame(() => { viewer.style.opacity = '1'; });
+    }
     updateNavBtns();
     showFsUI();
 }
@@ -574,8 +578,8 @@ function closeLandscapeView() {
                     imgEl.style.transition = 'none';
                     const nextImg = document.getElementById('fullscreen-img-next');
                     if (!nextSheet) {
-                        // 첫/마지막 페이지: 감쇠 효과 (20%)
-                        imgEl.style.transform = `translate(${deltaX * 0.2}px, 0) scale(1)`;
+                        // 첫/마지막 페이지: 이동 없음
+                        imgEl.style.transform = 'translate(0, 0) scale(1)';
                         if (nextImg) { nextImg.style.opacity = 0; nextImg.style.transform = 'translateX(200%)'; }
                     } else {
                         imgEl.style.transform = `translate(${deltaX}px, 0) scale(1)`;
@@ -609,6 +613,7 @@ function closeLandscapeView() {
                     nextImg.style.transform = 'translate(0, 0)';
                 }
                 setTimeout(() => {
+                    imgEl.style.transition = 'none';
                     _realtimeSwipeDone = true;
                     navigateSheet(dir);
                     _realtimeSwipeDone = false;
@@ -712,8 +717,8 @@ function closeLandscapeView() {
                     imgEl.style.transition = 'none';
                     const lsNextImg = document.getElementById('ls-sheet-img-next');
                     if (!nextSheet) {
-                        // 첫/마지막 페이지: 감쇠 효과 (20%)
-                        imgEl.style.transform = `translate(${deltaX * 0.2}px, 0) scale(1)`;
+                        // 첫/마지막 페이지: 이동 없음
+                        imgEl.style.transform = 'translate(0, 0) scale(1)';
                         if (lsNextImg) { lsNextImg.style.opacity = 0; lsNextImg.style.transform = 'translateX(200%)'; }
                     } else {
                         imgEl.style.transform = `translate(${deltaX}px, 0) scale(1)`;
@@ -747,6 +752,7 @@ function closeLandscapeView() {
                     lsNextImg.style.transform = 'translate(0, 0)';
                 }
                 setTimeout(() => {
+                    imgEl.style.transition = 'none';
                     _realtimeLsSwipeDone = true;
                     navigateLandscapeSheet(lsDir);
                     _realtimeLsSwipeDone = false;
