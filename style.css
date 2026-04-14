@@ -314,7 +314,7 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
 .fullscreen-header .btn-close { font-size: 28px; background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; flex-shrink: 0; }
 .fullscreen-body {
     position: absolute; inset: 0; overflow: hidden; display: flex;
-    justify-content: center; align-items: center; position: relative;
+    justify-content: center; align-items: center;
 }
 .fullscreen-body img { width: 100%; height: 100%; object-fit: contain; display: block; transform-origin: center center; will-change: transform; }
 .fullscreen-footer {
@@ -697,7 +697,7 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
 .ls-back-btn:active { background: rgba(255,255,255,0.35); transform: scale(0.95); }
 .ls-sheet-body {
     position: absolute; inset: 0; overflow: hidden; display: flex;
-    align-items: center; justify-content: center; position: relative;
+    align-items: center; justify-content: center;
 }
 .ls-sheet-body img { width: 100%; height: 100%; object-fit: contain; display: block; transform-origin: center center; will-change: transform; }
 .ls-sheet-footer {
