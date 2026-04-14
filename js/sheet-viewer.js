@@ -298,6 +298,17 @@ function updateFullscreenTitle(index) {
     document.getElementById('fullscreen-title').textContent = `${sheet.label}  (${rank}/${total})`;
 }
 
+// 인접 악보 이미지 프리로드 (#145)
+function preloadAdjacentSheets(index) {
+    [-1, 1].forEach(d => {
+        let idx = index + d;
+        while (idx >= 0 && idx < sheetList.length && !sheetList[idx]) idx += d;
+        if (idx >= 0 && idx < sheetList.length && sheetList[idx] && sheetList[idx].src) {
+            new Image().src = sheetList[idx].src;
+        }
+    });
+}
+
 function openFullscreen(index) {
     currentSheetIndex = index;
     const sheet = sheetList[index];
@@ -332,6 +343,7 @@ function openFullscreen(index) {
     }
     updateNavBtns();
     showFsUI();
+    if (!_realtimeSwipeDone) preloadAdjacentSheets(index);
 }
 
 function navigateSheet(dir) {
@@ -343,10 +355,20 @@ function navigateSheet(dir) {
     let newIndex = currentSheetIndex + dir;
     while (newIndex >= 0 && newIndex < sheetList.length && !sheetList[newIndex]) newIndex += dir;
     if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;
-    // 리얼타임 스와이프 다음 이미지 리셋
     const nextImg = document.getElementById('fullscreen-img-next');
-    if (nextImg) { nextImg.style.opacity = 0; nextImg.style.transform = ''; nextImg.style.transition = ''; }
+    if (!_realtimeSwipeDone) {
+        // 일반 탐색: nextImg 즉시 리셋 + src 초기화 (#145)
+        if (nextImg) { nextImg.src = ''; nextImg.style.opacity = 0; nextImg.style.transform = ''; nextImg.style.transition = ''; }
+    }
     openFullscreen(newIndex);
+    if (_realtimeSwipeDone && nextImg) {
+        // 리얼타임 스와이프: imgEl 렌더 후 다음 프레임에서 nextImg 제거 (깜빡임 방지 #144)
+        requestAnimationFrame(() => {
+            nextImg.style.opacity = 0;
+            nextImg.style.transform = '';
+            nextImg.src = '';
+        });
+    }
     // 슬라이드 전환 애니메이션 (리얼타임 스와이프 완료 후에는 건너뜀)
     if (!_realtimeSwipeDone) {
         const body = document.getElementById('fullscreen-body');
@@ -473,16 +495,27 @@ function showLsSheet(index) {
         `${sheet.label}  (${visibleSheetRank(index)}/${visibleSheetCount()})`;
     updateLsNavBtns();
     showLsNav();
+    if (!_realtimeLsSwipeDone) preloadAdjacentSheets(index);
 }
 
 function navigateLandscapeSheet(dir) {
     let newIndex = currentSheetIndex + dir;
     while (newIndex >= 0 && newIndex < sheetList.length && !sheetList[newIndex]) newIndex += dir;
     if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;
-    // 리얼타임 스와이프 다음 이미지 리셋
     const lsNextImg = document.getElementById('ls-sheet-img-next');
-    if (lsNextImg) { lsNextImg.style.opacity = 0; lsNextImg.style.transform = ''; lsNextImg.style.transition = ''; }
+    if (!_realtimeLsSwipeDone) {
+        // 일반 탐색: lsNextImg 즉시 리셋 + src 초기화 (#145)
+        if (lsNextImg) { lsNextImg.src = ''; lsNextImg.style.opacity = 0; lsNextImg.style.transform = ''; lsNextImg.style.transition = ''; }
+    }
     showLsSheet(newIndex);
+    if (_realtimeLsSwipeDone && lsNextImg) {
+        // 리얼타임 스와이프: imgEl 렌더 후 다음 프레임에서 lsNextImg 제거 (깜빡임 방지 #144)
+        requestAnimationFrame(() => {
+            lsNextImg.style.opacity = 0;
+            lsNextImg.style.transform = '';
+            lsNextImg.src = '';
+        });
+    }
     if (!_realtimeLsSwipeDone) {
         const body = document.querySelector('.ls-sheet-body');
         if (body) {
@@ -584,12 +617,22 @@ function closeLandscapeView() {
                     } else {
                         imgEl.style.transform = `translate(${deltaX}px, 0) scale(1)`;
                         if (nextImg) {
-                            nextImg.src = nextSheet.src || '';
+                            const nextSrc = nextSheet.src || '';
+                            if (nextImg.dataset.swipeSrc !== nextSrc) {
+                                nextImg.dataset.swipeSrc = nextSrc;
+                                nextImg.src = nextSrc;
+                            }
                             const vw = viewer.clientWidth;
                             const neighborOffset = deltaX < 0 ? vw : -vw;
                             nextImg.style.transition = 'none';
-                            nextImg.style.opacity = 1;
                             nextImg.style.transform = `translate(${neighborOffset + deltaX}px, 0)`;
+                            // 로드 완료 시에만 표시, 미완료 시 onload 후 표시 (#145)
+                            if (nextImg.complete && nextImg.naturalWidth > 0) {
+                                nextImg.style.opacity = 1;
+                            } else {
+                                nextImg.style.opacity = 0;
+                                nextImg.onload = () => { nextImg.style.opacity = 1; };
+                            }
                         }
                     }
                 }
@@ -603,6 +646,15 @@ function closeLandscapeView() {
         if (scale <= 1 && e.changedTouches.length === 1) {
             if (isSwiping && Math.abs(swipeDeltaX) > 50) {
                 const dir = swipeDeltaX < 0 ? 1 : -1;
+                // 유효한 다음 시트 확인 (#143)
+                let chkIdx = currentSheetIndex + dir;
+                while (chkIdx >= 0 && chkIdx < sheetList.length && !sheetList[chkIdx]) chkIdx += dir;
+                const hasValidNext = chkIdx >= 0 && chkIdx < sheetList.length && !!sheetList[chkIdx];
+                if (!hasValidNext) {
+                    // 첫/마지막 페이지 무효 방향 — 스프링백
+                    imgEl.style.transition = 'transform 0.2s ease';
+                    imgEl.style.transform = 'scale(1) translate(0, 0)';
+                } else {
                 const vw = viewer.clientWidth;
                 const exitX = dir > 0 ? -vw : vw;
                 const nextImg = document.getElementById('fullscreen-img-next');
@@ -618,6 +670,7 @@ function closeLandscapeView() {
                     navigateSheet(dir);
                     _realtimeSwipeDone = false;
                 }, 180);
+                }
             } else if (isSwiping) {
                 imgEl.style.transition = 'transform 0.2s ease';
                 imgEl.style.transform = 'scale(1) translate(0, 0)';
@@ -630,6 +683,8 @@ function closeLandscapeView() {
                         nextImg.style.opacity = 0;
                         nextImg.style.transform = '';
                         nextImg.style.transition = '';
+                        nextImg.src = '';
+                        delete nextImg.dataset.swipeSrc;
                     }, 200);
                 }
             } else {
@@ -723,12 +778,22 @@ function closeLandscapeView() {
                     } else {
                         imgEl.style.transform = `translate(${deltaX}px, 0) scale(1)`;
                         if (lsNextImg) {
-                            lsNextImg.src = nextSheet.src || '';
+                            const lsNextSrc = nextSheet.src || '';
+                            if (lsNextImg.dataset.swipeSrc !== lsNextSrc) {
+                                lsNextImg.dataset.swipeSrc = lsNextSrc;
+                                lsNextImg.src = lsNextSrc;
+                            }
                             const lsVw = lsArea.clientWidth;
                             const lsNeighborOffset = deltaX < 0 ? lsVw : -lsVw;
                             lsNextImg.style.transition = 'none';
-                            lsNextImg.style.opacity = 1;
                             lsNextImg.style.transform = `translate(${lsNeighborOffset + deltaX}px, 0)`;
+                            // 로드 완료 시에만 표시, 미완료 시 onload 후 표시 (#145)
+                            if (lsNextImg.complete && lsNextImg.naturalWidth > 0) {
+                                lsNextImg.style.opacity = 1;
+                            } else {
+                                lsNextImg.style.opacity = 0;
+                                lsNextImg.onload = () => { lsNextImg.style.opacity = 1; };
+                            }
                         }
                     }
                 }
@@ -742,6 +807,15 @@ function closeLandscapeView() {
         if (scale <= 1 && e.changedTouches.length === 1) {
             if (isLSSwiping && Math.abs(lsSwipeDeltaX) > 50) {
                 const lsDir = lsSwipeDeltaX < 0 ? 1 : -1;
+                // 유효한 다음 시트 확인 (#143)
+                let lsChkIdx = currentSheetIndex + lsDir;
+                while (lsChkIdx >= 0 && lsChkIdx < sheetList.length && !sheetList[lsChkIdx]) lsChkIdx += lsDir;
+                const lsHasValidNext = lsChkIdx >= 0 && lsChkIdx < sheetList.length && !!sheetList[lsChkIdx];
+                if (!lsHasValidNext) {
+                    // 첫/마지막 페이지 무효 방향 — 스프링백
+                    imgEl.style.transition = 'transform 0.2s ease';
+                    imgEl.style.transform = 'scale(1) translate(0, 0)';
+                } else {
                 const lsVw = lsArea.clientWidth;
                 const lsExitX = lsDir > 0 ? -lsVw : lsVw;
                 const lsNextImg = document.getElementById('ls-sheet-img-next');
@@ -757,6 +831,7 @@ function closeLandscapeView() {
                     navigateLandscapeSheet(lsDir);
                     _realtimeLsSwipeDone = false;
                 }, 180);
+                }
             } else if (isLSSwiping) {
                 imgEl.style.transition = 'transform 0.2s ease';
                 imgEl.style.transform = 'scale(1) translate(0, 0)';
@@ -769,6 +844,8 @@ function closeLandscapeView() {
                         lsNextImg.style.opacity = 0;
                         lsNextImg.style.transform = '';
                         lsNextImg.style.transition = '';
+                        lsNextImg.src = '';
+                        delete lsNextImg.dataset.swipeSrc;
                     }, 200);
                 }
             } else {

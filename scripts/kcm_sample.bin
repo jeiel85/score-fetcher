@@ -1,0 +1,434 @@
+<html>
+<head>
+<link rel="shortcut icon" href="image/favicon7.ico">
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr">
+<meta name="Author" content="이영제"> 
+<meta name="Copyright" content="한국컴퓨터선교회"> 
+<meta name="Keywords" content="성경타자, 성경쓰기, 성경통독, 기독교검색, 검색, KCM디렉토리, 선교, 교회, 목사, 선교사, 기독교, 교회사, 성경검색, 찬송가, 교독문, bible, search, 설교, 예화, 예수, 그리스도, 교회주소록, 한국교회, 주앙교회, KCM, 이영제, Mission, 세계선교지도, 대한민국복음화지도, 전돌이, KCM메일, 웹메일, 한국교회광장, 게시판, 커뮤니티"> 
+<style type="text/css">
+<!--
+@import url("css/kcmsearch.css");
+-->
+</style>
+<script language="JavaScript" type="text/JavaScript">
+<!--
+function MM_preloadImages() { //v3.0
+  var d=document; if(d.images){ if(!d.MM_p) d.MM_p=new Array();
+    var i,j=d.MM_p.length,a=MM_preloadImages.arguments; for(i=0; i<a.length; i++)
+    if (a[i].indexOf("#")!=0){ d.MM_p[j]=new Image; d.MM_p[j++].src=a[i];}}
+}
+
+function MM_swapImgRestore() { //v3.0
+  var i,x,a=document.MM_sr; for(i=0;a&&i<a.length&&(x=a[i])&&x.oSrc;i++) x.src=x.oSrc;
+}
+
+function MM_findObj(n, d) { //v4.01
+  var p,i,x;  if(!d) d=document; if((p=n.indexOf("?"))>0&&parent.frames.length) {
+    d=parent.frames[n.substring(p+1)].document; n=n.substring(0,p);}
+  if(!(x=d[n])&&d.all) x=d.all[n]; for (i=0;!x&&i<d.forms.length;i++) x=d.forms[i][n];
+  for(i=0;!x&&d.layers&&i<d.layers.length;i++) x=MM_findObj(n,d.layers[i].document);
+  if(!x && d.getElementById) x=d.getElementById(n); return x;
+}
+
+function MM_swapImage() { //v3.0
+  var i,j=0,x,a=MM_swapImage.arguments; document.MM_sr=new Array; for(i=0;i<(a.length-2);i+=3)
+   if ((x=MM_findObj(a[i]))!=null){document.MM_sr[j++]=x; if(!x.oSrc) x.oSrc=x.src; x.src=a[i+2];}
+}
+
+function check_search(thisform) {
+    var sel = thisform.service.selectedIndex;
+    var selval = thisform.service.options[sel].value;
+    thisform.action=selval;
+    return true;
+}
+
+//-->
+</script>
+</head>
+
+<body onLoad="MM_preloadImages('images/sub_m1_ov.gif','images/sub_m2_ov.gif','images/sub_m3_ov.gif','images/sub_m4_ov.gif','images/sub_m5_ov.gif','images/sub_m6_ov.gif','images/sub_m7_ov.gif','images/sub_m8_ov.gif','images/sub_m9_ov.gif')">
+<center>
+  <table width="90%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td width="200"><a href=http://kcm.kr/search.php?kword=kcm><img src="images/top_logo.gif" width="200" height="31"  border="0"></a></td>
+      <td align="right"><table border="0" cellspacing="0" cellpadding="3">
+        <tr>
+          <td align="right"><img src="images/point_06.gif" width="3" height="5"></td>
+          <td><a href="http://kcm.kr/" onClick="this.style.behavior='url(#default#homepage)';this.setHomePage('http://kcm.kr');"' class="link1">Startsite</a></td>
+          <td>&nbsp;</td>
+          <td align="right"><img src="images/point_06.gif" width="3" height="5"></td>
+          <td><a href="http://kcm.kr/cycle_board/main.php?nbcode=notice" class="link1">게시판</a></td>
+          <td>&nbsp;</td>
+          <td align="right"><img src="images/point_06.gif" width="3" height="5"></td>
+          <td><a href="http://kcm.kr/_nmail_sso_login.php" class="link1">메일</a></td>
+          <td>&nbsp;</td>
+          <td align="right"><img src="images/point_06.gif" width="3" height="5"></td>
+          <td><a href="http://m1000.org" class="link1">M1000선교사홈</a></td>
+          <td>&nbsp;</td>
+          <td align="right"><img src="images/point_06.gif" width="3" height="5"></td>
+          <td><a href="http://missionmagazine.com/" class="link1">Mission Magazine</a></td>
+          </tr>
+      </table></td>
+    </tr>
+	</table>
+
+  <table width="90%" border="0" cellspacing="0" cellpadding="0">    <tr>      <td width="200" height="49" valign="top"><a href=http://kcm.kr><img src="images/sub_logo.gif" width="200" height="49"  border="0"></a></td>      <td  background="images/sub_srch2.gif"><form id="searchform" name="searchform" action="dic_list.php" method="post" onSubmit="return check_search(this)" style="margin:0px"><table width="100%"  border="0" cellspacing="0" cellpadding="0">        <tr>          <td width="36" height="49" valign="top"><img src="images/sub_srch1.gif" width="36" height="49"></td>          <td height="49" align="center" valign="top" style="padding:14 0 0 0 "><table border="0" cellspacing="0" cellpadding="0">              <tr>                <td><select name="key" style="font-family:굴림; font-size:9pt;" size="1" class="select1">				<option value="">사전전체</option>				<option value='1'>성경인명</option>
+<option value='2'>성경지명</option>
+<option value='3'>성경동물</option>
+<option value='5'>성경사전</option>
+<option value='8'>인명사전</option>
+<option value='9'>지명사전</option>
+<option value='10'>지식사전</option>
+<option value='15'>신학영한사전</option>
+<option value='16'>신학용어사전</option>
+<option value='20'>스트롱코드사전(히)</option>
+<option value='21'>스트롱코드사전(헬)</option>
+<option value='30'>이야기사전</option>
+<option value='50' selected>찬송가</option>
+<option value='100'>단체</option>
+<option value='950'>이동고리</option>
+<option value='999'>기타자료</option>
+</select></td>                <td width="3">&nbsp;</td>                <td><input name="kword" type="text" class="textbox1" size="25" value=""></td>                <td width="3"><p>&nbsp;</p></td>                <td><input type="image" src="images/btn_search.gif" width="72" height="24" border="0"></td>              
+    <td> &nbsp; <a href='add_dic.php'>사전등록</a> &nbsp; <a href='font.exe'>히,헬 폰트받기</td>
+
+</tr>          </table>		  </form>		  </td>          <td width="19" height="49" align="right" valign="top"><img src="images/sub_srch3.gif" width="38" height="49"  border="0"></td>          <td width="3" align="right"><img src="images/sub_srch4.gif" width="3" height="49"></td>        </tr>      </table></td>    </tr>  </table>  <table width="90%" border="0" cellpadding="0" cellspacing="0">    <tr>      <td bgcolor="#333333" style="padding:0 0 0 15 " height="5"></td>      <td width="3" align="right"><img src="images/sub_srch5.gif" width="3" height="3"></td>    </tr>  </table>  <table width="90%" border="0" cellpadding="0" cellspacing="0">    <tr>      <td bgcolor="#333333" style="padding:0 0 0 15 "><table border="0" cellpadding="0" cellspacing="0" bgcolor="#333333">          <tr>            <td><a href="search.php?kword=" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('m_m01','','images/sub_m0_ov.gif',1)"><img src="images/sub_m0.gif" width="60" height="23" border="0" id="m_m01"></a></td>            <td><img src="images/sub_m1_ov.gif" name="m_m11" width="40" height="23" hspace="2" border="0" id="m_m11"></td>            <td><a href="search_bible_all.php?kword=" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('m_m21','','images/sub_m2_ov.gif',1)"><img src="images/sub_m2.gif" name="m_m21" width="40" height="23" hspace="2" border="0" id="m_m21"></a></td>            <td><a href="search_mio.php?kword=" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('m_m31','','images/sub_m3_ov.gif',1)"><img src="images/sub_m3.gif" name="m_m31" width="60" height="23" hspace="2" border="0" id="m_m31"></a></td>            <td><a href="search_doc.php?kword=" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('m_m41','','images/sub_m4_ov.gif',1)"><img src="images/sub_m4.gif" name="m_m41" width="60" height="23" hspace="2" border="0" id="m_m41"></a></td>            <td><a href="search_magazine.php?kword=" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('m_m51','','images/sub_m5_ov.gif',1)"><img src="images/sub_m5.gif" name="m_m51" width="72" height="23" hspace="2" border="0" id="m_m51"></a></td>            <td><a href="search_web.php?kword=" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('m_m61','','images/sub_m6_ov.gif',1)"><img src="images/sub_m6.gif" name="m_m61" width="51" height="23" hspace="2" border="0" id="m_m61"></a></td>            <td><a href="search_address.php?kword=" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('m_m71','','images/sub_m7_ov.gif',1)"><img src="images/sub_m7.gif" name="m_m71" width="60" height="23" hspace="2" border="0" id="m_m71"></a></td>            <td><a href="search_icon.php?kword=" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('m_m81','','images/sub_m8_ov.gif',1)"><img src="images/sub_m8.gif" name="m_m81" width="52" height="23" hspace="2" border="0" id="m_m81"></a></td>            <td><a href="search_uimg.php?kword=" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('m_m91','','images/sub_m9_ov.gif',1)"><img src="images/sub_m9.gif" name="m_m91" width="60" height="23" hspace="2" border="0" id="m_m91"></a></td>          </tr>      </table></td>      <td width="3" align="right"><img src="images/sub_srch5.gif" width="3" height="23"></td>    </tr>  </table>  
+
+	<!-- 메인내용 시작-->
+
+	<table width="90%" border="0" cellpadding="0" cellspacing="0">
+	<tr>
+	<td style="padding:5 5 5 0">
+<script language='JavaScript'>
+<!--
+
+function winopen(theURL,winName,features) { 
+window.open(theURL,winName,features);
+}
+//-->
+</script>
+
+
+<!-- 중앙메인테이블시작 -->
+<div  ALIGN=''>
+<TABLE BORDER='0' cellpadding='0' cellspacing='0' width=100%>
+<tr>
+<td valign=top width=85%>
+<!-- HERE START -->
+
+<!-- NAME: here_static.html -->
+<div align="">
+<table cellpadding='0' cellspacing='0' width='100%' style="border-collapse:collapse;">
+<tr><td height=5></td></tr>
+<tr><td height=1 bgcolor=cccccc></td></tr>
+<tr><td height=24 bgcolor=F6F6F6>&nbsp;<font size=2>현재위치 : <a href=index.php>HOME</a> &gt;  
+
+<b>문서보기</b></font>
+
+</td></tr>
+
+<tr><td height=1 bgcolor=cccccc></td></tr>
+</table></div>
+<!-- END: here_static.html -->
+<!-- HERE START -->
+
+
+<br>
+<div align=''>
+
+<table width="100%" border=0 style="border:1px solid #cccccc">
+<tr>
+<td align=center valign=top>
+<br>
+
+	<table width="95%" border=1 bordercolor="#cccccc" style="border-collapse:collapse;">
+
+
+	<tr height=25>
+		<td bgcolor='#F6F6F6' height=22>&nbsp;<FONT SIZE='2'><b>작성자</b></FONT></td>
+		<td>&nbsp;관리자</td>
+		<td bgcolor='#F6F6F6' height=22>&nbsp;<FONT SIZE='2'><b>첨부파일</b></FONT></td>
+		<td>&nbsp;&nbsp;&nbsp;</td>
+	</tr>
+
+
+	<tr height=25>
+		<td bgcolor='#F6F6F6' height=22>&nbsp;<FONT SIZE='2'><b>자료구분</b></FONT></td>
+		<td>&nbsp;찬송가</td>
+		<td bgcolor='#F6F6F6' height=22>&nbsp;<FONT SIZE='2'><b>작성일</b></FONT></td>
+		<td>&nbsp;2006-12-29</td>
+	</tr>
+
+
+	<tr height=25>
+		<td bgcolor='#F6F6F6' height=22>&nbsp;<FONT SIZE='2'><b>제목</b></FONT></td>
+		<td colspan=3>&nbsp;가슴마다 파도 친다</td>
+	</tr>
+
+	<tr height=25>
+		<td bgcolor='#F6F6F6' height=22>&nbsp;<FONT SIZE='2'><b>주제어</b></FONT></td>
+		<td colspan=3>&nbsp;찬송가 303장 [절기와 행사 청년]</td>
+	</tr>
+
+
+	<tr height=25>
+		<td width='15%'  bgcolor='#F6F6F6' height=22>&nbsp;<FONT SIZE='2'><b>자료출처</b></FONT></td>
+		<td width='35%'>&nbsp;303장 [절기와 행사 청년]</td>
+		<td width='15%' bgcolor='#F6F6F6' height=22>&nbsp;<FONT SIZE='2'><b>성경본문</b></FONT></td>
+		<td width='35%'>&nbsp;전 12:1</td>
+	</tr>
+
+
+	<tr height=25>
+		<td bgcolor='#F6F6F6' height=22 valign=top style="padding:5 0 0 5;">&nbsp;<FONT SIZE='2'><b>내용</b></FONT></td>
+		<td colspan=3 style="padding:10 10 10 10;line-height:140%"><P align=center><IMG src="http://kcm.kr/dic_image/1304d80f81ec02d0b5fa1c8d198e0dfc.jpg"></P>
+<P>&nbsp;</P>
+<P>1. 가슴마다 파도친다 우리들의 젊은이 눈동자에 어리운다 우리들의 푸른 꿈 주의 말씀 주의 행함 길과 진리 되시니 우리 평생 한결같이 주만 따라 살리라 <BR>2. 하늘같이 높푸르자 우리들의 젊은이 바다같이 넓고 깊자 우리들의 사랑이 우리들은 주의 자녀 부름받은 한 형제 몸과 마음 다 바쳐서 주 뜻대로 살리라 <BR>3. 화산같이 타오르자 우리들의 젊은이 폭포같이 줄기차자 우리들의 붉은 피 할일 많은 이 나라에 우리 태어났으니 복음 들고 앞장서서 충성되게 일하자 <BR>4. 대지같이 광활하자 우리들의 젊은이 산과 같이 우람하자 우리들의 기상이 십자가를 높이 들고 노래하며 나가자 하늘 뜻이 이땅 위에 이루어질 때까지 아멘 <BR><BR><BR><FONT color=#000099><A href="http://kcm.co.kr/hymn/midi/hymn-303.mid">미디듣기</A></FONT> | <FONT color=#000099><A href="http://kcm.co.kr/hymn/nwc/hymn-303.nwc">nwc 파일받기</A></FONT> 
+<HR>
+<FONT color=#660000>영문명</FONT> : 가슴마다 파도친다 <BR><BR><FONT color=#009900>작사</FONT> : &lt;개편찬송가&gt; (1967년&gt; 편찬 때 가사위원이었던 반병섭 (1924 ~ ) 목사의 작시로 청년에게 적합한 찬송가로 채택되어 &lt;개편찬송가&gt;에 처음 수록되었다. 청년의 이미지를 하늘과 바다, 화산과 폭포, 대지와 산과 같은 자연으로 비유하여 기독청년의 힘찬 기상을 묘사하고 있다. <BR><BR><FONT color=#009900>작곡</FONT> : &lt;개편찬송가&gt; 편찬 때 음악위원이었던 이동훈 (1922 ~ 1974) 선생이 위촉을 받아 작곡하였다. 
+<P></P></td>
+	</tr>
+
+	<tr height=50>
+		<td colspan=4 align=center>&nbsp;<input type="button" value="찬송가 목록보기" class=binput onClick="window.location.href='dic_list.php?key=50'"></td>
+
+	</tr>
+
+	</table>
+
+	<br>
+	<iframe name="hframe" id="hframe" src="" width=0 height=0 frameborder=0></iframe>
+	<br><br>
+	<table width="95%" border=0 bordercolor="#cccccc" style="border-collapse:collapse;">
+		<tr>
+			<td align=center width=70%><a href='dic_view.php?nid=40705&page=1&kword=&key='><img src='image/b_prev.gif' align=absmiddle border=0></a>&nbsp;&nbsp;&nbsp;<a href='dic_view.php?nid=40706&page=1&kword=&key='><img src='image/b_next.gif' border=0 align=absmiddle></a></td>
+			<td align=right width=30%><input type="button" value="수정/추가" class=grayinput style="width:80px" onClick="window.location.href='mod_dic.php?nid=21400'">
+			<input type="button" value="신규등록" class=grayinput style="width:80px" onClick="window.location.href='add_dic.php'">
+			</td>
+		</tr>
+	</table>
+	
+	<br><br>
+
+		<table background="image/graid_top.gif" width=95% border='1' cellpadding="0" cellspacing="0" bordercolordark="#F0F0F0" bordercolorlight="#F0F0F0" ><tr>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=z'><font size='2'><b>A-Z</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㄱ'><font size='2'><b>ㄱ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㄴ'><font size='2'><b>ㄴ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㄷ'><font size='2'><b>ㄷ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㄹ'><font size='2'><b>ㄹ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㅁ'><font size='2'><b>ㅁ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㅂ'><font size='2'><b>ㅂ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㅅ'><font size='2'><b>ㅅ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㅇ'><font size='2'><b>ㅇ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㅈ'><font size='2'><b>ㅈ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㅊ'><font size='2'><b>ㅊ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㅋ'><font size='2'><b>ㅋ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㅌ'><font size='2'><b>ㅌ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㅍ'><font size='2'><b>ㅍ</b></font></a></td>
+		<td align=center onMouseOver="this.borderColorLight='#666666';this.borderColorDark='white'" onMouseOut="this.borderColorLight='';this.borderColorDark=''"><a href='dic_list.php?key=50&jamo=ㅎ'><font size='2'><b>ㅎ</b></font></a></td>
+
+		</tr></table>
+		<br>
+
+	
+</td>
+</tr>
+
+
+
+
+</table>
+
+<br><br><br>
+
+
+</td>
+<!-- 배너 right--> 
+<td><table border=0 width="5"><tr><td></td></tr></table></td>
+<td width=150 align=center valign=top style="padding:5 0 0 0">
+
+<!-- 인기검색어 -->
+
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+    <td><img src="image/round_top1.gif"></td>
+    <td width=100% background="image/round_top2.gif">&nbsp;<img src="image/cafe.gif" align="absmiddle">&nbsp;인기검색어</td>
+    <td><img src="image/round_top3.gif"></td>
+</tr>
+<tr>
+    <td background="image/round_middle1.gif"></td>
+    <td height=25 style="padding:5 0 0 0">
+            
+<table border="0" cellpadding="0" width="100%">
+
+<!-- BEGIN DYN: tkcol -->
+<tr><td colspan=3 height=1 background="image/bg_dot.gif"></td></tr>
+<tr>
+<td height=25 width="30" align="center"><img src="image/num_01.gif" align=absmiddle></td>
+<td width="100" style="padding:0 0 0 0"><a href="search.php?kword=kcm"><font class=stxt1>kcm</font></a></td>
+<td width="70" align="center"><img src="image/arrow_right.gif" border=0 align="absmiddle">&nbsp;<font class=stxt1>3127248</font></td>
+</tr>
+<tr><td colspan=3 height=1 background="image/bg_dot.gif"></td></tr>
+<tr>
+<td height=25 width="30" align="center"><img src="image/num_02.gif" align=absmiddle></td>
+<td width="100" style="padding:0 0 0 0"><a href="search.php?kword=%B1%B3%C8%B8"><font class=stxt1>교회</font></a></td>
+<td width="70" align="center"><img src="image/arrow_right.gif" border=0 align="absmiddle">&nbsp;<font class=stxt1>1756641</font></td>
+</tr>
+<tr><td colspan=3 height=1 background="image/bg_dot.gif"></td></tr>
+<tr>
+<td height=25 width="30" align="center"><img src="image/num_03.gif" align=absmiddle></td>
+<td width="100" style="padding:0 0 0 0"><a href="search.php?kword=%BC%B1%B1%B3"><font class=stxt1>선교</font></a></td>
+<td width="70" align="center"><img src="image/arrow_right.gif" border=0 align="absmiddle">&nbsp;<font class=stxt1>1719395</font></td>
+</tr>
+<tr><td colspan=3 height=1 background="image/bg_dot.gif"></td></tr>
+<tr>
+<td height=25 width="30" align="center"><img src="image/num_04.gif" align=absmiddle></td>
+<td width="100" style="padding:0 0 0 0"><a href="search.php?kword=%BF%B9%BC%F6"><font class=stxt1>예수</font></a></td>
+<td width="70" align="center"><img src="image/arrow_right.gif" border=0 align="absmiddle">&nbsp;<font class=stxt1>1624100</font></td>
+</tr>
+<tr><td colspan=3 height=1 background="image/bg_dot.gif"></td></tr>
+<tr>
+<td height=25 width="30" align="center"><img src="image/num_05.gif" align=absmiddle></td>
+<td width="100" style="padding:0 0 0 0"><a href="search.php?kword=%BC%B3%B1%B3"><font class=stxt1>설교</font></a></td>
+<td width="70" align="center"><img src="image/arrow_right.gif" border=0 align="absmiddle">&nbsp;<font class=stxt1>1300784</font></td>
+</tr>
+<tr><td colspan=3 height=1 background="image/bg_dot.gif"></td></tr>
+<tr>
+<td height=25 width="30" align="center"><img src="image/num_06.gif" align=absmiddle></td>
+<td width="100" style="padding:0 0 0 0"><a href="search.php?kword=%BE%C6%BD%C3%BE%C6"><font class=stxt1>아시아</font></a></td>
+<td width="70" align="center"><img src="image/arrow_right.gif" border=0 align="absmiddle">&nbsp;<font class=stxt1>1201619</font></td>
+</tr>
+<tr><td colspan=3 height=1 background="image/bg_dot.gif"></td></tr>
+<tr>
+<td height=25 width="30" align="center"><img src="image/num_07.gif" align=absmiddle></td>
+<td width="100" style="padding:0 0 0 0"><a href="search.php?kword=%BC%BC%B0%E8"><font class=stxt1>세계</font></a></td>
+<td width="70" align="center"><img src="image/arrow_right.gif" border=0 align="absmiddle">&nbsp;<font class=stxt1>1184899</font></td>
+</tr>
+<tr><td colspan=3 height=1 background="image/bg_dot.gif"></td></tr>
+<tr>
+<td height=25 width="30" align="center"><img src="image/num_08.gif" align=absmiddle></td>
+<td width="100" style="padding:0 0 0 0"><a href="search.php?kword=%BC%B1%B1%B3%C8%B8"><font class=stxt1>선교회</font></a></td>
+<td width="70" align="center"><img src="image/arrow_right.gif" border=0 align="absmiddle">&nbsp;<font class=stxt1>1141075</font></td>
+</tr>
+<tr><td colspan=3 height=1 background="image/bg_dot.gif"></td></tr>
+<tr>
+<td height=25 width="30" align="center"><img src="image/num_09.gif" align=absmiddle></td>
+<td width="100" style="padding:0 0 0 0"><a href="search.php?kword=%BB%E7%B6%FB"><font class=stxt1>사랑</font></a></td>
+<td width="70" align="center"><img src="image/arrow_right.gif" border=0 align="absmiddle">&nbsp;<font class=stxt1>1126352</font></td>
+</tr>
+<tr><td colspan=3 height=1 background="image/bg_dot.gif"></td></tr>
+<tr>
+<td height=25 width="30" align="center"><img src="image/num_10.gif" align=absmiddle></td>
+<td width="100" style="padding:0 0 0 0"><a href="search.php?kword=%B9%D9%BF%EF"><font class=stxt1>바울</font></a></td>
+<td width="70" align="center"><img src="image/arrow_right.gif" border=0 align="absmiddle">&nbsp;<font class=stxt1>1115339</font></td>
+</tr>
+<!-- END DYN: tkcol -->
+<tr><td colspan=3 height=1 background="image/bg_dot.gif"></td></tr>
+</table>
+
+            
+</td>
+<td background="image/round_middle3.gif"></td>
+</tr>
+<tr>
+<td><img src="image/round_bottom1.gif"></td>
+<td background="image/round_bottom2.gif"></td>
+<td><img src="image/round_bottom3.gif"></td>
+</tr>
+</table>
+
+
+<!-- 인기검색어 -->
+<br>
+
+<a href="jump_ban.php?sid=" target="_new"></a>
+<br><a href='add.php?baddtype=4' id='black_a'>[배너등록]</a>
+<br>
+</td>
+<!-- 배너 right-->
+</tr></table>
+<!-- 중앙메인테이블끝 -->
+
+
+
+<!-- direct bar -->
+
+<!-- FOOTER START-->
+	  </td>
+    </tr>
+  </table>
+
+	<!-- 메인내용 끝-->
+
+
+  <table width="90%"  border="0" cellpadding="15" cellspacing="0" class="table1">
+    <tr>
+      <td align="center"><form id="searchform" name="searchform" action="search.php" method="post" onSubmit="return check_search(this)" style="margin:0px"><table border="0" cellspacing="0" cellpadding="0">
+        <tr>
+          <td><select name="select2" class="select1">
+				<option selected value="search.php">통합검색</option>
+				<option value="search_dic.php">사전</option>
+				<option value="search_mio.php">세계선교정보</option>
+				<option value="search_doc.php">정보클럽</option>
+				<option value="search_magazine.php">미션매거진</option>
+				<option value="search_web.php">웹문서</option>
+				<option value="search_address.php">교회주소록</option>
+				<option value="search_icon.php">이미지</option>
+				<option value="search_uimg.php">선교사진</option>
+          </select></td>
+          <td width="3">&nbsp;</td>
+          <td><input name="kword" type="text" class="textbox1" size="30"></td>
+          <td width="3"><p>&nbsp;</p></td>
+          <td><input type=image src="images/btn_search.gif" width="72" height="24" border="0"></td>
+        </tr>
+      </table>
+	  </form>
+	  </td>
+    </tr>
+  </table>  
+  <br>
+  <table width="90%"  border="0" cellpadding="5" cellspacing="0" class="table2">
+    <tr>
+      <td align="center"><table border="0" cellspacing="2" cellpadding="3">
+        <tr>
+          <td><a href="index.php" class="link1">홈페이지</a></td>
+          		  <td class="t4">|</td>
+          <td><a href="http://kcm.kr/_nmail_sso_login.php" class="link1">메일</a></td>
+		  <td class="t4">|</td>
+          <td><a href="dir_index.php" class="link1">디렉토리페이지</a></td>
+		  <td class="t4">|</td>
+          <td><a href="topkword.php" class="link1">인기검색어</a></td>
+          <td class="t4">|</td>
+          <td><a href="pick.php" class="link1">추천사이트</a></td>
+		  <td class="t4">|</td>
+          <td><a href="cool.php" class="link1">인기사이트</a></td>
+		  <td class="t4">|</td>
+          <td><a href="addpre_widgets.php" class="link1">KCM 위젯모음</a></td>
+		  <td class="t4">|</td>
+          <td><a href="addpre.php" class="link1">등록 및 조회 </a></td>
+        </tr>
+      </table></td>
+    </tr>
+  </table><br>
+  <table border="0" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center"  bgcolor="#ffffff" style="padding:10 10 10 10"> <img src="image/banner_kcm_title.gif" border="0"  usemap="#kcm"></td>
+<map name="kcm" id="kcm">
+  <area shape="rect" coords="0,0,220,19" href="http://kcm.co.kr/KCM/" alt="KCM">
+  <area shape="rect" coords="320,0,387,19" href="http://kcm.co.kr/KCM/data/kcmmp.html" alt="찾아오시는 길">
+  <area shape="rect" coords="460,0,550,19" href="http://m1000.org" alt="M1000선교사홈">
+  <area shape="rect" coords="560,0,648,19" href="http://www.missionmagazine.com/" alt="미션매거진">
+</map>
+<!--
+      <td>
+        <span class="t4">Copyright ⓒ 1995-2007 한국컴퓨터선교회(KCM) All Rights Reserved.</span> </td>
+-->
+    </tr>
+  </table>
+</center>
+</body>
+</html>
+
+<!-- FOOTER END -->
+
+</body></html>
