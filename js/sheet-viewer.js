@@ -362,12 +362,12 @@ function navigateSheet(dir) {
     }
     openFullscreen(newIndex);
     if (_realtimeSwipeDone && nextImg) {
-        // 리얼타임 스와이프: imgEl 렌더 후 다음 프레임에서 nextImg 제거 (깜빡임 방지 #144)
-        requestAnimationFrame(() => {
+        // 리얼타임 스와이프: imgEl의 새 src가 완전히 디코딩/페인팅 되는 시간을 벌어주기 위해 대기 (깜빡임 방지)
+        setTimeout(() => {
             nextImg.style.opacity = 0;
             nextImg.style.transform = '';
             nextImg.src = '';
-        });
+        }, 80);
     }
     // 슬라이드 전환 애니메이션 (리얼타임 스와이프 완료 후에는 건너뜀)
     if (!_realtimeSwipeDone) {
@@ -509,12 +509,12 @@ function navigateLandscapeSheet(dir) {
     }
     showLsSheet(newIndex);
     if (_realtimeLsSwipeDone && lsNextImg) {
-        // 리얼타임 스와이프: imgEl 렌더 후 다음 프레임에서 lsNextImg 제거 (깜빡임 방지 #144)
-        requestAnimationFrame(() => {
+        // 리얼타임 스와이프: imgEl 디코딩 딜레이 보완 (깜빡임 방지)
+        setTimeout(() => {
             lsNextImg.style.opacity = 0;
             lsNextImg.style.transform = '';
             lsNextImg.src = '';
-        });
+        }, 80);
     }
     if (!_realtimeLsSwipeDone) {
         const body = document.querySelector('.ls-sheet-body');
