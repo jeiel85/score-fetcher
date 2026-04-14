@@ -24,22 +24,29 @@ function _markAllAsRead() {
 
 // ─── Firebase 데이터 fetch ──────────────────────────────────────────────────
 async function fetchNotifications() {
+    let firebaseNotifs = [];
     try {
         const idToken = await getIdToken();
-        if (!idToken) return [];
-        const res = await fetch(
-            `${FIREBASE_CONFIG.databaseURL}/notifications.json?auth=${idToken}&orderBy="$key"&limitToLast=50`
-        );
-        if (!res.ok) return [];
-        const data = await res.json();
-        if (!data) return [];
-        return Object.entries(data)
-            .map(([key, val]) => ({ id: key, ...val }))
-            .sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+        if (idToken) {
+            const res = await fetch(
+                `${FIREBASE_CONFIG.databaseURL}/notifications.json?auth=${idToken}&orderBy="$key"&limitToLast=50`
+            );
+            if (res.ok) {
+                const data = await res.json();
+                if (data) {
+                    firebaseNotifs = Object.entries(data).map(([key, val]) => ({ id: key, ...val }));
+                }
+            }
+        }
     } catch(e) {
         console.warn('알림 fetch 실패:', e);
-        return [];
     }
+
+    let localNotifs = [];
+    try { localNotifs = JSON.parse(localStorage.getItem('local_updates_notifs') || '[]'); } catch(e) {}
+
+    return [...firebaseNotifs, ...localNotifs]
+        .sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
 }
 
 // ─── 타입별 아이콘 / 레이블 ─────────────────────────────────────────────────
@@ -169,12 +176,22 @@ async function writeNotification(type, title, body, extraData = {}) {
 // ─── 초기화 (앱 로드 시 배지 표시) ─────────────────────────────────────────
 async function initNotifications() {
     try {
-        // 업데이트 알림 예약 처리
+        // 업데이트 알림 예약 처리 (개선: 로컬 알림으로 처리하여 글로벌 DB 중복 오염 방지)
         const pending = localStorage.getItem('_pendingUpdateNotif');
         if (pending) {
             try {
                 const { from, to } = JSON.parse(pending);
-                await writeNotification('app_update', `앱이 v${to}로 업데이트되었습니다`, `이전 버전: v${from}`);
+                const localUpdates = JSON.parse(localStorage.getItem('local_updates_notifs') || '[]');
+                if (!localUpdates.some(n => n.id === 'local_update_' + to)) {
+                    localUpdates.push({
+                        id: 'local_update_' + to,
+                        type: 'app_update',
+                        title: `앱이 v${to}로 업데이트되었습니다`,
+                        body: `이전 버전: v${from}`,
+                        created_at: Date.now()
+                    });
+                    localStorage.setItem('local_updates_notifs', JSON.stringify(localUpdates));
+                }
             } catch(e) {}
             localStorage.removeItem('_pendingUpdateNotif');
         }
