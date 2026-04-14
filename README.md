@@ -5,7 +5,7 @@
 
 [![배포](https://img.shields.io/badge/배포-score--fetcher.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
 [![관리자](https://img.shields.io/badge/관리자-admin.html-indigo?style=flat-square&logo=google-cloud&logoColor=white)](https://score-fetcher.vercel.app/admin.html)
-![Version](https://img.shields.io/badge/version-v1.11.5-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-v1.12.0-blue?style=flat-square)
 ![Build](https://img.shields.io/badge/build-2026.04.14-indigo?style=flat-square)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
@@ -181,6 +181,8 @@ npx vercel --prod
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| **v1.12.0** | **2026.04.14** | **악보 뷰어 스와이프 개선 — 다음/이전 페이지 함께 슬라이드, 첫/마지막 페이지 감쇠 효과, 천천히 드래그도 작동** |
+| **v1.11.5** | **2026.04.14** | **리얼타임 스와이프 - 손 따라 악보 이동 + 다음 악보 프리로딩** |
 | **v1.11.4** | **2026.04.11** | **악보 카드 가로 오버플로우 수정 (#126), 저장 후 공유 시 콘티 중복 저장 방지 (#127)** |
 | v1.11.3 | 2026.04.11 | GitHub/버전/관리자 링크 → 설정 모달로 이동, 가로 모드 우측 패널 높이 좌측과 일치 |
 | v1.11.2 | 2026.04.11 | 찬양 목록 가사/악보 버튼 크기 통일 — 태블릿 미디어 쿼리에서 btn-score도 btn-lyrics와 동일하게 적용 |

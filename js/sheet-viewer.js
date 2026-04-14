@@ -264,6 +264,8 @@ function visibleSheetRank(index) {
 
 // ─── 전체화면 UI 오버레이 자동 숨김 ───────────────────────────────────────────
 let _fsUITimer = null;
+let _realtimeSwipeDone = false;    // 리얼타임 스와이프 완료 후 slide-in 애니메이션 건너뜀
+let _realtimeLsSwipeDone = false;  // ls 뷰어용
 
 // ─── 가로 뷰어 헤더/푸터 자동 숨김 ──────────────────────────────────────────
 let _lsNavTimer = null;
@@ -339,13 +341,15 @@ function navigateSheet(dir) {
     if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;
     // 리얼타임 스와이프 다음 이미지 리셋
     const nextImg = document.getElementById('fullscreen-img-next');
-    if (nextImg) nextImg.style.opacity = 0;
+    if (nextImg) { nextImg.style.opacity = 0; nextImg.style.transform = ''; nextImg.style.transition = ''; }
     openFullscreen(newIndex);
-    // 슬라이드 전환 애니메이션 (fullscreen-body에 적용 → zoom transform과 분리)
-    const body = document.getElementById('fullscreen-body');
-    body.classList.remove('slide-in-right', 'slide-in-left');
-    void body.offsetWidth; // reflow 강제
-    body.classList.add(dir > 0 ? 'slide-in-right' : 'slide-in-left');
+    // 슬라이드 전환 애니메이션 (리얼타임 스와이프 완료 후에는 건너뜀)
+    if (!_realtimeSwipeDone) {
+        const body = document.getElementById('fullscreen-body');
+        body.classList.remove('slide-in-right', 'slide-in-left');
+        void body.offsetWidth; // reflow 강제
+        body.classList.add(dir > 0 ? 'slide-in-right' : 'slide-in-left');
+    }
     showFsUI();
 }
 
@@ -473,13 +477,15 @@ function navigateLandscapeSheet(dir) {
     if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;
     // 리얼타임 스와이프 다음 이미지 리셋
     const lsNextImg = document.getElementById('ls-sheet-img-next');
-    if (lsNextImg) lsNextImg.style.opacity = 0;
+    if (lsNextImg) { lsNextImg.style.opacity = 0; lsNextImg.style.transform = ''; lsNextImg.style.transition = ''; }
     showLsSheet(newIndex);
-    const body = document.querySelector('.ls-sheet-body');
-    if (body) {
-        body.classList.remove('slide-in-right', 'slide-in-left');
-        void body.offsetWidth;
-        body.classList.add(dir > 0 ? 'slide-in-right' : 'slide-in-left');
+    if (!_realtimeLsSwipeDone) {
+        const body = document.querySelector('.ls-sheet-body');
+        if (body) {
+            body.classList.remove('slide-in-right', 'slide-in-left');
+            void body.offsetWidth;
+            body.classList.add(dir > 0 ? 'slide-in-right' : 'slide-in-left');
+        }
     }
 }
 
@@ -560,14 +566,27 @@ function closeLandscapeView() {
                 if (!isSwiping && Math.abs(deltaX) > 10) isSwiping = true;
                 if (isSwiping) {
                     swipeDeltaX = deltaX;
+                    // 유효한 다음/이전 시트 확인 (null 건너뜀)
+                    const swipeDir = deltaX < 0 ? 1 : -1;
+                    let nextValidIdx = currentSheetIndex + swipeDir;
+                    while (nextValidIdx >= 0 && nextValidIdx < sheetList.length && !sheetList[nextValidIdx]) nextValidIdx += swipeDir;
+                    const nextSheet = (nextValidIdx >= 0 && nextValidIdx < sheetList.length) ? sheetList[nextValidIdx] : null;
                     imgEl.style.transition = 'none';
-                    imgEl.style.transform = `translate(${deltaX}px, 0) scale(1)`;
-                    const nextIdx = deltaX < 0 ? currentSheetIndex + 1 : currentSheetIndex - 1;
-                    const nextSheet = nextIdx >= 0 && nextIdx < sheetList.length ? sheetList[nextIdx] : null;
                     const nextImg = document.getElementById('fullscreen-img-next');
-                    if (nextSheet && nextImg) {
-                        nextImg.src = nextSheet.src || '';
-                        nextImg.style.opacity = Math.min(1, Math.abs(deltaX) / 200);
+                    if (!nextSheet) {
+                        // 첫/마지막 페이지: 감쇠 효과 (20%)
+                        imgEl.style.transform = `translate(${deltaX * 0.2}px, 0) scale(1)`;
+                        if (nextImg) { nextImg.style.opacity = 0; nextImg.style.transform = 'translateX(200%)'; }
+                    } else {
+                        imgEl.style.transform = `translate(${deltaX}px, 0) scale(1)`;
+                        if (nextImg) {
+                            nextImg.src = nextSheet.src || '';
+                            const vw = viewer.clientWidth;
+                            const neighborOffset = deltaX < 0 ? vw : -vw;
+                            nextImg.style.transition = 'none';
+                            nextImg.style.opacity = 1;
+                            nextImg.style.transform = `translate(${neighborOffset + deltaX}px, 0)`;
+                        }
                     }
                 }
                 e.preventDefault();
@@ -579,12 +598,35 @@ function closeLandscapeView() {
         if (isPinching) { isPinching = false; return; }
         if (scale <= 1 && e.changedTouches.length === 1) {
             if (isSwiping && Math.abs(swipeDeltaX) > 50) {
-                navigateSheet(swipeDeltaX < 0 ? 1 : -1);
+                const dir = swipeDeltaX < 0 ? 1 : -1;
+                const vw = viewer.clientWidth;
+                const exitX = dir > 0 ? -vw : vw;
+                const nextImg = document.getElementById('fullscreen-img-next');
+                imgEl.style.transition = 'transform 0.18s ease';
+                imgEl.style.transform = `translate(${exitX}px, 0) scale(1)`;
+                if (nextImg && parseFloat(nextImg.style.opacity) > 0) {
+                    nextImg.style.transition = 'transform 0.18s ease';
+                    nextImg.style.transform = 'translate(0, 0)';
+                }
+                setTimeout(() => {
+                    _realtimeSwipeDone = true;
+                    navigateSheet(dir);
+                    _realtimeSwipeDone = false;
+                }, 180);
             } else if (isSwiping) {
                 imgEl.style.transition = 'transform 0.2s ease';
-                imgEl.style.transform = '';
+                imgEl.style.transform = 'scale(1) translate(0, 0)';
                 const nextImg = document.getElementById('fullscreen-img-next');
-                if (nextImg) nextImg.style.opacity = 0;
+                if (nextImg) {
+                    const vw = viewer.clientWidth;
+                    nextImg.style.transition = 'transform 0.2s ease';
+                    nextImg.style.transform = `translate(${swipeDeltaX < 0 ? vw : -vw}px, 0)`;
+                    setTimeout(() => {
+                        nextImg.style.opacity = 0;
+                        nextImg.style.transform = '';
+                        nextImg.style.transition = '';
+                    }, 200);
+                }
             } else {
                 const dx = e.changedTouches[0].clientX - touchStartX;
                 const dy = e.changedTouches[0].clientY - touchStartY;
@@ -663,14 +705,26 @@ function closeLandscapeView() {
                 if (!isLSSwiping && Math.abs(deltaX) > 10) isLSSwiping = true;
                 if (isLSSwiping) {
                     lsSwipeDeltaX = deltaX;
+                    const lsSwipeDir = deltaX < 0 ? 1 : -1;
+                    let nextValidIdx = currentSheetIndex + lsSwipeDir;
+                    while (nextValidIdx >= 0 && nextValidIdx < sheetList.length && !sheetList[nextValidIdx]) nextValidIdx += lsSwipeDir;
+                    const nextSheet = (nextValidIdx >= 0 && nextValidIdx < sheetList.length) ? sheetList[nextValidIdx] : null;
                     imgEl.style.transition = 'none';
-                    imgEl.style.transform = `translate(${deltaX}px, 0) scale(1)`;
-                    const nextIdx = deltaX < 0 ? currentSheetIndex + 1 : currentSheetIndex - 1;
-                    const nextSheet = nextIdx >= 0 && nextIdx < sheetList.length ? sheetList[nextIdx] : null;
                     const lsNextImg = document.getElementById('ls-sheet-img-next');
-                    if (nextSheet && lsNextImg) {
-                        lsNextImg.src = nextSheet.src || '';
-                        lsNextImg.style.opacity = Math.min(1, Math.abs(deltaX) / 200);
+                    if (!nextSheet) {
+                        // 첫/마지막 페이지: 감쇠 효과 (20%)
+                        imgEl.style.transform = `translate(${deltaX * 0.2}px, 0) scale(1)`;
+                        if (lsNextImg) { lsNextImg.style.opacity = 0; lsNextImg.style.transform = 'translateX(200%)'; }
+                    } else {
+                        imgEl.style.transform = `translate(${deltaX}px, 0) scale(1)`;
+                        if (lsNextImg) {
+                            lsNextImg.src = nextSheet.src || '';
+                            const lsVw = lsArea.clientWidth;
+                            const lsNeighborOffset = deltaX < 0 ? lsVw : -lsVw;
+                            lsNextImg.style.transition = 'none';
+                            lsNextImg.style.opacity = 1;
+                            lsNextImg.style.transform = `translate(${lsNeighborOffset + deltaX}px, 0)`;
+                        }
                     }
                 }
                 e.preventDefault();
@@ -682,12 +736,35 @@ function closeLandscapeView() {
         if (isPinching) { isPinching = false; return; }
         if (scale <= 1 && e.changedTouches.length === 1) {
             if (isLSSwiping && Math.abs(lsSwipeDeltaX) > 50) {
-                navigateLandscapeSheet(lsSwipeDeltaX < 0 ? 1 : -1);
+                const lsDir = lsSwipeDeltaX < 0 ? 1 : -1;
+                const lsVw = lsArea.clientWidth;
+                const lsExitX = lsDir > 0 ? -lsVw : lsVw;
+                const lsNextImg = document.getElementById('ls-sheet-img-next');
+                imgEl.style.transition = 'transform 0.18s ease';
+                imgEl.style.transform = `translate(${lsExitX}px, 0) scale(1)`;
+                if (lsNextImg && parseFloat(lsNextImg.style.opacity) > 0) {
+                    lsNextImg.style.transition = 'transform 0.18s ease';
+                    lsNextImg.style.transform = 'translate(0, 0)';
+                }
+                setTimeout(() => {
+                    _realtimeLsSwipeDone = true;
+                    navigateLandscapeSheet(lsDir);
+                    _realtimeLsSwipeDone = false;
+                }, 180);
             } else if (isLSSwiping) {
                 imgEl.style.transition = 'transform 0.2s ease';
-                imgEl.style.transform = '';
+                imgEl.style.transform = 'scale(1) translate(0, 0)';
                 const lsNextImg = document.getElementById('ls-sheet-img-next');
-                if (lsNextImg) lsNextImg.style.opacity = 0;
+                if (lsNextImg) {
+                    const lsVw = lsArea.clientWidth;
+                    lsNextImg.style.transition = 'transform 0.2s ease';
+                    lsNextImg.style.transform = `translate(${lsSwipeDeltaX < 0 ? lsVw : -lsVw}px, 0)`;
+                    setTimeout(() => {
+                        lsNextImg.style.opacity = 0;
+                        lsNextImg.style.transform = '';
+                        lsNextImg.style.transition = '';
+                    }, 200);
+                }
             } else {
                 const dx = e.changedTouches[0].clientX - tsX;
                 const dy = e.changedTouches[0].clientY - tsY;
