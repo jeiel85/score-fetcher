@@ -364,24 +364,21 @@ function navigateSheet(dir) {
     }
     openFullscreen(newIndex);
     if (_realtimeSwipeDone && nextImg) {
-        // 크로스페이드: imgEl(새 악보) 스르륵 등장 + nextImg(프리뷰) 스르륵 소멸
-        // 두 이미지가 같은 src이므로 밝기 변화 없이 자연스럽게 전환됨
+        // decode() 후 한 프레임에 즉각 스왑 — 크로스페이드 시 opacity 합산으로 생기는 밝기 저하(깜빡임) 방지
         const fsImgEl = document.getElementById('fullscreen-img');
-        requestAnimationFrame(() => {
-            nextImg.style.transition = 'opacity 0.15s ease';
-            nextImg.style.opacity = 0;
-            if (fsImgEl) {
-                fsImgEl.style.transition = 'opacity 0.15s ease';
-                fsImgEl.style.opacity = '1';
-            }
-            setTimeout(() => {
+        const doSwap = () => requestAnimationFrame(() => {
+            if (fsImgEl) { fsImgEl.style.transition = 'none'; fsImgEl.style.opacity = '1'; }
+            nextImg.style.transition = 'none';
+            nextImg.style.opacity = '0';
+            requestAnimationFrame(() => {
                 nextImg.style.transform = '';
-                nextImg.style.transition = '';
                 nextImg.src = '';
                 delete nextImg.dataset.swipeSrc;
-                if (fsImgEl) fsImgEl.style.transition = '';
-            }, 150);
+            });
         });
+        (fsImgEl && typeof fsImgEl.decode === 'function')
+            ? fsImgEl.decode().then(doSwap).catch(doSwap)
+            : doSwap();
     }
     // 슬라이드 전환 애니메이션 (리얼타임 스와이프 완료 후에는 건너뜀)
     if (!_realtimeSwipeDone) {
@@ -527,21 +524,20 @@ function navigateLandscapeSheet(dir) {
     if (_realtimeLsSwipeDone && lsNextImg) {
         // 크로스페이드: imgEl(새 악보) 스르륵 등장 + lsNextImg(프리뷰) 스르륵 소멸
         const lsImgEl = document.getElementById('ls-sheet-img');
-        requestAnimationFrame(() => {
-            lsNextImg.style.transition = 'opacity 0.15s ease';
-            lsNextImg.style.opacity = 0;
-            if (lsImgEl) {
-                lsImgEl.style.transition = 'opacity 0.15s ease';
-                lsImgEl.style.opacity = '1';
-            }
-            setTimeout(() => {
+        // decode() 후 한 프레임에 즉각 스왑 — 크로스페이드 밝기 저하(깜빡임) 방지
+        const doLsSwap = () => requestAnimationFrame(() => {
+            if (lsImgEl) { lsImgEl.style.transition = 'none'; lsImgEl.style.opacity = '1'; }
+            lsNextImg.style.transition = 'none';
+            lsNextImg.style.opacity = '0';
+            requestAnimationFrame(() => {
                 lsNextImg.style.transform = '';
-                lsNextImg.style.transition = '';
                 lsNextImg.src = '';
                 delete lsNextImg.dataset.swipeSrc;
-                if (lsImgEl) lsImgEl.style.transition = '';
-            }, 150);
+            });
         });
+        (lsImgEl && typeof lsImgEl.decode === 'function')
+            ? lsImgEl.decode().then(doLsSwap).catch(doLsSwap)
+            : doLsSwap();
     }
     if (!_realtimeLsSwipeDone) {
         const body = document.querySelector('.ls-sheet-body');
