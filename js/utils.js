@@ -127,8 +127,8 @@ function normalizeContiText(rawText) {
     return allLines.join('\n');
 }
 // ─── 버전 관리 ────────────────────────────────────────────────────────────
-const APP_VERSION = "v1.12.3";
-const BUILD_DATE  = "2026.04.14";
+const APP_VERSION = "v1.12.4";
+const BUILD_DATE  = "2026.04.15";
 
 function initVersionDisplay() {
     // 모든 .app-version-badge를 APP_VERSION으로 동적 갱신 (#82)
