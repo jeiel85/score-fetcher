@@ -130,7 +130,7 @@ function normalizeContiText(rawText) {
     return allLines.join('\n');
 }
 // ─── 버전 관리 ────────────────────────────────────────────────────────────
-const APP_VERSION = "v1.13.0";
+const APP_VERSION = "v1.13.1";
 const BUILD_DATE  = "2026.04.15";
 
 function initVersionDisplay() {

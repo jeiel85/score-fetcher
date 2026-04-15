@@ -405,6 +405,15 @@ function updateNavBtns() {
 
 function closeFullscreen() {
     clearTimeout(_fsUITimer);
+    // nextImg 상태 즉시 초기화 — 찬양목록 미리보기 진입 시 이전 악보 잔상 방지
+    const _nextImgClean = document.getElementById('fullscreen-img-next');
+    if (_nextImgClean) {
+        _nextImgClean.src = '';
+        _nextImgClean.style.opacity = '0';
+        _nextImgClean.style.transform = '';
+        _nextImgClean.style.transition = '';
+        delete _nextImgClean.dataset.swipeSrc;
+    }
     const viewer = document.getElementById('fullscreenViewer');
     viewer.style.transition = 'opacity 0.15s ease';
     viewer.style.opacity = '0';
@@ -426,6 +435,15 @@ let _scorePreviewIdx  = 0;
 let _scorePreviewFromModal = false;
 
 function openScorePreview(numPadded, displayTitle, previewList, listIdx) {
+    // 이전 콘티 스와이프 잔상 방지 — closeFullscreen에서 못 지운 경우 대비 (방어적 초기화)
+    const _nextImgClean2 = document.getElementById('fullscreen-img-next');
+    if (_nextImgClean2) {
+        _nextImgClean2.src = '';
+        _nextImgClean2.style.opacity = '0';
+        _nextImgClean2.style.transform = '';
+        _nextImgClean2.style.transition = '';
+        delete _nextImgClean2.dataset.swipeSrc;
+    }
     // previewList: 찬양목록 현재 표시 목록 전체 (선택적). 없으면 단일 곡 모드.
     _scorePreviewList = previewList || [];
     _scorePreviewIdx  = (listIdx !== undefined) ? listIdx : 0;
@@ -633,35 +651,50 @@ function closeLandscapeView() {
                 if (!isSwiping && Math.abs(deltaX) > 10) isSwiping = true;
                 if (isSwiping) {
                     swipeDeltaX = deltaX;
-                    // 유효한 다음/이전 시트 확인 (null 건너뜀)
-                    const swipeDir = deltaX < 0 ? 1 : -1;
-                    let nextValidIdx = currentSheetIndex + swipeDir;
-                    while (nextValidIdx >= 0 && nextValidIdx < sheetList.length && !sheetList[nextValidIdx]) nextValidIdx += swipeDir;
-                    const nextSheet = (nextValidIdx >= 0 && nextValidIdx < sheetList.length) ? sheetList[nextValidIdx] : null;
                     imgEl.style.transition = 'none';
                     const nextImg = document.getElementById('fullscreen-img-next');
-                    if (!nextSheet) {
-                        // 첫/마지막 페이지: 이동 없음
-                        imgEl.style.transform = 'translate(0, 0) scale(1)';
-                        if (nextImg) { nextImg.style.opacity = 0; nextImg.style.transform = 'translateX(200%)'; }
-                    } else {
+                    if (_scorePreviewFromModal) {
+                        // 찬양목록 미리보기 모드: sheetList에서 nextImg 로드 금지 (콘티 악보 잔상 방지)
                         imgEl.style.transform = `translate(${deltaX}px, 0) scale(1)`;
-                        if (nextImg) {
-                            const nextSrc = nextSheet.src || '';
-                            if (nextImg.dataset.swipeSrc !== nextSrc) {
-                                nextImg.dataset.swipeSrc = nextSrc;
-                                nextImg.src = nextSrc;
-                            }
-                            const vw = viewer.clientWidth;
-                            const neighborOffset = deltaX < 0 ? vw : -vw;
-                            nextImg.style.transition = 'none';
-                            nextImg.style.transform = `translate(${neighborOffset + deltaX}px, 0)`;
-                            // 로드 완료 시에만 표시, 미완료 시 onload 후 표시 (#145)
-                            if (nextImg.complete && nextImg.naturalWidth > 0) {
-                                nextImg.style.opacity = 1;
-                            } else {
-                                nextImg.style.opacity = 0;
-                                nextImg.onload = () => { nextImg.style.opacity = 1; };
+                        if (nextImg) { nextImg.style.opacity = '0'; nextImg.style.transform = 'translateX(200%)'; }
+                    } else {
+                        // 콘티 악보 스와이프 모드
+                        const swipeDir = deltaX < 0 ? 1 : -1;
+                        let nextValidIdx = currentSheetIndex + swipeDir;
+                        while (nextValidIdx >= 0 && nextValidIdx < sheetList.length && !sheetList[nextValidIdx]) nextValidIdx += swipeDir;
+                        const nextSheet = (nextValidIdx >= 0 && nextValidIdx < sheetList.length) ? sheetList[nextValidIdx] : null;
+                        if (!nextSheet) {
+                            // 첫/마지막 페이지: 이동 없음
+                            imgEl.style.transform = 'translate(0, 0) scale(1)';
+                            if (nextImg) { nextImg.style.opacity = 0; nextImg.style.transform = 'translateX(200%)'; }
+                        } else {
+                            imgEl.style.transform = `translate(${deltaX}px, 0) scale(1)`;
+                            if (nextImg) {
+                                const nextSrc = nextSheet.src || '';
+                                if (nextImg.dataset.swipeSrc !== nextSrc) {
+                                    nextImg.dataset.swipeSrc = nextSrc;
+                                    nextImg.src = nextSrc;
+                                }
+                                const vw = viewer.clientWidth;
+                                const neighborOffset = deltaX < 0 ? vw : -vw;
+                                nextImg.style.transition = 'none';
+                                nextImg.style.transform = `translate(${neighborOffset + deltaX}px, 0)`;
+                                // 처음 등장 시 부드러운 페이드인, 이미 표시 중이면 그대로 유지 (#145)
+                                const wasHidden = parseFloat(nextImg.style.opacity || '0') < 0.5;
+                                if (nextImg.complete && nextImg.naturalWidth > 0) {
+                                    if (wasHidden) {
+                                        requestAnimationFrame(() => {
+                                            nextImg.style.transition = 'opacity 0.2s ease';
+                                            nextImg.style.opacity = '1';
+                                        });
+                                    }
+                                } else if (wasHidden) {
+                                    nextImg.style.opacity = '0';
+                                    nextImg.onload = () => {
+                                        nextImg.style.transition = 'opacity 0.2s ease';
+                                        nextImg.style.opacity = '1';
+                                    };
+                                }
                             }
                         }
                     }
@@ -684,6 +717,16 @@ function closeLandscapeView() {
                     // 첫/마지막 페이지 무효 방향 — 스프링백
                     imgEl.style.transition = 'transform 0.2s ease';
                     imgEl.style.transform = 'scale(1) translate(0, 0)';
+                } else if (_scorePreviewFromModal && _scorePreviewList.length > 0) {
+                    // 찬양목록 미리보기 모드: nextImg 없이 imgEl만 슬라이드 후 navigateScorePreview 직접 호출
+                    const vw = viewer.clientWidth;
+                    imgEl.style.transition = 'transform 0.18s ease';
+                    imgEl.style.transform = `translate(${dir > 0 ? -vw : vw}px, 0) scale(1)`;
+                    setTimeout(() => {
+                        imgEl.style.transition = 'none';
+                        imgEl.style.transform = 'scale(1) translate(0, 0)';
+                        navigateScorePreview(dir);
+                    }, 180);
                 } else {
                 const vw = viewer.clientWidth;
                 const exitX = dir > 0 ? -vw : vw;
@@ -817,12 +860,21 @@ function closeLandscapeView() {
                             const lsNeighborOffset = deltaX < 0 ? lsVw : -lsVw;
                             lsNextImg.style.transition = 'none';
                             lsNextImg.style.transform = `translate(${lsNeighborOffset + deltaX}px, 0)`;
-                            // 로드 완료 시에만 표시, 미완료 시 onload 후 표시 (#145)
+                            // 처음 등장 시 부드러운 페이드인, 이미 표시 중이면 그대로 유지 (#145)
+                            const lsWasHidden = parseFloat(lsNextImg.style.opacity || '0') < 0.5;
                             if (lsNextImg.complete && lsNextImg.naturalWidth > 0) {
-                                lsNextImg.style.opacity = 1;
-                            } else {
-                                lsNextImg.style.opacity = 0;
-                                lsNextImg.onload = () => { lsNextImg.style.opacity = 1; };
+                                if (lsWasHidden) {
+                                    requestAnimationFrame(() => {
+                                        lsNextImg.style.transition = 'opacity 0.2s ease';
+                                        lsNextImg.style.opacity = '1';
+                                    });
+                                }
+                            } else if (lsWasHidden) {
+                                lsNextImg.style.opacity = '0';
+                                lsNextImg.onload = () => {
+                                    lsNextImg.style.transition = 'opacity 0.2s ease';
+                                    lsNextImg.style.opacity = '1';
+                                };
                             }
                         }
                     }

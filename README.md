@@ -5,7 +5,7 @@
 
 [![배포](https://img.shields.io/badge/배포-score--fetcher.vercel.app-000?style=flat-square&logo=vercel&logoColor=white)](https://score-fetcher.vercel.app/)
 [![관리자](https://img.shields.io/badge/관리자-admin.html-indigo?style=flat-square&logo=google-cloud&logoColor=white)](https://score-fetcher.vercel.app/admin.html)
-![Version](https://img.shields.io/badge/version-v1.13.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-v1.13.1-blue?style=flat-square)
 ![Build](https://img.shields.io/badge/build-2026.04.15-indigo?style=flat-square)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
@@ -181,6 +181,7 @@ npx vercel --prod
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| **v1.13.1** | **2026.04.15** | **찬양목록 미리보기 스와이프 버그 수정 — 이전 콘티 악보 잔상/겹침 제거, nextImg 페이드인 부드럽게 개선** |
 | **v1.13.0** | **2026.04.15** | **악보 스와이프 프리로드 개선 (decode() + 스와이프 완료 후 즉시 프리로드), 콘티 제목 날짜-제목 공백 자동 삽입 (blur 즉시 반영)** |
 | v1.12.4 | 2026.04.15 | 스와이프 완료 후 이전 악보 깜빡임 수정 — imgEl opacity 크로스페이드로 순간이동 플래시 제거 (전체화면·가로 뷰어 공통) |
 | **v1.12.2** | **2026.04.14** | **스와이프 완료 후 다음 악보 로딩 중 깜빡임(Flickering) 현상 수정** |
