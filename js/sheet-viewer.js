@@ -330,6 +330,8 @@ function openFullscreen(index) {
         imgEl.style.display = 'none';
     }
 
+    // 리얼타임 스와이프 완료 시: resetZoom으로 위치 순간이동 전에 숨겨서 이전 악보 깜빡임 방지
+    if (_realtimeSwipeDone) imgEl.style.opacity = '0';
     if (window._resetFullscreenZoom) window._resetFullscreenZoom();
     updateFullscreenTitle(index);
     const viewer = document.getElementById('fullscreenViewer');
@@ -362,12 +364,24 @@ function navigateSheet(dir) {
     }
     openFullscreen(newIndex);
     if (_realtimeSwipeDone && nextImg) {
-        // 리얼타임 스와이프: imgEl의 새 src가 완전히 디코딩/페인팅 되는 시간을 벌어주기 위해 대기 (깜빡임 방지)
-        setTimeout(() => {
+        // 크로스페이드: imgEl(새 악보) 스르륵 등장 + nextImg(프리뷰) 스르륵 소멸
+        // 두 이미지가 같은 src이므로 밝기 변화 없이 자연스럽게 전환됨
+        const fsImgEl = document.getElementById('fullscreen-img');
+        requestAnimationFrame(() => {
+            nextImg.style.transition = 'opacity 0.15s ease';
             nextImg.style.opacity = 0;
-            nextImg.style.transform = '';
-            nextImg.src = '';
-        }, 80);
+            if (fsImgEl) {
+                fsImgEl.style.transition = 'opacity 0.15s ease';
+                fsImgEl.style.opacity = '1';
+            }
+            setTimeout(() => {
+                nextImg.style.transform = '';
+                nextImg.style.transition = '';
+                nextImg.src = '';
+                delete nextImg.dataset.swipeSrc;
+                if (fsImgEl) fsImgEl.style.transition = '';
+            }, 150);
+        });
     }
     // 슬라이드 전환 애니메이션 (리얼타임 스와이프 완료 후에는 건너뜀)
     if (!_realtimeSwipeDone) {
@@ -490,6 +504,8 @@ function showLsSheet(index) {
         imgEl.style.display = 'none';
     }
 
+    // 리얼타임 스와이프 완료 시: resetZoom으로 위치 순간이동 전에 숨겨서 이전 악보 깜빡임 방지
+    if (_realtimeLsSwipeDone) imgEl.style.opacity = '0';
     if (window._resetLsZoom) window._resetLsZoom();
     document.getElementById('ls-sheet-title').textContent =
         `${sheet.label}  (${visibleSheetRank(index)}/${visibleSheetCount()})`;
@@ -509,12 +525,23 @@ function navigateLandscapeSheet(dir) {
     }
     showLsSheet(newIndex);
     if (_realtimeLsSwipeDone && lsNextImg) {
-        // 리얼타임 스와이프: imgEl 디코딩 딜레이 보완 (깜빡임 방지)
-        setTimeout(() => {
+        // 크로스페이드: imgEl(새 악보) 스르륵 등장 + lsNextImg(프리뷰) 스르륵 소멸
+        const lsImgEl = document.getElementById('ls-sheet-img');
+        requestAnimationFrame(() => {
+            lsNextImg.style.transition = 'opacity 0.15s ease';
             lsNextImg.style.opacity = 0;
-            lsNextImg.style.transform = '';
-            lsNextImg.src = '';
-        }, 80);
+            if (lsImgEl) {
+                lsImgEl.style.transition = 'opacity 0.15s ease';
+                lsImgEl.style.opacity = '1';
+            }
+            setTimeout(() => {
+                lsNextImg.style.transform = '';
+                lsNextImg.style.transition = '';
+                lsNextImg.src = '';
+                delete lsNextImg.dataset.swipeSrc;
+                if (lsImgEl) lsImgEl.style.transition = '';
+            }, 150);
+        });
     }
     if (!_realtimeLsSwipeDone) {
         const body = document.querySelector('.ls-sheet-body');
