@@ -709,6 +709,24 @@ function closeLandscapeView() {
         if (scale <= 1 && e.changedTouches.length === 1) {
             if (isSwiping && Math.abs(swipeDeltaX) > 50) {
                 const dir = swipeDeltaX < 0 ? 1 : -1;
+                if (_scorePreviewFromModal && _scorePreviewList.length > 0) {
+                    // 찬양목록 미리보기 모드: _scorePreviewList 기반 범위 확인
+                    const newPreviewIdx = _scorePreviewIdx + dir;
+                    if (newPreviewIdx < 0 || newPreviewIdx >= _scorePreviewList.length) {
+                        // 첫/마지막 — 스프링백
+                        imgEl.style.transition = 'transform 0.2s ease';
+                        imgEl.style.transform = 'scale(1) translate(0, 0)';
+                    } else {
+                        const vw = viewer.clientWidth;
+                        imgEl.style.transition = 'transform 0.18s ease';
+                        imgEl.style.transform = `translate(${dir > 0 ? -vw : vw}px, 0) scale(1)`;
+                        setTimeout(() => {
+                            imgEl.style.transition = 'none';
+                            imgEl.style.transform = 'scale(1) translate(0, 0)';
+                            navigateScorePreview(dir);
+                        }, 180);
+                    }
+                } else {
                 // 유효한 다음 시트 확인 (#143)
                 let chkIdx = currentSheetIndex + dir;
                 while (chkIdx >= 0 && chkIdx < sheetList.length && !sheetList[chkIdx]) chkIdx += dir;
@@ -717,16 +735,6 @@ function closeLandscapeView() {
                     // 첫/마지막 페이지 무효 방향 — 스프링백
                     imgEl.style.transition = 'transform 0.2s ease';
                     imgEl.style.transform = 'scale(1) translate(0, 0)';
-                } else if (_scorePreviewFromModal && _scorePreviewList.length > 0) {
-                    // 찬양목록 미리보기 모드: nextImg 없이 imgEl만 슬라이드 후 navigateScorePreview 직접 호출
-                    const vw = viewer.clientWidth;
-                    imgEl.style.transition = 'transform 0.18s ease';
-                    imgEl.style.transform = `translate(${dir > 0 ? -vw : vw}px, 0) scale(1)`;
-                    setTimeout(() => {
-                        imgEl.style.transition = 'none';
-                        imgEl.style.transform = 'scale(1) translate(0, 0)';
-                        navigateScorePreview(dir);
-                    }, 180);
                 } else {
                 const vw = viewer.clientWidth;
                 const exitX = dir > 0 ? -vw : vw;
@@ -743,6 +751,7 @@ function closeLandscapeView() {
                     navigateSheet(dir);
                     _realtimeSwipeDone = false;
                 }, 180);
+                }
                 }
             } else if (isSwiping) {
                 imgEl.style.transition = 'transform 0.2s ease';
