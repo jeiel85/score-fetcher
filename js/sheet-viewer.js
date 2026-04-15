@@ -304,7 +304,10 @@ function preloadAdjacentSheets(index) {
         let idx = index + d;
         while (idx >= 0 && idx < sheetList.length && !sheetList[idx]) idx += d;
         if (idx >= 0 && idx < sheetList.length && sheetList[idx] && sheetList[idx].src) {
-            new Image().src = sheetList[idx].src;
+            const img = new Image();
+            img.src = sheetList[idx].src;
+            // decode(): HTTP 캐시뿐 아니라 GPU 텍스처까지 미리 준비 → 스와이프 시작 시 즉시 표시
+            if (typeof img.decode === 'function') img.decode().catch(() => {});
         }
     });
 }
@@ -374,6 +377,8 @@ function navigateSheet(dir) {
                 nextImg.style.transform = '';
                 nextImg.src = '';
                 delete nextImg.dataset.swipeSrc;
+                // 스와이프 완료 후 다음 인접 악보 프리로드 (리얼타임 스와이프 시 건너뛰었던 것 보완)
+                preloadAdjacentSheets(currentSheetIndex);
             });
         });
         (fsImgEl && typeof fsImgEl.decode === 'function')
@@ -533,6 +538,8 @@ function navigateLandscapeSheet(dir) {
                 lsNextImg.style.transform = '';
                 lsNextImg.src = '';
                 delete lsNextImg.dataset.swipeSrc;
+                // 스와이프 완료 후 인접 악보 프리로드
+                preloadAdjacentSheets(currentSheetIndex);
             });
         });
         (lsImgEl && typeof lsImgEl.decode === 'function')

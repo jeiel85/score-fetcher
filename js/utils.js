@@ -76,6 +76,9 @@ function normalizeDateInTitle(title) {
         return _;
     });
 
+    // Step 4: 날짜 뒤 공백 정규화 — 없으면 삽입, 여러 개면 하나로 (예: "2026-04-15수요" → "2026-04-15 수요")
+    result = result.replace(/^(\d{4}-\d{2}-\d{2})\s*(?=\S)/, '$1 ');
+
     return result;
 }
 
@@ -127,7 +130,7 @@ function normalizeContiText(rawText) {
     return allLines.join('\n');
 }
 // ─── 버전 관리 ────────────────────────────────────────────────────────────
-const APP_VERSION = "v1.12.4";
+const APP_VERSION = "v1.13.0";
 const BUILD_DATE  = "2026.04.15";
 
 function initVersionDisplay() {
