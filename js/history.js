@@ -274,3 +274,10 @@ function buildSongFrequency(entries) {
     });
     return freq;
 }
+
+// 콘티 제목 입력창: blur 시 날짜 정규화 즉시 반영 (날짜-제목 공백 포함)
+// — 저장 버튼을 누르기 전에도 바로 정돈된 형태로 보임
+document.getElementById('setlist-title').addEventListener('blur', function () {
+    const v = normalizeDateInTitle(this.value);
+    if (v !== this.value) this.value = v;
+});
