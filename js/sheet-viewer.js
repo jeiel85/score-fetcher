@@ -1,4 +1,15 @@
-// ─── 악보 찾기 & 뷰어 ────────────────────────────────────────────────────────
+// ─── 이미지 프리로드 유틸리티 ──────────────────────────────────────────────────
+function prefetchImage(numPadded) {
+    for (let i = 0; i < EXTENSIONS.length; i++) {
+        const src = `images/${numPadded}${EXTENSIONS[i]}`;
+        const tempImg = new Image();
+        tempImg.src = src;
+    }
+}
+
+function isImageLoaded(imgEl) {
+    return imgEl && imgEl.complete && imgEl.naturalWidth > 0;
+}
 
 function tryLoadImage(imgElement, songNum, extIndex, onDone) {
     const s = String(songNum);
@@ -352,11 +363,7 @@ function openFullscreen(index) {
 }
 
 function navigateSheet(dir) {
-    // 찬양목록 미리보기 모드일 경우 별도 탐색 사용
-    if (_scorePreviewFromModal && _scorePreviewList.length > 0) {
-        navigateScorePreview(dir);
-        return;
-    }
+    // #143: 첫/마지막 페이지에서 스와이프 방어 - 네비게이션 전 유효성 검사
     let newIndex = currentSheetIndex + dir;
     while (newIndex >= 0 && newIndex < sheetList.length && !sheetList[newIndex]) newIndex += dir;
     if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;
@@ -393,6 +400,7 @@ function navigateSheet(dir) {
         body.classList.add(dir > 0 ? 'slide-in-right' : 'slide-in-left');
     }
     showFsUI();
+}
 }
 
 function updateNavBtns() {
@@ -535,6 +543,7 @@ function showLsSheet(index) {
 }
 
 function navigateLandscapeSheet(dir) {
+    // #143: 첫/마지막 페이지에서 스와이프 방어
     let newIndex = currentSheetIndex + dir;
     while (newIndex >= 0 && newIndex < sheetList.length && !sheetList[newIndex]) newIndex += dir;
     if (newIndex < 0 || newIndex >= sheetList.length || !sheetList[newIndex]) return;

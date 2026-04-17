@@ -1,5 +1,28 @@
 {
+  "name": "score-fetcher",
+  "version": "1.0.0",
+  "description": "> **콘티 입력부터 악보 검색, 전체화면 뷰어, 실시간 이력 공유, 푸시 알림까지 — 찬양팀 리더를 위한 스마트 워크플로우 도구**",
+  "main": "firebase-config.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "serve": "npx serve -l 3000 ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeiel85/score-fetcher.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jeiel85/score-fetcher/issues"
+  },
+  "homepage": "https://github.com/jeiel85/score-fetcher#readme",
   "devDependencies": {
-    "sharp": "^0.34.5"
+    "@playwright/test": "^1.59.1",
+    "playwright": "^1.59.1"
   }
 }
