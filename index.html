@@ -37,6 +37,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="style.css">
 
@@ -119,6 +120,7 @@
                             <button class="btn-share" onclick="shareConti()">콘티 공유하기 📤</button>
                             <button class="btn-save" onclick="exportContiToJson()" style="background:#059669;">JSON 내보내기 📥</button>
                             <button class="btn-share" onclick="importContiFromJson()" style="background:#5465FF;">JSON 가져오기 📤</button>
+                            <button onclick="downloadContiPdf()" style="background:#dc2626; border:none; border-radius:8px; padding:10px 14px; cursor:pointer; font-size:13px; font-weight:600; color:white;">📄 PDF 다운로드</button>
                         </div>
                         <div class="btn-row" style="margin-top:8px; flex-wrap:wrap; gap:8px;">
                             <div id="draft-indicator" style="display:none; align-items:center; gap:8px; padding:6px 10px; background:rgba(251,191,36,0.2); border:1px solid rgba(251,191,36,0.5); border-radius:8px; font-size:12px; color:#fbbf24;">

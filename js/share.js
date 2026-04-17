@@ -244,3 +244,145 @@ async function doShareConti() {
     a.click();
     closeSharePreview();
 }
+
+// ─── #148 전체 콘티 악보 PDF 다운로드 ─────────────────────────────────────
+
+// 전체 콘티 악보 PDF로 다운로드
+async function downloadContiPdf() {
+    if (typeof jspdf === 'undefined') {
+        showToast('⚠️ PDF 라이브러리가 로드되지 않았습니다');
+        return;
+    }
+    
+    const title = document.getElementById('setlist-title').value.trim() || '제목 없는 콘티';
+    const rawContent = document.getElementById('song-input').value.trim();
+    
+    if (!rawContent) {
+        showToast('⚠️ PDF로 내보낼 콘티 내용이 없습니다');
+        return;
+    }
+    
+    // 곡 줄 추출
+    const songLines = rawContent.split('\n').filter(line => {
+        const trimmed = line.trim();
+        return /^\d+/.test(trimmed) || /^찬\d+/.test(trimmed) || /^통\d+/.test(trimmed);
+    });
+    
+    if (songLines.length === 0) {
+        showToast('⚠️ 곡이 포함된 콘티만 PDF로 내보낼 수 있습니다');
+        return;
+    }
+    
+    showToast('🔄 PDF 생성 중... (이미지 로딩 대기)');
+    
+    try {
+        const { jsPDF } = jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4'); // 세로 A4
+        const pageWidth = pdf.internal.pageSize.getWidth();  // 210mm
+        const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
+        
+        // ── 1페이지: 콘티 표지 ──────────────────────────────────────────
+        const PALETTES = [
+            { bg: [45, 74, 92], accent: [126, 200, 227] },
+            { bg: [61, 43, 90], accent: [196, 168, 232] },
+            { bg: [26, 58, 42], accent: [126, 207, 170] },
+            { bg: [90, 45, 58], accent: [240, 168, 184] },
+            { bg: [45, 58, 92], accent: [168, 191, 240] },
+            { bg: [74, 48, 32], accent: [240, 200, 144] },
+            { bg: [28, 44, 62], accent: [144, 200, 240] },
+            { bg: [58, 32, 64], accent: [216, 168, 240] },
+        ];
+        const hashIdx = (str) => {
+            let h = 0;
+            for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+            return Math.abs(h) % PALETTES.length;
+        };
+        const { bg: BG, accent: AC } = PALETTES[hashIdx(title)];
+        
+        // 배경
+        pdf.setFillColor(...BG);
+        pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+        
+        // 제목
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(28);
+        pdf.text(title, pageWidth / 2, 80, { align: 'center' });
+        
+        // 곡 수
+        pdf.setFontSize(14);
+        pdf.setTextColor(...AC);
+        pdf.text(`총 ${songLines.length}곡`, pageWidth / 2, 100, { align: 'center' });
+        
+        // ── 2페이지 이후: 악보 이미지 ─────────────────────────────────
+        let pageNum = 1;
+        const margin = 10;
+        const imgWidth = pageWidth - margin * 2;
+        const imgHeight = pageHeight - margin * 2;
+        
+        for (const songLine of songLines) {
+            // 곡 번호 추출
+            const match = songLine.match(/^(?:통|찬)?(\d+)/);
+            if (!match) continue;
+            
+            const num = match[1].padStart(3, '0');
+            const prefix = songLine.includes('통') ? '통' : songLine.includes('찬') ? '찬' : '';
+            const imgKey = prefix + num;
+            
+            // 이미지 경로
+            const basePath = prefix === '찬' ? 'images/hymn/' : prefix === '통' ? 'images/tongil/' : 'images/';
+            const extensions = ['.jpg', '.png', '.gif', '.jfif', '.JPG', '.PNG', '.GIF', '.JFIF'];
+            
+            // 이미지 찾기
+            let imgSrc = null;
+            for (const ext of extensions) {
+                const testSrc = basePath + num + ext;
+                try {
+                    const loaded = await loadImageAsync(testSrc);
+                    if (loaded) {
+                        imgSrc = testSrc;
+                        break;
+                    }
+                } catch {}
+            }
+            
+            if (imgSrc) {
+                pdf.addPage();
+                pageNum++;
+                
+                // 이미지 추가
+                try {
+                    pdf.addImage(imgSrc, 'JPEG', margin, margin, imgWidth, imgHeight, undefined, 'FAST');
+                } catch (err) {
+                    console.warn('PDF 이미지 추가 실패:', imgSrc, err);
+                    // 이미지 실패 시 빈 페이지 또는 텍스트
+                    pdf.setFontSize(12);
+                    pdf.setTextColor(100);
+                    pdf.text(`악보 이미지 로드 실패: ${imgKey}`, pageWidth / 2, pageHeight / 2, { align: 'center' });
+                }
+            }
+        }
+        
+        // PDF 다운로드
+        const safeTitle = title.replace(/[\/\\:*?"<>|]/g, '_').substring(0, 30);
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        pdf.save(`${safeTitle}_${dateStr}.pdf`);
+        
+        showToast(`✅ PDF 다운로드 완료! (${pageNum}페이지)`);
+        
+    } catch (error) {
+        console.error('PDF 생성 오류:', error);
+        showToast('⚠️ PDF 생성 중 오류가 발생했습니다');
+    }
+}
+
+// 이미지 비동기 로드 헬퍼
+function loadImageAsync(src) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = src;
+        // 타임아웃
+        setTimeout(() => resolve(false), 3000);
+    });
+}
