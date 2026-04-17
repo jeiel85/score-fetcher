@@ -244,3 +244,206 @@ async function doShareConti() {
     a.click();
     closeSharePreview();
 }
+
+// ─── #147 세로형 콘티 이미지 생성 (SNS 공유용) ────────────────────────────
+
+async function generateVerticalContiCanvas() {
+    const title      = document.getElementById('setlist-title').value.trim();
+    const rawContent = document.getElementById('song-input').value.trim();
+    if (!rawContent || rawContent.includes('아래 예시처럼 붙여넣어 주세요')) return null;
+
+    // 팔레트: 제목 해시 → 일관된 배경색
+    const PALETTES = [
+        { bg: '#2d4a5c', accent: '#7ec8e3' },
+        { bg: '#3d2b5a', accent: '#c4a8e8' },
+        { bg: '#1a3a2a', accent: '#7ecfaa' },
+        { bg: '#5a2d3a', accent: '#f0a8b8' },
+        { bg: '#2d3a5c', accent: '#a8bff0' },
+        { bg: '#4a3020', accent: '#f0c890' },
+        { bg: '#1c2c3e', accent: '#90c8f0' },
+        { bg: '#3a2040', accent: '#d8a8f0' },
+    ];
+    const hashIdx = (str) => {
+        let h = 0;
+        for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+        return Math.abs(h) % PALETTES.length;
+    };
+    const { bg: BG, accent: AC } = PALETTES[hashIdx(title || rawContent.slice(0, 20))];
+
+    // 세로형: 9:16 비율 (인스타 스토리 규격)
+    const W = 450, SCALE = 2;
+    const H = Math.round(W * 16 / 9);
+    const PAD_X = 30, PAD_TOP = 40, PAD_BOT = 60;
+    const INNER_W = W - PAD_X * 2;
+
+    // 곡 줄만 추출
+    const songLines = rawContent.split('\n').filter(line => {
+        const trimmed = line.trim();
+        return /^\d+/.test(trimmed) || /^찬\d+/.test(trimmed) || /^통\d+/.test(trimmed);
+    });
+
+    // 곡 목록 텍스트
+    const songText = songLines.map(line => {
+        const trimmed = line.trim();
+        // 번호 추출
+        const match = trimmed.match(/^(?:통|찬)?(\d+)\s*(.*)/);
+        if (match) {
+            const num = match[1].padStart(3, '0');
+            const prefix = trimmed.includes('통') ? '통' : trimmed.includes('찬') ? '찬' : '';
+            return `${prefix}${num} ${match[2] || ''}`.trim();
+        }
+        return trimmed;
+    }).join('\n');
+
+    // 텍스트 높이 계산
+    const tmpC = document.createElement('canvas');
+    tmpC.width = W * 2; tmpC.height = 10;
+    const tCtx = tmpC.getContext('2d');
+    
+    const TITLE_SZ = 32, SONG_SZ = 18;
+    tCtx.font = `bold ${TITLE_SZ}px sans-serif`;
+    const titleHeight = TITLE_SZ + 10;
+    
+    tCtx.font = `${SONG_SZ}px sans-serif`;
+    const lineHeight = SONG_SZ + 8;
+    const textHeight = songText.split('\n').length * lineHeight;
+    
+    const totalContentH = titleHeight + 20 + textHeight;
+    
+    // 실제 콘텐츠 높이에 맞게 Canvas 높이 조정
+    const minH = H * SCALE;
+    const neededH = (PAD_TOP + totalContentH + PAD_BOT) * SCALE;
+    const canvasH = Math.max(minH, neededH);
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = W * SCALE;
+    canvas.height = canvasH;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(SCALE, SCALE);
+
+    // 배경
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, W, canvasH / SCALE);
+
+    let y = PAD_TOP;
+
+    // 제목
+    ctx.fillStyle = 'white';
+    ctx.font = `bold ${TITLE_SZ}px sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(title || '콘티', PAD_X, y + TITLE_SZ);
+    y += titleHeight;
+
+    // 구분선
+    ctx.strokeStyle = AC;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(PAD_X, y);
+    ctx.lineTo(W - PAD_X, y);
+    ctx.stroke();
+    y += 20;
+
+    // 곡 목록
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = `${SONG_SZ}px sans-serif`;
+    ctx.textAlign = 'left';
+    
+    const lines = songText.split('\n');
+    lines.forEach(line => {
+        if (line.trim()) {
+            ctx.fillText(line, PAD_X, y + SONG_SZ);
+        }
+        y += lineHeight;
+    });
+
+    // 워터마크
+    y = canvasH / SCALE - PAD_BOT + 20;
+    ctx.fillStyle = AC;
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Made with 🎵 콘티 메이커', W / 2, y);
+
+    return canvas;
+}
+
+// 세로형 이미지 공유
+async function shareVerticalConti() {
+    const canvas = await generateVerticalContiCanvas();
+    if (!canvas) {
+        showToast('⚠️ 공유할 콘티 내용이 없습니다');
+        return;
+    }
+
+    const title = document.getElementById('setlist-title').value.trim() || '콘티';
+    const safeTitle = title.replace(/[\/\\:*?"<>|]/g, '_').substring(0, 20);
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    
+    canvas.toBlob(blob => {
+        if (!blob) {
+            showToast('⚠️ 이미지 생성에 실패했습니다');
+            return;
+        }
+        
+        const file = new File([blob], `${safeTitle}_${dateStr}_vertical.png`, { type: 'image/png' });
+        
+        // 미리보기
+        showVerticalPreview(file, canvas, title);
+    }, 'image/png');
+}
+
+// 세로형 이미지 미리보기 모달
+let _verticalPreviewFile = null;
+function showVerticalPreview(file, canvas, title) {
+    let modal = document.getElementById('verticalPreviewModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'verticalPreviewModal';
+        modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:10000;display:flex;flex-direction:column;justify-content:center;align-items:center;';
+        modal.onclick = (e) => { if (e.target === modal) closeVerticalPreview(); };
+        
+        modal.innerHTML = `
+            <img id="verticalPreviewImg" style="max-width:90%;max-height:80vh;border-radius:8px;" alt="미리보기">
+            <div style="margin-top:20px;display:flex;gap:12px;">
+                <button onclick="downloadVerticalConti()" style="background:#181d3a;color:white;border:none;border-radius:8px;padding:12px 24px;font-size:14px;cursor:pointer;">📥 다운로드</button>
+                <button onclick="shareVerticalContiDirect()" style="background:#5465FF;color:white;border:none;border-radius:8px;padding:12px 24px;font-size:14px;cursor:pointer;">📤 공유하기</button>
+                <button onclick="closeVerticalPreview()" style="background:#666;color:white;border:none;border-radius:8px;padding:12px 24px;font-size:14px;cursor:pointer;">✕ 닫기</button>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+    
+    _verticalPreviewFile = file;
+    document.getElementById('verticalPreviewImg').src = canvas.toDataURL('image/png');
+    modal.style.display = 'flex';
+}
+
+function closeVerticalPreview() {
+    const modal = document.getElementById('verticalPreviewModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function downloadVerticalConti() {
+    if (!_verticalPreviewFile) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(_verticalPreviewFile);
+    a.download = _verticalPreviewFile.name;
+    a.click();
+    closeVerticalPreview();
+}
+
+async function shareVerticalContiDirect() {
+    if (!_verticalPreviewFile || !navigator.share) return;
+    
+    try {
+        await navigator.share({
+            title: '콘티 공유',
+            files: [_verticalPreviewFile]
+        });
+        closeVerticalPreview();
+    } catch (e) {
+        if (e.name !== 'AbortError') {
+            downloadVerticalConti();
+        }
+    }
+}
