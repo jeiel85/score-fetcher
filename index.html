@@ -4,7 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>콘티 메이커 🎵</title>
+    <title>콘티 메이커 🎵 - 교회 예배 콘티 관리 및 악보 뷰어</title>
+    <meta name="description" content="교회 예배 콘티(악보 세트리스트)를 관리하고, 찬양 번호로 악보를 자동으로 검색하는 스마트 웹 앱. 실시간 콘티 공유, 푸시 알림, 전체화면 악보 뷰어 지원">
+    <meta name="keywords" content="콘티, 예배 콘티, 악보, 찬양, 세트리스트, 교회, 예배 준비, 악보 뷰어, 찬양 앱">
+    <meta name="author" content="Conti Maker">
+    <meta name="robots" content="index, follow">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://score-fetcher.vercel.app/">
 
     <link rel="icon" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
@@ -18,18 +25,47 @@
     <!-- Open Graph (카카오톡, 슬랙, 디스코드 등 링크 미리보기) -->
     <meta property="og:type"        content="website">
     <meta property="og:url"         content="https://score-fetcher.vercel.app/">
-    <meta property="og:title"       content="콘티 메이커 🎵">
-    <meta property="og:description" content="예배 콘티 관리 · 악보 뷰어 · 실시간 푸시 알림">
+    <meta property="og:title"       content="콘티 메이커 🎵 - 교회 예배 콘티 관리 및 악보 뷰어">
+    <meta property="og:description" content="교회 예배 콘티를 관리하고, 찬양 번호로 악보를 자동으로 검색. 실시간 공유, 푸시 알림, 전체화면 뷰어 지원">
     <meta property="og:image"       content="https://score-fetcher.vercel.app/og-image-premium.png?v=2">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:locale"      content="ko_KR">
+    <meta property="og:site_name"   content="콘티 메이커">
 
     <!-- Twitter Card -->
     <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:title"       content="콘티 메이커 🎵">
-    <meta name="twitter:description" content="예배 콘티 관리 · 악보 뷰어 · 실시간 푸시 알림">
+    <meta name="twitter:title"       content="콘티 메이커 🎵 - 교회 예배 콘티 관리 및 악보 뷰어">
+    <meta name="twitter:description" content="교회 예배 콘티를 관리하고, 찬양 번호로 악보를 자동으로 검색. 실시간 공유, 푸시 알림, 전체화면 뷰어 지원">
     <meta name="twitter:image"       content="https://score-fetcher.vercel.app/og-image-premium.png?v=2">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "콘티 메이커",
+        "alternateName": "Conti Maker",
+        "description": "교회 예배 콘티(악보 세트리스트)를 관리하고, 찬양 번호로 악보를 자동으로 검색하는 스마트 웹 앱",
+        "url": "https://score-fetcher.vercel.app/",
+        "applicationCategory": "LifestyleApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "KRW"
+        },
+        "screenshot": "https://score-fetcher.vercel.app/og-image-premium.png?v=2",
+        "featureList": [
+            "악보 번호로 자동 검색",
+            "전체화면 악보 뷰어",
+            "실시간 콘티 공유",
+            "푸시 알림",
+            "콘티 템플릿",
+            "JSON 내보내기/가져오기"
+        ]
+    }
+    </script>
 
     <!-- Firebase SDK (Cloud Messaging 푸시 알림 및 Database 용) -->
     <script src="firebase-config.js"></script>
