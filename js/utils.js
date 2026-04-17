@@ -177,3 +177,78 @@ async function prefetchImage(num) {
         } catch(e) {}
     }
 }
+
+// ─── #154 오프라인 모드 ─────────────────────────────────────────────────
+
+let _offlineIndicator = null;
+
+// 오프라인 상태 감지 및 표시
+function initOfflineMode() {
+    // 오프라인 인디케이터 생성
+    _offlineIndicator = document.createElement('div');
+    _offlineIndicator.id = 'offline-indicator';
+    _offlineIndicator.style.cssText = `
+        position: fixed;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #f97316;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        z-index: 9999;
+        display: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transition: opacity 0.3s;
+    `;
+    _offlineIndicator.innerHTML = '📴 오프라인 모드';
+    document.body.appendChild(_offlineIndicator);
+    
+    // 초기 상태
+    updateOnlineStatus();
+    
+    // 온라인/오프라인 이벤트 리스너
+    window.addEventListener('online', () => {
+        updateOnlineStatus();
+        showToast('🌐 온라인恢复了!', 2000);
+    });
+    
+    window.addEventListener('offline', () => {
+        updateOnlineStatus();
+        showToast('📴 오프라인 상태입니다. 저장된 데이터만 조회 가능합니다.', 4000);
+    });
+}
+
+function updateOnlineStatus() {
+    if (!navigator.onLine) {
+        _offlineIndicator.style.display = 'block';
+    } else {
+        _offlineIndicator.style.display = 'none';
+    }
+}
+
+// Service Worker 캐시 상태 표시
+async function showCacheStatus() {
+    if (!('caches' in window)) return;
+    
+    try {
+        const cacheNames = await caches.keys();
+        const scoresCache = cacheNames.find(name => name.startsWith('scores'));
+        if (scoresCache) {
+            const cache = await caches.open(scoresCache);
+            const keys = await cache.keys();
+            console.log(`📦 오프라인 캐시: ${keys.length}개의 이미지 캐시됨`);
+        }
+    } catch (e) {
+        console.warn('캐시 상태 확인 실패:', e);
+    }
+}
+
+// 초기화
+document.addEventListener('DOMContentLoaded', () => {
+    initOfflineMode();
+    // 배경에서 캐시 상태 확인
+    setTimeout(showCacheStatus, 2000);
+});
