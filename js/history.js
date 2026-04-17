@@ -4,6 +4,98 @@
 let _loadedContiKey = null;
 let _loadedContiTitle = null;
 
+// ─── #134 초안(draft) / 확정(published) 상태 구분 ────────────────────────
+
+const DRAFT_STORAGE_KEY = 'conti_draft';
+
+// 초안 저장 (localStorage에만 저장)
+function saveDraft() {
+    const titleEl = document.getElementById('setlist-title');
+    const textareaEl = document.getElementById('song-input');
+    
+    const title = titleEl.value.trim();
+    const text = textareaEl.value.trim();
+    
+    if (!text || text.includes('아래 예시처럼 붙여넣어 주세요')) {
+        showToast('⚠️ 저장할 콘티 내용이 없습니다');
+        return;
+    }
+    
+    // 제목 날짜 정규화
+    const normalizedTitle = normalizeDateInTitle(title);
+    if (normalizedTitle !== title) titleEl.value = normalizedTitle;
+    
+    // 곡 번호 정규화
+    const normalizedText = normalizeContiText(text);
+    if (normalizedText !== text) textareaEl.value = normalizedText;
+    
+    const draft = {
+        title: normalizedTitle || '제목 없는 콘티',
+        text: normalizedText,
+        savedAt: Date.now()
+    };
+    
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    updateDraftIndicator(true);
+    showToast('📝 초안이 저장되었습니다 (게시 전 다른 사람이 볼 수 없음)');
+}
+
+// 초안 불러오기
+function loadDraft() {
+    const draftJson = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!draftJson) {
+        showToast('저장된 초안이 없습니다');
+        return;
+    }
+    
+    try {
+        const draft = JSON.parse(draftJson);
+        document.getElementById('setlist-title').value = draft.title || '';
+        document.getElementById('song-input').value = draft.text || '';
+        document.getElementById('result-container').innerHTML = '';
+        sheetList = [];
+        _setLoadedConti(null, null); // Firebase 연동 해제
+        updateDraftIndicator(true);
+        showToast(`📋 초안을 불러왔습니다 (${draft.savedAt ? new Date(draft.savedAt).toLocaleString() : '시간 불명'})`);
+        startSearch();
+    } catch (e) {
+        console.error('초안 파싱 오류:', e);
+        showToast('⚠️ 초안을 불러오는 중 오류가 발생했습니다');
+    }
+}
+
+// 초안 삭제
+function deleteDraft() {
+    if (!localStorage.getItem(DRAFT_STORAGE_KEY)) {
+        showToast('삭제할 초안이 없습니다');
+        return;
+    }
+    
+    if (confirm('초안을 삭제하시겠습니까?')) {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+        updateDraftIndicator(false);
+        showToast('🗑️ 초안이 삭제되었습니다');
+    }
+}
+
+// 초안 표시 상태 업데이트
+function updateDraftIndicator(hasDraft) {
+    const indicator = document.getElementById('draft-indicator');
+    if (!indicator) return;
+    
+    if (hasDraft) {
+        indicator.style.display = 'flex';
+    } else {
+        indicator.style.display = 'none';
+    }
+}
+
+// 초기 로드 시 초안 상태 확인
+(function initDraftIndicator() {
+    const hasDraft = !!localStorage.getItem(DRAFT_STORAGE_KEY);
+    updateDraftIndicator(hasDraft);
+})();
+
 function _setLoadedConti(key, title) {
     _loadedContiKey = key;
     _loadedContiTitle = title;
