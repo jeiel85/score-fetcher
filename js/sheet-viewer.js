@@ -348,6 +348,7 @@ function openFullscreen(index) {
     }
     updateNavBtns();
     showFsUI();
+    addMetronomeToFullscreen(); // 메트로놈 UI 추가
     if (!_realtimeSwipeDone) preloadAdjacentSheets(index);
 }
 
@@ -980,4 +981,195 @@ window.addEventListener('resize', () => {
         closeFullscreen();
     }
 });
+
+// ─── #157 메트로놈 및 BPM 가이드 (Web Audio API) ─────────────────────────────
+
+let _metronomeAudioCtx = null;
+let _metronomeInterval = null;
+let _metronomeBpm = 72; // 기본 BPM
+let _metronomeBeat = 0; // 현재 박자 (1, 2, 3, 4)
+let _metronomeBeatsPerMeasure = 4; // 마디당 박수
+
+// Web Audio API 컨텍스트 초기화
+function getMetronomeAudioContext() {
+    if (!_metronomeAudioCtx) {
+        _metronomeAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return _metronomeAudioCtx;
+}
+
+// 메트로놈 클릭 소리 생성
+function playMetronomeClick(beat) {
+    try {
+        const ctx = getMetronomeAudioContext();
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        // 첫 박자는 높은音 ( acento )
+        const freq = beat === 1 ? 1000 : 800;
+        const duration = beat === 1 ? 0.05 : 0.03;
+        
+        oscillator.frequency.value = freq;
+        oscillator.type = 'square';
+        
+        gainNode.gain.setValueAtTime(beat === 1 ? 0.3 : 0.15, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + duration);
+    } catch (e) {
+        console.warn('메트로놈 소리 생성 실패:', e);
+    }
+}
+
+// 메트로놈 토글
+function toggleMetronome() {
+    if (_metronomeInterval) {
+        stopMetronome();
+    } else {
+        startMetronome();
+    }
+    updateMetronomeUI();
+}
+
+// 메트로놈 시작
+function startMetronome() {
+    if (_metronomeInterval) return;
+    
+    // AudioContext resume (브라우저 자동재생 정책 대응)
+    const ctx = getMetronomeAudioContext();
+    if (ctx.state === 'suspended') {
+        ctx.resume();
+    }
+    
+    _metronomeBeat = 0;
+    const intervalMs = 60000 / _metronomeBpm;
+    
+    _metronomeInterval = setInterval(() => {
+        _metronomeBeat = (_metronomeBeat % _metronomeBeatsPerMeasure) + 1;
+        playMetronomeClick(_metronomeBeat);
+        updateMetronomeVisual(_metronomeBeat);
+    }, intervalMs);
+}
+
+// 메트로놈 정지
+function stopMetronome() {
+    if (_metronomeInterval) {
+        clearInterval(_metronomeInterval);
+        _metronomeInterval = null;
+        _metronomeBeat = 0;
+        updateMetronomeVisual(0);
+    }
+}
+
+// BPM 변경
+function setMetronomeBpm(bpm) {
+    _metronomeBpm = Math.max(40, Math.min(240, bpm));
+    document.getElementById('metronome-bpm-display').textContent = _metronomeBpm;
+    document.getElementById('metronome-bpm-slider').value = _metronomeBpm;
+    
+    // 실행 중이면 재시작
+    if (_metronomeInterval) {
+        stopMetronome();
+        startMetronome();
+    }
+}
+
+// 시각적 박자 표시 업데이트
+function updateMetronomeVisual(beat) {
+    const beats = document.querySelectorAll('.metronome-beat');
+    beats.forEach((el, i) => {
+        const beatNum = i + 1;
+        if (beatNum === beat) {
+            el.classList.add('active');
+            el.style.transform = beatNum === 1 ? 'scale(1.4)' : 'scale(1.2)';
+            el.style.backgroundColor = beatNum === 1 ? '#ef4444' : '#f97316';
+        } else {
+            el.classList.remove('active');
+            el.style.transform = 'scale(1)';
+            el.style.backgroundColor = '#6b7280';
+        }
+    });
+    
+    // 숫자 표시
+    if (beat > 0) {
+        document.getElementById('metronome-count').textContent = `${beat}/${_metronomeBeatsPerMeasure}`;
+    } else {
+        document.getElementById('metronome-count').textContent = '-';
+    }
+}
+
+// UI 업데이트
+function updateMetronomeUI() {
+    const indicator = document.getElementById('metronome-indicator');
+    const toggleBtn = document.getElementById('metronome-toggle');
+    
+    if (_metronomeInterval) {
+        indicator.classList.add('active');
+        toggleBtn.textContent = '⏸️';
+        toggleBtn.classList.add('playing');
+    } else {
+        indicator.classList.remove('active');
+        toggleBtn.textContent = '▶️';
+        toggleBtn.classList.remove('playing');
+    }
+}
+
+// 전체화면 뷰어에 메트로놈 UI 추가
+function addMetronomeToFullscreen() {
+    // 이미 추가되어 있으면 스킵
+    if (document.getElementById('metronome-indicator')) return;
+    
+    const footer = document.querySelector('.fullscreen-footer');
+    if (!footer) return;
+    
+    // 메트로놈 컨테이너
+    const metronome = document.createElement('div');
+    metronome.id = 'metronome-indicator';
+    metronome.style.cssText = `
+        position: absolute;
+        bottom: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.85);
+        border-radius: 16px;
+        padding: 12px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        z-index: 1001;
+        transition: opacity 0.3s;
+    `;
+    
+    metronome.innerHTML = `
+        <div style="display:flex; gap:12px; margin-bottom:4px;">
+            <div class="metronome-beat" style="width:16px; height:16px; border-radius:50%; background:#6b7280; transition:all 0.1s;"></div>
+            <div class="metronome-beat" style="width:16px; height:16px; border-radius:50%; background:#6b7280; transition:all 0.1s;"></div>
+            <div class="metronome-beat" style="width:16px; height:16px; border-radius:50%; background:#6b7280; transition:all 0.1s;"></div>
+            <div class="metronome-beat" style="width:16px; height:16px; border-radius:50%; background:#6b7280; transition:all 0.1s;"></div>
+        </div>
+        <div id="metronome-count" style="font-size:24px; font-weight:bold; color:white; font-variant-numeric: tabular-nums;">-</div>
+        <div style="display:flex; align-items:center; gap:12px;">
+            <button id="metronome-toggle" onclick="toggleMetronome()" style="background:#5465FF; color:white; border:none; border-radius:50%; width:40px; height:40px; font-size:18px; cursor:pointer;">▶️</button>
+            <div style="display:flex; flex-direction:column; align-items:center;">
+                <input type="range" id="metronome-bpm-slider" min="40" max="200" value="${_metronomeBpm}" onchange="setMetronomeBpm(+this.value)" oninput="document.getElementById('metronome-bpm-display').textContent=this.value" style="width:100px;">
+                <div style="font-size:14px; color:#ccc; margin-top:4px;"><span id="metronome-bpm-display">${_metronomeBpm}</span> BPM</div>
+            </div>
+        </div>
+    `;
+    
+    footer.style.position = 'relative';
+    footer.appendChild(metronome);
+}
+
+// 전체화면 닫을 때 메트로놈 정지
+const _originalCloseFullscreen = closeFullscreen;
+closeFullscreen = function() {
+    stopMetronome();
+    _originalCloseFullscreen();
+};
 
