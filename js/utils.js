@@ -2,6 +2,8 @@
 
 function showToast(msg, duration = 2500) {
     const t = document.createElement('div');
+    t.setAttribute('role', 'alert');
+    t.setAttribute('aria-live', 'polite');
     t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:14px 20px;border-radius:10px;z-index:9999;font-size:14px;max-width:90%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);line-height:1.5;';
     t.innerHTML = msg;
     document.body.appendChild(t);
