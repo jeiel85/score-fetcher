@@ -1001,3 +1001,114 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
 }
 .slide-in-right { animation: slideInFromRight 0.22s ease; }
 .slide-in-left  { animation: slideInFromLeft  0.22s ease; }
+
+/* ─── #156 다크 모드 ──────────────────────────────────────────────────── */
+
+/* OS 다크 모드 감지 */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary:                #3d4eff;
+        --primary-container:      #1e2340;
+        --on-primary:             #ffffff;
+        --accent:                 #818cf8;
+        --secondary-container:    #3730a3;
+        --on-secondary-container: #c7d2fe;
+        --surface:                #121212;
+        --surface-low:            #1a1a1a;
+        --surface-container:      #252525;
+        --surface-high:           #303030;
+        --surface-highest:        #3a3a3a;
+        --on-surface:             #e1e1e1;
+        --on-surface-variant:     #a1a1aa;
+        --outline-variant:        #3f3f46;
+        --error:                  #f87171;
+        --shadow:                 rgba(0, 0, 0, 0.3);
+    }
+    
+    html { background-color: #0a0a0a; }
+    body { box-shadow: none; }
+    
+    /* 모달 오버레이 */
+    .modal-overlay { background: rgba(0, 0, 0, 0.8); }
+    .modal-content { background: #1a1a1a; }
+    
+    /* 입력 필드 */
+    input, textarea, select {
+        background-color: #252525;
+        color: #e1e1e1;
+        border-color: #3f3f46;
+    }
+    
+    /* 리스트 아이템 */
+    .song-item { background: #1a1a1a; border-color: #2a2a2a; }
+    .song-item:active { background: #252525; }
+    
+    /* 카드 */
+    .sheet-music-card { background: #1a1a1a; }
+    
+    /* 전체화면 오버레이 */
+    .fullscreen-overlay { background: #000; }
+    
+    /* 설정 모달 */
+    .settings-section h4 { color: #e1e1e1; border-color: #3f3f46; }
+    .setting-row span { color: #e1e1e1; }
+    .setting-row small { color: #a1a1aa; }
+}
+
+/* JS 토글 다크 모드 (OS보다 우선) */
+:root[data-theme="dark"] {
+    --primary:                #3d4eff;
+    --primary-container:      #1e2340;
+    --on-primary:             #ffffff;
+    --accent:                 #818cf8;
+    --secondary-container:    #3730a3;
+    --on-secondary-container: #c7d2fe;
+    --surface:                #121212;
+    --surface-low:            #1a1a1a;
+    --surface-container:      #252525;
+    --surface-high:           #303030;
+    --surface-highest:        #3a3a3a;
+    --on-surface:             #e1e1e1;
+    --on-surface-variant:     #a1a1aa;
+    --outline-variant:        #3f3f46;
+    --error:                  #f87171;
+    --shadow:                 rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] html { background-color: #0a0a0a; }
+:root[data-theme="dark"] body { box-shadow: none; }
+:root[data-theme="dark"] .modal-overlay { background: rgba(0, 0, 0, 0.8); }
+:root[data-theme="dark"] .modal-content { background: #1a1a1a; }
+:root[data-theme="dark"] input, 
+:root[data-theme="dark"] textarea, 
+:root[data-theme="dark"] select { background-color: #252525; color: #e1e1e1; border-color: #3f3f46; }
+:root[data-theme="dark"] .song-item { background: #1a1a1a; border-color: #2a2a2a; }
+:root[data-theme="dark"] .song-item:active { background: #252525; }
+:root[data-theme="dark"] .sheet-music-card { background: #1a1a1a; }
+:root[data-theme="dark"] .fullscreen-overlay { background: #000; }
+:root[data-theme="dark"] .settings-section h4 { color: #e1e1e1; border-color: #3f3f46; }
+:root[data-theme="dark"] .setting-row span { color: #e1e1e1; }
+:root[data-theme="dark"] .setting-row small { color: #a1a1aa; }
+
+/* JS 토글 라이트 모드 (OS 다크 모드 덮어쓰기) */
+:root[data-theme="light"] {
+    --primary:                #181d3a;
+    --primary-container:      #2d3250;
+    --on-primary:             #ffffff;
+    --accent:                 #c0c4ea;
+    --secondary-container:    #c4ccff;
+    --on-secondary-container: #4d5581;
+    --surface:                #f9f9f9;
+    --surface-low:            #f3f3f3;
+    --surface-container:      #eeeeee;
+    --surface-high:           #e8e8e8;
+    --surface-highest:        #e2e2e2;
+    --on-surface:             #1a1c1c;
+    --on-surface-variant:     #46464d;
+    --outline-variant:        #c7c5ce;
+    --error:                  #ba1a1a;
+    --shadow:                 rgba(24, 29, 58, 0.08);
+}
+
+:root[data-theme="light"] html { background-color: #d8dcf0; }
+:root[data-theme="light"] body { box-shadow: 0 0 40px rgba(24, 29, 58, 0.15); }
