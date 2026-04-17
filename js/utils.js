@@ -177,3 +177,60 @@ async function prefetchImage(num) {
         } catch(e) {}
     }
 }
+
+// ─── #156 다크 모드 ─────────────────────────────────────────────────────
+
+const THEME_STORAGE_KEY = 'conti_maker_theme';
+
+function getSystemTheme() {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function getUserTheme() {
+    return localStorage.getItem(THEME_STORAGE_KEY);
+}
+
+function setTheme(theme) {
+    if (theme === 'system') {
+        localStorage.removeItem(THEME_STORAGE_KEY);
+        document.documentElement.removeAttribute('data-theme');
+    } else {
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+        document.documentElement.setAttribute('data-theme', theme);
+    }
+    updateThemeToggleUI();
+}
+
+function toggleTheme() {
+    const current = getUserTheme() || getSystemTheme();
+    const next = current === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    showToast(next === 'dark' ? '🌙 다크 모드 적용됨' : '☀️ 라이트 모드 적용됨');
+}
+
+function updateThemeToggleUI() {
+    const toggle = document.getElementById('theme-toggle-btn');
+    const toggleSmall = document.getElementById('theme-toggle-small');
+    const current = getUserTheme() || getSystemTheme();
+    
+    const icon = current === 'dark' ? '🌙' : '☀️';
+    const label = current === 'dark' ? '다크' : '라이트';
+    
+    if (toggle) toggle.textContent = `${icon} ${label} 모드`;
+    if (toggleSmall) toggleSmall.textContent = icon;
+}
+
+// 초기화 시 테마 적용
+(function initTheme() {
+    const userTheme = getUserTheme();
+    if (userTheme) {
+        document.documentElement.setAttribute('data-theme', userTheme);
+    }
+    // 시스템 테마 변경 감지
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!getUserTheme()) {
+            updateThemeToggleUI();
+        }
+    });
+    updateThemeToggleUI();
+})();
