@@ -494,3 +494,172 @@ function importContiFromJson() {
     };
     input.click();
 }
+
+// ─── #131 콘티 템플릿 저장/불러오기 ──────────────────────────────────────
+
+const TEMPLATE_STORAGE_KEY = 'conti_templates';
+
+// 템플릿 저장
+function saveAsTemplate() {
+    const text = document.getElementById('song-input').value.trim();
+    
+    if (!text) {
+        showToast('⚠️ 템플릿으로 저장할 콘티 내용이 없습니다');
+        return;
+    }
+    
+    // 곡 줄만 추출 (제목, 날짜, 코멘트 제외)
+    const lines = text.split('\n').filter(line => {
+        const trimmed = line.trim();
+        return /^\d+/.test(trimmed) || /^찬\d+/.test(trimmed) || /^통\d+/.test(trimmed);
+    });
+    
+    if (lines.length === 0) {
+        showToast('⚠️ 곡이 포함된 콘티만 템플릿으로 저장할 수 있습니다');
+        return;
+    }
+    
+    const templateName = prompt('템플릿 이름을 입력하세요:', `템플릿 ${getTemplateCount() + 1}`);
+    if (!templateName || !templateName.trim()) return;
+    
+    const templates = getTemplates();
+    const newTemplate = {
+        id: Date.now().toString(),
+        name: templateName.trim(),
+        songs: lines,
+        createdAt: new Date().toISOString()
+    };
+    
+    templates.push(newTemplate);
+    localStorage.setItem(TEMPLATE_STORAGE_KEY, JSON.stringify(templates));
+    
+    showToast(`✅ "${templateName}" 템플릿이 저장되었습니다`);
+}
+
+// 템플릿 목록 가져오기
+function getTemplates() {
+    const stored = localStorage.getItem(TEMPLATE_STORAGE_KEY);
+    if (!stored) return [];
+    try {
+        return JSON.parse(stored);
+    } catch {
+        return [];
+    }
+}
+
+// 템플릿 개수
+function getTemplateCount() {
+    return getTemplates().length;
+}
+
+// 템플릿 불러오기
+function loadTemplate(templateId) {
+    const templates = getTemplates();
+    const template = templates.find(t => t.id === templateId);
+    
+    if (!template) {
+        showToast('⚠️ 템플릿을 찾을 수 없습니다');
+        return;
+    }
+    
+    // 확인
+    const currentText = document.getElementById('song-input').value.trim();
+    if (currentText) {
+        const ok = confirm('현재 콘티 내용을 덮어쓰시겠습니까?');
+        if (!ok) return;
+    }
+    
+    document.getElementById('setlist-title').value = '';
+    document.getElementById('song-input').value = template.songs.join('\n');
+    document.getElementById('result-container').innerHTML = '';
+    sheetList = [];
+    _setLoadedConti(null, null);
+    
+    closeTemplateModal();
+    showToast(`📋 "${template.name}" 템플릿을 불러왔습니다 (${template.songs.length}곡)`);
+    startSearch();
+}
+
+// 템플릿 삭제
+function deleteTemplate(templateId) {
+    const templates = getTemplates();
+    const template = templates.find(t => t.id === templateId);
+    
+    if (!template) return;
+    
+    if (confirm(`"${template.name}" 템플릿을 삭제하시겠습니까?`)) {
+        const filtered = templates.filter(t => t.id !== templateId);
+        localStorage.setItem(TEMPLATE_STORAGE_KEY, JSON.stringify(filtered));
+        showToast('🗑️ 템플릿이 삭제되었습니다');
+        openTemplateModal(); // 목록 갱신
+    }
+}
+
+// 템플릿 모달 열기
+function openTemplateModal() {
+    const modal = document.getElementById('templateModal');
+    if (!modal) {
+        createTemplateModal();
+        return;
+    }
+    
+    const listContainer = document.getElementById('templateListContainer');
+    const templates = getTemplates();
+    
+    if (templates.length === 0) {
+        listContainer.innerHTML = '<li class="song-item" style="text-align:center; color:#999;">저장된 템플릿이 없습니다.</li>';
+    } else {
+        listContainer.innerHTML = '';
+        templates.forEach(template => {
+            const li = document.createElement('li');
+            li.className = 'song-item';
+            li.style.cssText = 'cursor:pointer; display:flex; justify-content:space-between; align-items:center;';
+            li.innerHTML = `
+                <div style="flex:1;">
+                    <div style="font-weight:600;">${template.name}</div>
+                    <div style="font-size:12px; color:#666; margin-top:4px;">${template.songs.join(', ')}</div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button onclick="loadTemplate('${template.id}')" style="background:#5465FF; color:white; border:none; border-radius:6px; padding:6px 12px; cursor:pointer; font-size:12px;">불러오기</button>
+                    <button onclick="deleteTemplate('${template.id}')" style="background:#ff6b6b; color:white; border:none; border-radius:6px; padding:6px 12px; cursor:pointer; font-size:12px;">삭제</button>
+                </div>
+            `;
+            listContainer.appendChild(li);
+        });
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// 템플릿 모달 닫기
+function closeTemplateModal() {
+    const modal = document.getElementById('templateModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// 템플릿 모달 DOM 생성
+function createTemplateModal() {
+    const modal = document.createElement('div');
+    modal.id = 'templateModal';
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center;';
+    modal.onclick = (e) => { if (e.target === modal) closeTemplateModal(); };
+    
+    modal.innerHTML = `
+        <div style="background:white; border-radius:12px; max-width:500px; width:90%; max-height:80vh; overflow:hidden; display:flex; flex-direction:column;">
+            <div style="padding:16px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; font-size:16px;">📋 콘티 템플릿</h3>
+                <button onclick="closeTemplateModal()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#666;">&times;</button>
+            </div>
+            <ul id="templateListContainer" style="flex:1; overflow-y:auto; list-style:none; padding:0; margin:0;">
+                <li class="song-item" style="text-align:center; color:#999;">로딩 중...</li>
+            </ul>
+            <div style="padding:16px; border-top:1px solid #eee;">
+                <button onclick="saveAsTemplate()" style="width:100%; background:#181d3a; color:white; border:none; border-radius:8px; padding:12px; cursor:pointer; font-weight:600;">➕ 현재 콘티를 템플릿으로 저장</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    openTemplateModal(); // 모달 열기
+}
