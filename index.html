@@ -83,8 +83,8 @@
                 <div class="controls-card" id="controls-section">
                     <div class="top-btn-group">
                         <div class="top-btn-row">
-                            <button class="top-btn btn-show-list" onclick="openSongModal()">📖 찬양 목록</button>
-                            <button class="top-btn btn-history" onclick="openHistoryModal()">🕒 콘티함</button>
+                            <button class="top-btn btn-show-list" onclick="openSongModal()" aria-label="찬양 목록 열기">📖 찬양 목록</button>
+                            <button class="top-btn btn-history" onclick="openHistoryModal()" aria-label="콘티함 열기">🕒 콘티함</button>
                         </div>
                     </div>
                 </div>
@@ -92,15 +92,15 @@
                 <div class="ls-sheet-area" id="ls-sheet-area">
                     <div class="ls-sheet-header">
                         <span id="ls-sheet-title"></span>
-                        <button class="ls-back-btn" onclick="closeLandscapeView()">✕ 돌아가기</button>
+                        <button class="ls-back-btn" onclick="closeLandscapeView()" aria-label="가로 뷰어 닫기">✕ 돌아가기</button>
                     </div>
                     <div class="ls-sheet-body">
                         <img id="ls-sheet-img-next" src="" alt="" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;opacity:0;pointer-events:none;">
-                        <img id="ls-sheet-img" src="" alt="">
+                        <img id="ls-sheet-img" src="" alt="악보 이미지">
                     </div>
                     <div class="ls-sheet-footer">
-                        <button class="fullscreen-nav ls-nav-prev" onclick="navigateLandscapeSheet(-1)">&#8249;</button>
-                        <button class="fullscreen-nav ls-nav-next" onclick="navigateLandscapeSheet(1)">&#8250;</button>
+                        <button class="fullscreen-nav ls-nav-prev" onclick="navigateLandscapeSheet(-1)" aria-label="이전 악보">&#8249;</button>
+                        <button class="fullscreen-nav ls-nav-next" onclick="navigateLandscapeSheet(1)" aria-label="다음 악보">&#8250;</button>
                     </div>
                 </div>
             </div>
@@ -136,15 +136,15 @@
     <div class="fullscreen-overlay" id="fullscreenViewer">
         <div class="fullscreen-header">
             <span class="fs-title" id="fullscreen-title"></span>
-            <button class="btn-close" onclick="closeFullscreen()">&times;</button>
+            <button class="btn-close" onclick="closeFullscreen()" aria-label="전체화면 닫기">&times;</button>
         </div>
         <div class="fullscreen-body" id="fullscreen-body">
             <img id="fullscreen-img-next" src="" alt="" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;opacity:0;pointer-events:none;">
             <img id="fullscreen-img" src="" alt="">
         </div>
         <div class="fullscreen-footer">
-            <button class="fullscreen-nav nav-prev" onclick="navigateSheet(-1)">&#8249;</button>
-            <button class="fullscreen-nav nav-next" onclick="navigateSheet(1)">&#8250;</button>
+<button class="fullscreen-nav nav-prev" onclick="navigateSheet(-1)" aria-label="이전 악보">&#8249;</button>
+                        <button class="fullscreen-nav nav-next" onclick="navigateSheet(1)" aria-label="다음 악보">&#8250;</button>
         </div>
     </div>
 
@@ -152,7 +152,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>📖 찬양 목록</h3>
-                <button class="btn-close" onclick="closeSongModal()">&times;</button>
+                <button class="btn-close" onclick="closeSongModal()" aria-label="찬양 목록 닫기">&times;</button>
             </div>
             <!-- 탭 -->
             <div class="modal-tabs">
@@ -181,7 +181,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="lyrics-title">가사</h3>
-                <button class="btn-close" onclick="closeLyricsModal()">&times;</button>
+                <button class="btn-close" onclick="closeLyricsModal()" aria-label="가사 모달 닫기">&times;</button>
             </div>
             <div id="lyrics-tags" style="display:none; flex-wrap:wrap; gap:6px; padding:10px 16px; border-bottom:1px solid rgba(199,197,206,0.2);"></div>
             <div class="lyrics-body" id="lyrics-content"></div>
@@ -195,7 +195,7 @@
         <div class="modal-content">
             <div class="modal-header history">
                 <h3>🕒 콘티함</h3>
-                <button class="btn-close" onclick="closeHistoryModal()">&times;</button>
+                <button class="btn-close" onclick="closeHistoryModal()" aria-label="콘티함 닫기">&times;</button>
             </div>
             <div class="modal-search">
                 <input type="text" id="historySearchInput" placeholder="제목 또는 곡 번호로 검색..." onkeyup="filterHistory()">
