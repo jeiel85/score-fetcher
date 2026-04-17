@@ -306,3 +306,99 @@ document.getElementById('setlist-title').addEventListener('blur', function () {
     const v = normalizeDateInTitle(this.value);
     if (v !== this.value) this.value = v;
 });
+
+// ─── #136 콘티 JSON 내보내기/가져오기 ──────────────────────────────────────
+
+// JSON 내보내기: 현재 콘티를 JSON 파일로 다운로드
+function exportContiToJson() {
+    const title = document.getElementById('setlist-title').value.trim() || '제목 없는 콘티';
+    const text = document.getElementById('song-input').value.trim();
+    
+    if (!text) {
+        showToast('⚠️ 내보낼 콘티 내용이 없습니다');
+        return;
+    }
+    
+    const now = new Date();
+    const exportData = {
+        version: '1.0',
+        exported_at: now.toISOString(),
+        title: title,
+        songs: text.split('\n').filter(line => line.trim()),
+        metadata: {
+            total_songs: text.split('\n').filter(line => line.trim()).length,
+            app_version: typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'unknown'
+        }
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    // 파일명: 제목_날짜.json
+    const safeTitle = title.replace(/[\/\\:*?"<>|]/g, '_').substring(0, 30);
+    const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    a.download = `${safeTitle}_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('✅ 콘티가 JSON 파일로 내보내졌습니다');
+}
+
+// JSON 가져오기: 파일 선택 후 콘티에 적용
+function importContiFromJson() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            // 데이터 검증
+            if (!data.title && !data.songs && !data.text) {
+                showToast('⚠️ 유효하지 않은 콘티 파일입니다');
+                return;
+            }
+            
+            // 데이터 형식 호환성 처리
+            let title = data.title || '';
+            let songs = [];
+            
+            if (Array.isArray(data.songs)) {
+                songs = data.songs;
+            } else if (typeof data.text === 'string') {
+                songs = data.text.split('\n').filter(line => line.trim());
+            }
+            
+            // 기존 콘티가 있으면 확인
+            const currentText = document.getElementById('song-input').value.trim();
+            if (currentText) {
+                const ok = confirm('현재 콘티 내용을 덮어쓰시겠습니까?\n(확인: 덮어쓰기, 취소: 취소)');
+                if (!ok) return;
+            }
+            
+            // 콘티 적용
+            document.getElementById('setlist-title').value = title;
+            document.getElementById('song-input').value = songs.join('\n');
+            document.getElementById('result-container').innerHTML = '';
+            sheetList = [];
+            _setLoadedConti(null, null); // Firebase 연동 해제
+            
+            showToast(`✅ "${title || '콘티'}"를 불러왔습니다 (${songs.length}곡)`);
+            
+            // 악보 자동 생성
+            startSearch();
+            
+        } catch (error) {
+            console.error('JSON 파싱 오류:', error);
+            showToast('⚠️ 파일을 읽는 중 오류가 발생했습니다');
+        }
+    };
+    input.click();
+}
