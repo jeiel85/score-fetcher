@@ -1,5 +1,88 @@
 // ─── 악보 찾기 & 뷰어 ────────────────────────────────────────────────────────
 
+// ─── #133/#130/#132 태그 파싱 ───────────────────────────────────────────
+
+const DEFAULT_SONG_DURATION = 4; // 기본 곡 소요 시간 (분)
+
+// 태그 정규식: #키:D, #메모:xxx, #시간:4
+const TAG_REGEX = /#(키|키|KEY|key|메모|MEMO|memo|시간|TIME|time|분|MIN|min)\s*[:：]\s*([^\s#]+)/g;
+
+// 곡 줄에서 태그 추출
+function parseSongTags(line) {
+    const tags = { key: null, memo: null, duration: null };
+    let match;
+    const regex = new RegExp(TAG_REGEX.source, 'gi');
+    while ((match = regex.exec(line)) !== null) {
+        const tagType = match[1].toLowerCase();
+        const value = match[2].trim();
+        
+        if (['키', '키', 'key'].includes(tagType)) {
+            tags.key = value;
+        } else if (['메모', 'memo'].includes(tagType)) {
+            tags.memo = value;
+        } else if (['시간', 'time', '분', 'min'].includes(tagType)) {
+            const num = parseInt(value);
+            if (!isNaN(num) && num > 0 && num <= 60) {
+                tags.duration = num;
+            }
+        }
+    }
+    return tags;
+}
+
+// 태그가 포함된 원본 줄에서 태그 제거 (제목만 남김)
+function removeTagsFromLine(line) {
+    return line.replace(TAG_REGEX, '').replace(/\s+/g, ' ').trim();
+}
+
+// 전체 콘티에서 소요 시간 합산
+function calculateTotalDuration(normalizedText) {
+    const lines = normalizedText.split('\n');
+    let totalMinutes = 0;
+    
+    lines.forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        
+        // 곡 줄인지 확인
+        const isSongLine = /^\d+/.test(trimmed) || /^찬\d+/.test(trimmed) || /^통\d+/.test(trimmed);
+        if (!isSongLine) return;
+        
+        const tags = parseSongTags(trimmed);
+        totalMinutes += tags.duration || DEFAULT_SONG_DURATION;
+    });
+    
+    return totalMinutes;
+}
+
+// 소요 시간 표시 업데이트
+function updateDurationDisplay(totalMinutes) {
+    let indicator = document.getElementById('duration-indicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'duration-indicator';
+        indicator.style.cssText = 'text-align:center; padding:8px; font-size:12px; color:#94a3b8; background:#f8fafc; border-radius:8px; margin-top:8px;';
+        
+        // btn-group 다음에 추가
+        const btnGroup = document.querySelector('.btn-group');
+        if (btnGroup) {
+            btnGroup.parentElement.insertBefore(indicator, btnGroup.nextSibling);
+        }
+    }
+    
+    if (totalMinutes > 0) {
+        const hours = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+        const timeText = hours > 0 
+            ? `⏱️ 예상 소요 시간: 약 ${hours}시간 ${mins}분` 
+            : `⏱️ 예상 소요 시간: 약 ${mins}분`;
+        indicator.textContent = timeText;
+        indicator.style.display = 'block';
+    } else {
+        indicator.style.display = 'none';
+    }
+}
+
 function tryLoadImage(imgElement, songNum, extIndex, onDone) {
     const s = String(songNum);
     const isHymn   = s.startsWith('찬');
@@ -42,6 +125,10 @@ async function startSearch() {
     const songLines = allLines.filter(l => /^\d+/.test(l) || /^찬\d+/.test(l) || /^통\d+/.test(l));
     if (songLines.length === 0) return alert('곡 리스트를 입력해주세요!');
 
+    // ── #133/#130/#132: 전체 소요 시간 계산 ────────────────────────────
+    const totalDuration = calculateTotalDuration(normalized);
+    updateDurationDisplay(totalDuration);
+
     sheetList = new Array(allLines.length).fill(null);
 
     // ── 카드 그리드 (가로/세로 모드 공통) ──
@@ -58,7 +145,11 @@ async function startSearch() {
         const isTongil  = !!tongilMatch;
         const isHymn    = !!hymnMatch;
         const numPadded = match[1].padStart(3, '0');
-        const songTitle = match[2].trim();
+        const rawTitle = match[2].trim();
+        
+        // ── #133/#130: 태그 파싱 ─────────────────────────────────────
+        const tags = parseSongTags(rawTitle);
+        const songTitle = removeTagsFromLine(rawTitle).trim();
         const label     = isTongil ? `통${numPadded} ${songTitle}` : isHymn ? `찬${numPadded} ${songTitle}` : `${numPadded} ${songTitle}`;
         const imgKey    = isTongil ? `통${numPadded}` : isHymn ? `찬${numPadded}` : numPadded;
 
@@ -66,13 +157,48 @@ async function startSearch() {
         card.className = 'sheet-music-card';
         card.dataset.lineIndex = String(index);
         card.dataset.originalLine = line;
+        
+        // ── 카드 헤더 (제목 + 태그) ────────────────────────────────────
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'sheet-title';
+        cardHeader.innerHTML = `<span class="drag-handle" title="길게 눌러 순서 변경">⠿</span><span class="sheet-title-text">${label}</span>`;
+        
+        // 태그 배지 추가 (#133/#130)
+        if (tags.key || tags.memo || tags.duration) {
+            const tagContainer = document.createElement('div');
+            tagContainer.className = 'song-tags';
+            tagContainer.style.cssText = 'display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; padding:0 4px;';
+            
+            if (tags.key) {
+                const keyBadge = document.createElement('span');
+                keyBadge.style.cssText = 'background:#818cf8; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:600;';
+                keyBadge.textContent = `🎵 ${tags.key}`;
+                tagContainer.appendChild(keyBadge);
+            }
+            if (tags.duration) {
+                const timeBadge = document.createElement('span');
+                timeBadge.style.cssText = 'background:#34d399; color:#064e3b; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:600;';
+                timeBadge.textContent = `⏱️ ${tags.duration}분`;
+                tagContainer.appendChild(timeBadge);
+            }
+            if (tags.memo) {
+                const memoBadge = document.createElement('span');
+                memoBadge.style.cssText = 'background:#fbbf24; color:#78350f; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:600;';
+                memoBadge.textContent = `📝 ${tags.memo}`;
+                memoBadge.title = tags.memo; // 긴 텍스트는 툴팁으로
+                tagContainer.appendChild(memoBadge);
+            }
+            cardHeader.appendChild(tagContainer);
+        }
+        
         const removeBtn = document.createElement('button');
         removeBtn.className = 'card-remove-btn';
         removeBtn.title = '콘티에서 제거';
         removeBtn.textContent = '✕';
         removeBtn.onclick = (e) => { e.stopPropagation(); removeCard(card); };
-        card.innerHTML = `<div class="sheet-title"><span class="drag-handle" title="길게 눌러 순서 변경">⠿</span><span class="sheet-title-text">${label}</span></div>`;
-        card.querySelector('.sheet-title').appendChild(removeBtn);
+        cardHeader.appendChild(removeBtn);
+        card.appendChild(cardHeader);
+        
         const imgTag = document.createElement('img');
         imgTag.alt = `${isTongil ? '통일찬송가 ' : isHymn ? '새찬송가 ' : ''}${numPadded} 악보 찾는 중...`;
         card.appendChild(imgTag);
