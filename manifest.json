@@ -5,6 +5,54 @@
   "display": "standalone",
   "background_color": "#111111",
   "theme_color": "#181d3a",
+  "description": "교회 예배 콘티(악보 세트리스트)를 관리하고, 악보 이미지를 자동으로 불러오는 스마트 워크플로우 도구",
+  "categories": ["lifestyle", "productivity"],
+  "screenshots": [
+    {
+      "src": "screenshots/screenshot-1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "콘티 입력 화면"
+    },
+    {
+      "src": "screenshots/screenshot-2.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "악보 뷰어"
+    },
+    {
+      "src": "screenshots/screenshot-3.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "태블릿 가로 모드"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "콘티 만들기",
+      "short_name": "악보 만들기",
+      "description": "새로운 콘티를 작성하고 악보를 생성합니다",
+      "url": "./index.html?action=new",
+      "icons": [{ "src": "icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "콘티함",
+      "short_name": "이력",
+      "description": "저장된 콘티 이력을 확인합니다",
+      "url": "./index.html?action=history",
+      "icons": [{ "src": "icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "찬양 목록",
+      "short_name": "찬양목록",
+      "description": "전체 찬양 목록을 검색합니다",
+      "url": "./index.html?action=songs",
+      "icons": [{ "src": "icon.png", "sizes": "96x96" }]
+    }
+  ],
   "icons": [
     {
       "src": "icon.png",
