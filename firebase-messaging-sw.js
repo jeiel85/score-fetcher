@@ -5,20 +5,59 @@ importScripts('firebase-config.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
-const SCORES_CACHE = 'scores-v1';
+const SCORES_CACHE = 'scores-v2'; // 캐시 버전 업데이트
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
 
-// 악보 이미지: 네트워크 우선 → 실패 시 캐시 폴백 (오프라인 비상 대응)
+// ─── #154 오프라인 모드: 악보 이미지 캐싱 개선 ──────────────────────────
+
+// Cache-First 전략: 캐시 있으면 캐시 우선, 없으면 네트워크
+async function cacheFirst(request) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    
+    try {
+        const response = await fetch(request);
+        if (response.ok) {
+            const cache = await caches.open(SCORES_CACHE);
+            cache.put(request, response.clone());
+        }
+        return response;
+    } catch (e) {
+        return Response.error();
+    }
+}
+
+// 네트워크 우선, 실패 시 캐시 폴백 (动态 콘텐츠용)
+async function networkFirst(request) {
+    try {
+        const response = await fetch(request);
+        if (response.ok) {
+            const cache = await caches.open(SCORES_CACHE);
+            cache.put(request, response.clone());
+        }
+        return response;
+    } catch (e) {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        return Response.error();
+    }
+}
+
 self.addEventListener('fetch', (event) => {
-    if (new URL(event.request.url).pathname.startsWith('/images/')) {
-        event.respondWith(
-            fetch(event.request).then(res => {
-                if (res.ok) caches.open(SCORES_CACHE).then(c => c.put(event.request, res.clone()));
-                return res;
-            }).catch(() => caches.match(event.request).then(cached => cached || Response.error()))
-        );
+    const url = new URL(event.request.url);
+    
+    // 악보 이미지: Cache-First (빠른 로딩 + 오프라인 지원)
+    if (url.pathname.startsWith('/images/')) {
+        event.respondWith(cacheFirst(event.request));
+        return;
+    }
+    
+    // JS/CSS: 네트워크 우선 (새 버전 항상 다운로드)
+    if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+        event.respondWith(networkFirst(event.request));
+        return;
     }
 });
 
