@@ -483,7 +483,13 @@ textarea::placeholder { color: var(--outline-variant); font-size: 13px; }
 .history-date { font-size: 11px; color: var(--on-surface-variant); margin-bottom: 6px; }
 .history-text { font-size: 13px; white-space: pre-wrap; line-height: 1.5; color: var(--on-surface-variant); width: 100%; }
 .history-item.pressing { background-color: rgba(196, 204, 255, 0.2) !important; }
-.history-delete-hint { font-size: 10px; color: var(--outline-variant); margin-top: 6px; align-self: flex-end; }
+.history-delete-hint { font-size: 10px; color: var(--outline-variant); margin-top: 6px; }
+.history-actions { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 6px; }
+.history-action-btn {
+    font-size: 11px; padding: 4px 10px; background: var(--secondary-container);
+    border: none; border-radius: 6px; color: var(--on-secondary-container);
+    cursor: pointer; font-weight: 600;
+}
 
 /* ─── Share Preview Modal ─── */
 #sharePreviewModal { padding: 0; position: fixed; }

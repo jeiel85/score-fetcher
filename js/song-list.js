@@ -40,6 +40,15 @@ function toggleFavFilter() {
     filterSongs();
 }
 
+// #129: 최근 사용곡 필터 토글
+let _recentFilterOn = false;
+function toggleRecentFilter() {
+    _recentFilterOn = !_recentFilterOn;
+    const btn = document.getElementById('btn-recent-filter');
+    if (btn) btn.classList.toggle('recent-filter-on', _recentFilterOn);
+    filterSongs();
+}
+
 function cycleSortMode() {
     const modes = ['num', 'freq-desc', 'freq-asc'];
     _sortMode = modes[(modes.indexOf(_sortMode) + 1) % modes.length];
@@ -323,6 +332,18 @@ function filterSongs() {
         });
     }
 
+    // #129: 최근 사용곡 필터
+    if (_recentFilterOn) {
+        const recentKey = 'recentSongs';
+        let recent = [];
+        try { recent = JSON.parse(localStorage.getItem(recentKey) || '[]'); } catch(e) {}
+        const recentNums = new Set(recent.map(r => r.num));
+        base = base.filter(song => {
+            const m = song.match(/^(\d+)/);
+            return m && recentNums.has(m[1].padStart(3, '0'));
+        });
+    }
+
     renderSongList(_applySortMode(base));
 }
 
@@ -564,6 +585,24 @@ function addSongToInput(songLine) {
     if (currentText.includes('아래 예시처럼 붙여넣어 주세요')) currentText = '';
     else if (currentText.length > 0 && !currentText.endsWith('\n')) currentText += '\n';
     textarea.value = currentText + songLine;
+    
+    // #129: 최근 사용곡 기록
+    const match = songLine.match(/^(\d+)/);
+    if (match) {
+        const numPadded = match[1].padStart(3, '0');
+        const title = songLine.substring(match[1].length).trim();
+        const recentKey = 'recentSongs';
+        let recent = [];
+        try { recent = JSON.parse(localStorage.getItem(recentKey) || '[]'); } catch(e) {}
+        // 기존 항목 제거 (중복 시 최신으로 이동)
+        recent = recent.filter(r => r.num !== numPadded);
+        // 맨 앞에 추가
+        recent.unshift({ num: numPadded, title, usedAt: Date.now() });
+        // 최대 10개 유지
+        if (recent.length > 10) recent = recent.slice(0, 10);
+        localStorage.setItem(recentKey, JSON.stringify(recent));
+    }
+    
     showToast('✅ 추가됨 — 계속 선택하거나 ✕를 눌러 닫아주세요', 1800);
 }
 

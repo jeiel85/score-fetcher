@@ -163,6 +163,7 @@
             <div class="modal-search">
                 <input type="text" id="searchInput" placeholder="검색어 또는 번호를 입력하세요..." onkeyup="filterHymns()">
                 <div id="ccm-toolbar" style="display:flex;gap:6px;align-items:center;">
+                    <button id="btn-recent-filter" onclick="toggleRecentFilter()" class="btn-sort-freq btn-recent-filter" title="최근 사용곡만 보기">🕐 최근</button>
                     <button id="btn-fav-filter" onclick="toggleFavFilter()" class="btn-sort-freq btn-fav-filter" title="즐겨찾기만 보기">⭐</button>
                     <button id="btn-sort-freq" onclick="cycleSortMode()" class="btn-sort-freq">🔢 번호순</button>
                 </div>

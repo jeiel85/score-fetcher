@@ -187,7 +187,10 @@ function renderHistoryList(entries) {
             <div class="history-title-badge">📌 ${displayTitle}</div>
             <div class="history-date">🕒 저장일시: ${item.date}</div>
             <div class="history-text">${item.text}</div>
-            <div class="history-delete-hint">길게 누르면 삭제</div>
+            <div class="history-actions">
+                <button class="history-action-btn" onclick="loadHistoryItem('${key}', true); event.stopPropagation();" title="복제하여 편집">📋 복사</button>
+                <span class="history-delete-hint">길게 누르면 삭제</span>
+            </div>
         `;
 
         let pressTimer = null, didLongPress = false;
@@ -234,6 +237,28 @@ function renderHistoryList(entries) {
         moreBtn.onclick = (e) => { e.stopPropagation(); historyLimit += 20; renderHistoryList(entries); };
         container.appendChild(moreBtn);
     }
+}
+
+// #128: 콘티 복제 기능 - loadHistoryItem으로 통합
+function loadHistoryItem(key, isCopy) {
+    const item = allHistoryEntries.find(([k]) => k === key);
+    if (!item) return;
+    const [, data] = item;
+    const titleInput = document.getElementById('setlist-title');
+    const textInput = document.getElementById('song-input');
+    
+    if (isCopy) {
+        // 복사본: 제목에 "(복사본)" 추가, 새 콘티로 저장되도록 처리
+        const copyTitle = (data.title || '제목 없음') + ' (복사본)';
+        titleInput.value = copyTitle;
+    } else {
+        titleInput.value = data.title || '';
+    }
+    textInput.value = data.text || '';
+    document.getElementById('result-container').innerHTML = '';
+    sheetList = [];
+    closeHistoryModal();
+    startSearch(); // 불러오기 후 악보 자동 실행 (#77)
 }
 
 function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
