@@ -1,4 +1,0 @@
-﻿feat: URL 파라미터를 이용한 기능 임시 활성화 및 미리보기 기능 추가
-
-- js/firebase.js: f_ 파라미터 감지 및 APP_CONFIG 오버라이드 로직 추가
-- admin.html: '설정 적용 미리보기' 버튼 및 URL 생성 로직 추가

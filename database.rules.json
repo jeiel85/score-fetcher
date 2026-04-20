@@ -1,5 +1,9 @@
 {
   "rules": {
+    "config": {
+      ".read": true,
+      ".write": "auth.token.email == 'jeiel85@gmail.com'"
+    },
     "history": {
       ".read": "auth != null",
       ".write": "auth != null",

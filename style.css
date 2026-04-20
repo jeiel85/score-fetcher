@@ -778,9 +778,9 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     /* panel-left 스크롤: min-height:0 필수 (grid child) */
     .panel-left { min-height: 0; }
 
-    /* 입력 카드 가로 모드 — 세로모드 flex: 1 리셋 */
-    .panel-left .input-card { margin-bottom: 0; flex: none; }
-    .panel-left .input-card textarea { flex: none; height: clamp(80px, 20vh, 180px); min-height: 80px; }
+    /* 입력 카드 가로 모드 — 부모 높이를 꽉 채우도록 수정 */
+    .panel-left .input-card { margin-bottom: 0; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    .panel-left .input-card textarea { flex: 1; height: 100% !important; min-height: 80px; }
 
     /* ── ls-active: 악보 만들기 후 분할 뷰어 ── */
     .app-layout.ls-active {
