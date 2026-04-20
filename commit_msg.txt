@@ -1,0 +1,6 @@
+﻿feat: 관리자 페이지 모바일 UX 최적화 및 PR 문서 재구축 (v1.13.2)
+
+- 관리자 대시보드 반응형 레이아웃 적용 (테이블-카드 변환)
+- Feature Toggle 시스템 구축 및 메인 앱 연동
+- PR 본문(pr-body*.md) 및 작업 지침(WORKFLOW.md) 한글 복구 및 내용 현행화
+- source_history.md 업데이트

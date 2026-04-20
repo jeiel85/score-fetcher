@@ -179,8 +179,18 @@
         .badge-count { background: rgba(99,102,241,0.3); color: #a5b4fc; }
         
         /* 탭 및 테이블 UI (1단계, 3단계 용) */
-        .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 12px; }
-        .tab-btn { white-space: nowrap; background: transparent; border: none; color: #94a3b8; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .tabs { 
+            display: flex; flex-wrap: nowrap; gap: 8px; 
+            margin-bottom: 24px; border-bottom: 2px solid rgba(255,255,255,0.1); 
+            padding-bottom: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+        }
+        .tabs::-webkit-scrollbar { display: none; } /* 스크롤바 숨김 */
+        .tab-btn { 
+            white-space: nowrap; background: transparent; border: none; 
+            color: #94a3b8; font-size: 13px; font-weight: 700; 
+            padding: 10px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; 
+            flex-shrink: 0;
+        }
         .tab-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .tab-btn.active { background: rgba(99,102,241,0.2); color: #a5b4fc; }
         .tab-content { display: none; }
@@ -188,38 +198,31 @@
         
         .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-        th, td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        th { color: #a5b4fc; font-weight: 700; }
-        .action-btn { background: rgba(244,63,94,0.1); color: #fca5a5; border: 1px solid rgba(244,63,94,0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; }
-        .action-btn:hover { background: rgba(244,63,94,0.2); }
-        .pagination { display: flex; gap: 4px; margin-top: 16px; justify-content: center; }
-        .page-btn { padding: 6px 12px; background: rgba(255,255,255,0.05); border: none; border-radius: 4px; color: #94a3b8; cursor: pointer; }
+        th, td { padding: 14px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { color: #a5b4fc; font-weight: 700; background: rgba(255,255,255,0.02); }
+        .action-btn { background: rgba(244,63,94,0.1); color: #fca5a5; border: 1px solid rgba(244,63,94,0.3); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+        .action-btn:hover { background: rgba(244,63,94,0.2); transform: translateY(-1px); }
+        .pagination { display: flex; gap: 6px; margin-top: 24px; justify-content: center; flex-wrap: wrap; }
+        .page-btn { min-width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: none; border-radius: 8px; color: #94a3b8; cursor: pointer; font-weight: 600; }
         .page-btn.active { background: #6366f1; color: #fff; }
-        #history-search { width: 100%; max-width: 240px; padding: 8px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-family: 'Inter'; font-size: 13px; }
-        .admin-version-info { text-align: center; color: rgba(255,255,255,0.2); font-size: 11px; margin: 40px 0 20px 0; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; }
 
-        /* 📱 모바일 및 태블릿 대응 반응형 스타일 */
-        @media (max-width: 650px) {
+        /* 📱 모바일 및 태블릿 대응 반응형 스타일 최적화 */
+        @media (max-width: 768px) {
             body { padding: 16px 12px; }
-            .container { padding: 0; width: 100%; }
-            h1 { font-size: 20px; text-align: center; }
+            h1 { font-size: 22px; text-align: center; }
             .subtitle { font-size: 12px; text-align: center; margin-bottom: 24px; }
             
-            /* 탭 스크롤링 및 버튼 크기 확대 */
-            .tabs {
-                gap: 4px; border-bottom-width: 1px;
-                padding-bottom: 8px;
-                margin-bottom: 16px;
-                display: flex; flex-wrap: nowrap;
-                overflow-x: auto; -webkit-overflow-scrolling: touch;
+            /* 대시보드 상단 버튼 배치 */
+            #admin-container > div:first-child { flex-direction: column; align-items: center; gap: 16px; margin-bottom: 24px; }
+            #admin-container > div:first-child > div:last-child { 
+                width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; 
             }
-            .tab-btn { padding: 12px 14px; font-size: 14px; flex-shrink: 0; border-radius: 10px; }
-
-            /* 카드 레이아웃 표준화 */
-            .card { padding: 16px; margin-bottom: 16px; border-radius: 12px; }
-            h2 { font-size: 15px; margin-bottom: 12px; }
-
-            /* 테이블을 카드 형태로 변환 (핵심!) */
+            #admin-container > div:first-child > div:last-child a, 
+            #admin-container > div:first-child > div:last-child button { 
+                width: 100%; text-align: center; padding: 10px; font-size: 11px; 
+            }
+            
+            /* 테이블을 카드 레이아웃으로 변환 */
             .table-wrap table, .table-wrap thead, .table-wrap tbody, .table-wrap th, .table-wrap td, .table-wrap tr { 
                 display: block; 
             }
@@ -227,54 +230,60 @@
             .table-wrap tr {
                 background: rgba(255,255,255,0.03);
                 border: 1px solid rgba(255,255,255,0.08);
-                border-radius: 12px;
-                margin-bottom: 12px;
+                border-radius: 16px;
+                margin-bottom: 16px;
                 padding: 16px;
                 position: relative;
             }
             .table-wrap td {
                 border: none;
-                padding: 4px 0;
+                padding: 6px 0;
                 text-align: left;
                 width: 100% !important;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
             }
-            /* 특정 컬럼 스타일 (히스토리 탭) */
-            #history-tbody td:nth-of-type(1) { position: absolute; top: 16px; right: 16px; width: auto !important; } /* 체크박스 */
-            #history-tbody td:nth-of-type(2) { font-size: 11px; color: #94a3b8; margin-bottom: 2px; } /* 날짜 */
-            #history-tbody td:nth-of-type(3) { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; } /* 제목 & 목록 */
-            #history-tbody td:nth-of-type(4) { display: inline-block; width: auto !important; margin-right: 8px; } /* 배지 */
-            #history-tbody td:nth-of-type(5) { margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; text-align: right; } /* 삭제 버튼 */
+            /* 데이터 앞 레이블 추가 (선택사항) */
+            .table-wrap td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                color: #64748b;
+                font-size: 11px;
+                text-transform: uppercase;
+                margin-right: 12px;
+            }
 
-            /* 신고 관리 탭 카드 변환 */
-            #reports-tbody tr { padding-left: 72px; min-height: 80px; }
-            #reports-tbody td:nth-of-type(2) { position: absolute; left: 16px; top: 16px; width: 44px !important; height: 44px !important; padding:0; } /* 썸네일 */
-            #reports-tbody td:nth-of-type(1) { font-size: 11px; margin-bottom: 2px; } /* 날짜 */
-            #reports-tbody td:nth-of-type(3) { display: inline-block; width: auto !important; margin-right: 6px; font-size: 14px; } /* 번호 */
-            #reports-tbody td:nth-of-type(4) { display: inline-block; width: auto !important; font-size: 14px; font-weight: 700; color: #fff; } /* 제목 */
-            #reports-tbody td:nth-of-type(5) { font-size: 12px; margin-top: 4px; } /* 상태 */
-            #reports-tbody td:nth-of-type(6) { margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; text-align: right; }
+            /* 특정 컬럼 특화 레이아웃 (역대 콘티) */
+            #history-tbody tr { padding-top: 12px; }
+            #history-tbody td:nth-of-type(1) { position: absolute; top: 12px; right: 12px; border: none; padding: 0; } /* 체크박스 */
+            #history-tbody td:nth-of-type(1)::before { display: none; }
+            #history-tbody td:nth-of-type(2) { font-size: 12px; color: #94a3b8; } /* 날짜 */
+            #history-tbody td:nth-of-type(3) { display: block; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 8px; } /* 제목 */
+            #history-tbody td:nth-of-type(3)::before { display: none; }
+            #history-tbody td:nth-of-type(5) { margin-top: 12px; justify-content: flex-end; } /* 관리 버튼 */
 
-            /* 입력 폼 폰트 크기 확대 (iOS 줌 방지) */
-            input[type="text"], input[type="number"], input[type="password"], textarea, #history-search {
-                font-size: 16px !important;
-                padding: 12px 14px !important;
-                height: auto !important;
+            /* 신고 관리 특화 레이아웃 */
+            #reports-tbody tr { padding-left: 80px; min-height: 100px; }
+            #reports-tbody td:nth-of-type(2) { position: absolute; left: 16px; top: 16px; width: 50px !important; height: 50px !important; padding:0; } /* 썸네일 */
+            #reports-tbody td:nth-of-type(2)::before { display: none; }
+            #reports-tbody td:nth-of-type(6) { margin-top: 12px; justify-content: flex-end; }
+
+            /* 입력 폼 최적화 */
+            input[type="text"], input[type="number"], textarea, #history-search {
+                font-size: 16px !important; /* iOS 자동 줌 방지 */
+                padding: 14px !important;
+                border-radius: 12px !important;
             }
             
-            /* 버튼 전체 너비 */
-            #admin-container > div:first-child { flex-direction: column; align-items: center; gap: 16px; margin-bottom: 24px; }
-            #admin-container > div:first-child > div:last-child { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-            #admin-container > div:first-child > div:last-child a, 
-            #admin-container > div:first-child > div:last-child button { width: 100%; text-align: center; padding: 10px; }
-            
-            .btn { height: 48px; display: flex; align-items: center; justify-content: center; width: 100%; }
-            .btn-row { flex-direction: column; }
+            .btn { height: 50px; font-size: 15px; }
+            .btn-row { flex-direction: column; width: 100%; }
             .btn-row button { width: 100%; }
 
-            /* 모달 대응 */
-            .modal-content { height: 95vh; border-radius: 12px; }
-            .modal-grid { grid-template-columns: 1fr; gap: 12px; }
-            .modal-score-wrap { height: 180px; }
+            /* 모달 */
+            .modal-content { height: 92vh; margin-top: 8vh; border-radius: 24px 24px 0 0; }
+            .modal-grid { grid-template-columns: 1fr; gap: 16px; overflow-y: auto; }
+            .modal-score-wrap { height: 200px; }
         }
 
         /* 💻 가로 모드 및 태블릿 미세조정 */
