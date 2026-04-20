@@ -203,9 +203,10 @@ function showLyrics(numPadded, displayTitle) {
     _lastLyricsNum = numPadded; // 신고를 위해 번호 기억
     const d = lyricsData[numPadded];
     document.getElementById('lyrics-title').textContent = `🎵 ${displayTitle}`;
-    // ... (이하 동일)
+    
     const tagsEl = document.getElementById('lyrics-tags');
-    if (d && d.tags && d.tags.length > 0) {
+    const isTagEnabled = window.APP_CONFIG.features.lyrics_tag !== false; // ✅ 기능 활성화 체크
+    if (isTagEnabled && d && d.tags && d.tags.length > 0) {
         tagsEl.innerHTML = d.tags.map(t => `<span class="tag-chip">${t}</span>`).join('');
         tagsEl.style.display = 'flex';
     } else { tagsEl.style.display = 'none'; }
@@ -653,6 +654,12 @@ function _applyTabUI() {
     const hymnToolbar = document.getElementById('hymn-toolbar');
     if (ccmToolbar)  ccmToolbar.style.display  = _activeTab === 'ccm' ? 'flex' : 'none';
     if (hymnToolbar) hymnToolbar.style.display = (_activeTab === 'hymn' || _activeTab === 'tongil') ? 'flex' : 'none';
+
+    // #129: 최근 사용 곡 버튼 노출 제어
+    const btnRecent = document.getElementById('btn-recent-filter');
+    if (btnRecent) {
+        btnRecent.style.display = (window.APP_CONFIG.features.recent_songs !== false && _activeTab === 'ccm') ? 'inline-block' : 'none';
+    }
 }
 
 function cycleHymnSortMode() {

@@ -183,12 +183,13 @@ function renderHistoryList(entries) {
         const li = document.createElement('li');
         li.className = 'song-item history-item';
         const displayTitle = item.title || '제목 없음';
+        const isCopyEnabled = window.APP_CONFIG.features.copy_conti !== false;
         li.innerHTML = `
             <div class="history-title-badge">📌 ${displayTitle}</div>
             <div class="history-date">🕒 저장일시: ${item.date}</div>
             <div class="history-text">${item.text}</div>
             <div class="history-actions">
-                <button class="history-action-btn" onclick="loadHistoryItem('${key}', true); event.stopPropagation();" title="복제하여 편집">📋 복사</button>
+                ${isCopyEnabled ? `<button class="history-action-btn" onclick="loadHistoryItem('${key}', true); event.stopPropagation();" title="복제하여 편집">📋 복사</button>` : ''}
                 <span class="history-delete-hint">길게 누르면 삭제</span>
             </div>
         `;

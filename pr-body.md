@@ -1,10 +1,9 @@
 ## Summary
-- #145: 인접 악보 프리로드 (prefetchImage) 추가 - 천천히 스와이프 시 다음 악보 위치에 현재 악보가 보이는 현상 방지
-- #144: requestAnimationFrame으로 깜빡임 방어 - 스와이프 완료 후 화면이 잠깐 깜빡이는 현상 수정
-- #143: navigateSheet에서 유효성 검사 추가 - 첫/마지막 페이지에서 스와이프 시 악보가 화면 밖으로 밀려나는 현상 수정
-- Landscape 뷰어에도 동일 로직 적용
-- Playwright E2E 테스트 셋업 (버그 수정 후 자동 검증 가능)
+- **#145: 인접 악보 프리로딩 (prefetchImage) 도입**: 스와이프 시 다음 악보가 미리 로드되어 지연 없는 전환이 가능해졌습니다.
+- **#144: requestAnimationFrame 렌더링 최적화**: 악보 전환 시 발생하는 미세한 깜빡임(Flicker) 현상을 해결했습니다.
+- **#143: 뷰어 경계면 유효성 검사**: 첫 페이지와 마지막 페이지에서 스와이프 시 자연스러운 바운스 효과와 안내 토스트를 추가했습니다.
+- **가로 모드(Landscape) 뷰어 고도화**: 분할 뷰에서도 동일한 스와이프 및 렌더링 로직을 적용하여 일관된 사용자 경험을 제공합니다.
 
 ## Testing
-- Playwright 테스트 6개 모두 통과
-- npm test / npm run test:headed / npm run test:ui로 테스트 실행 가능
+- Playwright E2E 테스트 6개 케이스 모두 통과 (Swipe, Zoom, Flip 등)
+- `npm test`를 통해 로컬 환경에서 검증 완료

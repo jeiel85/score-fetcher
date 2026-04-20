@@ -36,3 +36,28 @@ let wakeLock   = null;
 // 전체화면 뷰어용 악보 목록
 let sheetList = [];          // { src, label } | null
 let currentSheetIndex = -1; // -1: 아직 아무 악보도 직접 선택 안 함
+
+// ─── Feature Toggle 전역 설정 ────────────────────────────────────────────────
+window.APP_CONFIG = {
+    features: {
+        prefetch: true,
+        copy_conti: true,
+        recent_songs: true,
+        lyrics_tag: true,
+        bounce_effect: true,
+        a11y_labels: true
+    }
+};
+
+async function initFeatureFlags() {
+    try {
+        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/config/feature_flags.json`);
+        const data = await res.json();
+        if (data) {
+            window.APP_CONFIG.features = { ...window.APP_CONFIG.features, ...data };
+            console.log('Feature Flags Loaded:', window.APP_CONFIG.features);
+        }
+    } catch(e) {
+        console.warn('Config load failed, using defaults:', e);
+    }
+}

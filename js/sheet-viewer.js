@@ -732,9 +732,15 @@ function closeLandscapeView() {
                 while (chkIdx >= 0 && chkIdx < sheetList.length && !sheetList[chkIdx]) chkIdx += dir;
                 const hasValidNext = chkIdx >= 0 && chkIdx < sheetList.length && !!sheetList[chkIdx];
                 if (!hasValidNext) {
-                    // 첫/마지막 페이지 무효 방향 — 스프링백
-                    imgEl.style.transition = 'transform 0.2s ease';
-                    imgEl.style.transform = 'scale(1) translate(0, 0)';
+                    // 첫/마지막 페이지 무효 방향 (#143)
+                    if (window.APP_CONFIG.features.bounce_effect !== false) {
+                        imgEl.style.transition = 'transform 0.2s ease';
+                        imgEl.style.transform = 'scale(1) translate(0, 0)';
+                        showToast(dir > 0 ? '마지막 악보입니다' : '첫 번째 악보입니다', 1000);
+                    } else {
+                        imgEl.style.transition = 'none';
+                        imgEl.style.transform = 'scale(1) translate(0, 0)';
+                    }
                 } else {
                 const vw = viewer.clientWidth;
                 const exitX = dir > 0 ? -vw : vw;
@@ -903,9 +909,15 @@ function closeLandscapeView() {
                 while (lsChkIdx >= 0 && lsChkIdx < sheetList.length && !sheetList[lsChkIdx]) lsChkIdx += lsDir;
                 const lsHasValidNext = lsChkIdx >= 0 && lsChkIdx < sheetList.length && !!sheetList[lsChkIdx];
                 if (!lsHasValidNext) {
-                    // 첫/마지막 페이지 무효 방향 — 스프링백
-                    imgEl.style.transition = 'transform 0.2s ease';
-                    imgEl.style.transform = 'scale(1) translate(0, 0)';
+                    // 첫/마지막 페이지 무효 방향 (#143)
+                    if (window.APP_CONFIG.features.bounce_effect !== false) {
+                        imgEl.style.transition = 'transform 0.2s ease';
+                        imgEl.style.transform = 'scale(1) translate(0, 0)';
+                        showToast(lsDir > 0 ? '마지막 악보입니다' : '첫 번째 악보입니다', 1000);
+                    } else {
+                        imgEl.style.transition = 'none';
+                        imgEl.style.transform = 'scale(1) translate(0, 0)';
+                    }
                 } else {
                 const lsVw = lsArea.clientWidth;
                 const lsExitX = lsDir > 0 ? -lsVw : lsVw;

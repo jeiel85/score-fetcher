@@ -160,6 +160,7 @@ function addDivider() {
 }
 
 async function prefetchImage(num) {
+    if (window.APP_CONFIG.features.prefetch === false) return; // ✅ 기능 비활성화 시 중단
     if (!num || _prefetchedSet.has(num)) return;
     const s        = String(num);
     const isHymn   = s.startsWith('찬');

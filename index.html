@@ -465,7 +465,9 @@
         });
 
         // ─── 앱 초기화 ─────────────────────────────────────────────────────────
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
+            await initFeatureFlags(); // ✅ 기능 플래그 로드 우선
+            
             // #85: 강제 새로고침 후 입력 중이던 데이터 복원
             const _pt = sessionStorage.getItem('_pendingTitle');
             const _ps = sessionStorage.getItem('_pendingSongs');
