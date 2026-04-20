@@ -831,6 +831,7 @@
 
         <div class="btn-row" style="margin-top:24px; justify-content: flex-end; gap: 12px;">
             <span id="feature-save-log" style="font-size:13px; color:#34d399;"></span>
+            <button class="btn btn-secondary" onclick="previewFeatureFlags()">👀 설정 적용 미리보기</button>
             <button class="btn btn-primary" onclick="saveFeatureFlags()">💾 설정 저장</button>
         </div>
     </div>
@@ -2108,6 +2109,16 @@ async function saveFeatureFlags() {
     } catch(e) {
         log.textContent = '❌ 저장 실패: ' + e.message;
     }
+}
+
+function previewFeatureFlags() {
+    const params = new URLSearchParams();
+    FEATURES.forEach(f => {
+        const isChecked = document.getElementById(`feature-${f.id}`).checked;
+        params.append(`f_${f.id}`, isChecked);
+    });
+    const previewUrl = `/?${params.toString()}`;
+    window.open(previewUrl, '_blank');
 }
 
 // ─── 공지 작성 ────────────────────────────────────────────────────────────────

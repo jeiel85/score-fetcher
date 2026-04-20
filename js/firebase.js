@@ -51,12 +51,25 @@ window.APP_CONFIG = {
 
 async function initFeatureFlags() {
     try {
+        // 1. Firebase 데이터베이스에서 설정 로드
         const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/config/feature_flags.json`);
         const data = await res.json();
         if (data) {
             window.APP_CONFIG.features = { ...window.APP_CONFIG.features, ...data };
-            console.log('Feature Flags Loaded:', window.APP_CONFIG.features);
         }
+
+        // 2. URL 파라미터를 통한 임시 오버라이드 (예: ?f_prefetch=true)
+        const params = new URLSearchParams(window.location.search);
+        params.forEach((value, key) => {
+            if (key.startsWith('f_')) {
+                const featureKey = key.substring(2);
+                if (window.APP_CONFIG.features.hasOwnProperty(featureKey)) {
+                    window.APP_CONFIG.features[featureKey] = (value === 'true');
+                }
+            }
+        });
+
+        console.log('Feature Flags Loaded (with Override):', window.APP_CONFIG.features);
     } catch(e) {
         console.warn('Config load failed, using defaults:', e);
     }

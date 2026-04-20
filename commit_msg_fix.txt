@@ -1,4 +1,0 @@
-﻿fix: 신규 기능 기본 활성화 상태를 '사용 안 함'으로 변경
-
-- js/firebase.js: APP_CONFIG 기본값 false 설정
-- admin.html: 설정 부재 시 체크박스 미체크 처리
