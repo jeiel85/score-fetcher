@@ -2069,7 +2069,7 @@ async function loadFeatureFlags() {
         const flags = await res.json() || {};
 
         list.innerHTML = FEATURES.map(f => {
-            const checked = flags[f.id] !== false; // 기본값 true
+            const checked = flags[f.id] === true; // 기본값 false
             return `
                 <div class="feature-item">
                     <div>

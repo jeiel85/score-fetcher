@@ -40,12 +40,12 @@ let currentSheetIndex = -1; // -1: 아직 아무 악보도 직접 선택 안 함
 // ─── Feature Toggle 전역 설정 ────────────────────────────────────────────────
 window.APP_CONFIG = {
     features: {
-        prefetch: true,
-        copy_conti: true,
-        recent_songs: true,
-        lyrics_tag: true,
-        bounce_effect: true,
-        a11y_labels: true
+        prefetch: false,
+        copy_conti: false,
+        recent_songs: false,
+        lyrics_tag: false,
+        bounce_effect: false,
+        a11y_labels: false
     }
 };
 
