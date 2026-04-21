@@ -11,6 +11,8 @@
 4. git status                # 작업 전 상태 확인 (unstaged files 없어야 함)
 ```
 
+> **이 절차는 선택이 아닌 필수입니다.** 사용자가 별도로 언급하지 않아도 세션 시작 시 반드시 실행합니다.
+
 ### 왜 이 절차가 중요한가?
 
 - **중복 수정 방지**: 이미 main에 반영된 내용을 다시 브랜치에서 구현하는 낭비 방지
@@ -31,7 +33,6 @@
 
 ### 2단계: 브랜치 생성
 ```bash
-# 최신 main 기반에서 새 브랜치 생성
 git pull origin main
 git checkout -b feat/issue-{번호}-{간단설명}-YYYYMMDD
 ```
@@ -40,7 +41,7 @@ git checkout -b feat/issue-{번호}-{간단설명}-YYYYMMDD
 ```
 1. 관련 코드 파일 읽기 (기존 패턴 파악)
 2. 구현
-3. lsp_diagnostics로 문법 검사
+3. 문법 오류 없는지 확인
 ```
 
 ### 4단계: 커밋 & 푸시
@@ -82,21 +83,23 @@ score-fetcher/
 ├── WORKFLOW.md              # 본 파일 - 작업 지침
 ├── CLAUDE.md               # 프로젝트 개요 및 코드 규칙
 ├── ROADMAP.md              # 개발 로드맵
+├── README.md               # 프로젝트 소개 (GitHub 표시용)
+├── source_history.md       # 개발 마일스톤 이력
 ├── index.html              # 메인 앱
 ├── admin.html              # 관리자 대시보드
 ├── manifest.json           # PWA 설정
 ├── style.css               # 스타일
 ├── js/
 │   ├── firebase.js         # Firebase 초기화
-│   ├── utils.js            # 유틸리티
+│   ├── utils.js            # 유틸리티 (버전 상수 포함)
 │   ├── history.js          # 콘티 이력
 │   ├── song-list.js        # 찬양 목록
 │   ├── sheet-viewer.js     # 악보 뷰어
 │   ├── push.js             # FCM 푸시
 │   ├── share.js            # 공유
-│   └── notifications.js    # 알림
-└── tests/
-    └── app.spec.js         # Playwright 테스트
+│   └── notifications.js    # 알림센터
+└── functions/
+    └── index.js            # Cloud Functions (FCM 발송)
 ```
 
 ---
@@ -104,33 +107,21 @@ score-fetcher/
 ## ✅ 완료 체크리스트
 
 커밋 전에 반드시 확인:
-- [ ] 최신 main에서 브랜치 생성
-- [ ] 기존 코드 패턴 따랐는가?
-- [ ] lsp_diagnostics 오류 없는가?
-- [ ] 테스트가 있는 경우 테스트 통과하는가?
-- [ ] 버전 관리는 필요한가? (버전 규칙 참고)
+- [ ] 최신 main에서 브랜치 생성했는가?
+- [ ] 기존 코드 패턴을 따랐는가?
+- [ ] 버전 업이 필요한가? (CLAUDE.md 버전 관리 규칙 참고)
 
 ---
 
 ## 🔢 버전 관리 규칙
 
-[CLAUDE.md의 버전 관리 규칙 참고]
-
-버전 업이 필요한 경우 4곳 동시 수정:
+버전 업 시 5곳 동시 수정 (CLAUDE.md 상세 규칙 참고):
 1. `js/utils.js` — `APP_VERSION`, `BUILD_DATE`
 2. `index.html` — `const VERSION`
-3. `index.html` — `.app-version-badge` 텍스트 (2곳)
+3. `index.html` — `.app-version-badge` 텍스트
 4. `README.md` — 배지, 변경이력
+5. `CLAUDE.md` — 현재 상태 테이블
 
 ---
 
-## 🧪 테스트 실행
-
-```bash
-npm test          # Playwright 테스트 실행
-npm run test:ui  # UI 모드로 시각적 확인
-```
-
----
-
-*최종 업데이트: 2026-04-17*
+*최종 업데이트: 2026-04-21*
