@@ -29,12 +29,13 @@
 4. git status                # 깨끗한 상태에서 시작
 ```
 
-### 이슈 대응 흐름
+### 이슈 대응 및 PR 가이드
 1. **분석**: GitHub 이슈 확인 및 중복 여부 체크.
 2. **브랜치**: `feat/issue-{번호}-{설명}` 형식으로 생성.
 3. **구현**: 기존 코드 패턴 준수 및 문법 검수.
-4. **커밋**: `feat/fix: #{번호} {설명}` (한글 메시지 권장).
-5. **PR/머지**: PR 생성 후 관리자 머지 및 이슈 종료.
+4. **테스트**: Playwright 기반 E2E 테스트 및 실기기 성능 체크.
+5. **커밋**: `feat/fix: #{번호} {설명}` (한글 메시지 권장).
+6. **PR**: 상세 변경 사항을 기능 단위로 나열하여 작성.
 
 ---
 
@@ -50,10 +51,22 @@
 | `README.md` | 상단 배지 및 변경이력 | 외부 공개용 정보 |
 | `source_history.md` | 최상단 마일스톤 추가 | 상세 개발 이력 기록 |
 
+### 버전 관리 정책 (SemVer)
+- **PATCH**: 버그 수정, 소규모 CSS 개선 (v1.13.1 → v1.13.2)
+- **MINOR**: 새 기능 추가 (v1.12.x → v1.13.0)
+- **MAJOR**: 대규모 리팩토링 / 구조 변경 (v1.x → v2.0)
+
 ---
 
-## 📁 4. 프로젝트 구조 및 데이터
+## 🛠️ 4. 기술 스택 및 데이터 구조
 
+### Stack
+- **Frontend**: HTML5, CSS3, Vanilla JS
+- **Backend**: Firebase Realtime DB, Cloud Functions v2 (Node.js)
+- **Infra**: Vercel (Auto Deploy), FCM (Push Notification)
+- **PWA**: Service Worker, Web App Manifest
+
+### Structure
 ```
 score-fetcher/
 ├── index.html           # 메인 UI
@@ -75,16 +88,21 @@ score-fetcher/
 
 ---
 
-## 🛠️ 5. 시행착오 및 해결책 (Lessons Learned)
+## 🎯 5. 향후 로드맵 (Roadmap)
+- **#58 예배 당일 알림 예약**: Cloud Functions cron 작업을 통한 자동 알림.
+- **#57 악보 멀티페이지 지원**: 한 곡에 여러 장의 악보가 있는 경우 대응.
+- **#49 Capacitor Hybrid App**: Android/iOS 네이티브 앱 포팅.
+
+---
+
+## 🛠️ 6. 시행착오 및 해결책 (Lessons Learned)
 - **관리자 세션 덮어쓰기**: 메인 앱의 익명 로그인이 관리자 로그인을 풀지 않도록 `admin.html`에서는 익명 로그인을 호출하지 않음.
 - **PATCH 방식 필수**: 데이터 수정 시 `PUT` 대신 `PATCH`를 사용하여 기존 필드 유실 방지.
-- **푸시 중복 방지**: 기기 핑거프린트(`device_id`) 기반으로 토큰 키를 관리하여 중복 발송 차단.
 - **카톡 공유 중복**: `text` 파라미터에서 URL을 제거하여 Android 카카오톡 중복 노출 해결.
 
 ---
 
 ## 🔗 관련 문서
 - [상세 변경 이력 (Source History)](source_history.md)
-- [개발 로드맵 (Roadmap)](ROADMAP.md)
 
-*최종 업데이트: 2026-04-21*
+*최종 업데이트: 2026-04-22*
