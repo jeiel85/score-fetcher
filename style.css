@@ -573,22 +573,48 @@ footer svg { width: 18px; height: 18px; fill: currentColor; }
     letter-spacing: 0.02em;
     margin-left: 4px;
 }
-/* ─── Settings meta links (GitHub / 관리자) ─── */
-.settings-meta-links {
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(199, 197, 206, 0.15);
-    margin-top: 4px;
+/* ─── Settings footer (GitHub / 관리자 / 버전) ─── */
+.settings-footer {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(199, 197, 206, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
-.settings-meta-links a {
-    display: flex; align-items: center; gap: 6px;
-    color: var(--on-surface-variant); text-decoration: none;
-    font-size: 12px; font-weight: 600;
-    opacity: 0.7; transition: opacity 0.2s;
+.settings-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
-.settings-meta-links a:hover { opacity: 1; }
-.settings-meta-links svg { width: 14px; height: 14px; fill: currentColor; }
-.settings-meta-divider { color: var(--on-surface-variant); opacity: 0.35; font-size: 13px; }
+.settings-footer a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--on-surface-variant);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.6;
+    transition: all 0.2s;
+}
+.settings-footer a:hover {
+    opacity: 1;
+    color: var(--primary);
+}
+.settings-footer svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+}
+.settings-version-info {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--on-surface-variant);
+    opacity: 0.5;
+}
 .footer-btn-group { display: flex; gap: 8px; justify-content: center; margin-bottom: 8px; }
 .footer-btn {
     padding: 9px 18px; border: none; border-radius: var(--r-full);

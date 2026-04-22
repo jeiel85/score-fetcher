@@ -7,6 +7,11 @@
 
 ## 🚀 주요 마일스톤 (Timeline)
 
+### ✨ 2026-04-22: 설정 모달 UI 고도화 및 버전 동기화 (v1.13.5)
+- **설정 모달 리뉴얼**: 하단 링크 영역(GitHub, 관리자, 버전 정보)을 그룹화하여 더 정갈한 레이아웃으로 개선.
+- **버전 동기화 (5-Point Sync)**: 지침에 따라 `index.html`, `js/utils.js`, `admin.html`, `README.md`, `source_history.md` 5개 지점 버전 업데이트 완료.
+- **배포 준비**: Vercel 자동 배포를 위한 GitHub Push 준비 완료.
+
 ### ✨ 2026-04-22: 문서 통합 관리 체계 구축 및 README 리뉴얼 (v1.13.4)
 - **문서 단일화 (SSOT)**: `ROADMAP.md`, `pr-body.md` 등의 파편화된 지침을 `agents.md`로 완전 통합.
 - **README 리뉴얼**: GitHub 메인 페이지를 최신 트렌드(배지, 기능 카드, 센터 정렬)에 맞춰 시각적으로 업그레이드.

@@ -1,4 +1,0 @@
-﻿fix: 기능 활성화 오류 수정 및 가로 모드 UI 균형 조정
-
-- database.rules.json: config 경로 공개 읽기 권한 추가
-- style.css: 가로 모드에서 콘티 입력창 높이 꽉 차게 수정
