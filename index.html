@@ -506,13 +506,3 @@
 </body>
 
 </html>
-               loadContiByKey(_contiKey);
-            }
-            navigator.serviceWorker?.addEventListener('message', (e) => {
-                if (e.data?.type === 'AUTOLOAD_LATEST') autoLoadLatestConti();
-            });
-        });
-    </script>
-</body>
-
-</html>
